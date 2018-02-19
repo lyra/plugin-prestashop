@@ -1,159 +1,184 @@
 <?php
-#####################################################################################################
-#
-#					Module pour la plateforme de paiement PayZen
-#						Version : 1.4f (révision 46408)
-#									########################
-#					Développé pour Prestashop
-#						Version : 1.4.0.x
-#						Compatibilité plateforme : V2
-#									########################
-#					Développé par Lyra Network
-#						http://www.lyra-network.com/
-#						22/04/2013
-#						Contact : support@payzen.eu
-#
-#####################################################################################################
-
-/*
-* The payment platform can use only one check url,
-* but prestashop may have both standard payment module or the multi-payment module.
-* They need to have their validation code in the same place (i.e. here),
-* so we detect the case and load the appropriate module.
-*/
-if ((array_key_exists('vads_payment_config', $_REQUEST) && stripos($_REQUEST['vads_payment_config'], 'MULTI') !== false)
-		|| (array_key_exists('vads_contrib', $_REQUEST) && stripos($_REQUEST['vads_contrib'], 'multi') !== false)) {
-
-	// Multi payment : let multi module do the work
-	require_once(dirname(dirname(__FILE__)) . '/payzenmulti/validation.php');
-	die();
-}
-
-require_once dirname(dirname(dirname(__FILE__))) . '/config/config.inc.php';
-require_once dirname(dirname(dirname(__FILE__))) . '/init.php';
-
-// Damn global variables
-global $cookie;
-
-// restore language from order info
-if(key_exists('vads_order_info', $_REQUEST) && !empty($_REQUEST['vads_order_info'])) {
-	$parts = explode('=', $_REQUEST['vads_order_info'], 2);
-	$cookie->id_lang = $parts[1];
-}
+/**
+ * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/afl-3.0.php
+ *
+ * @author    Lyra Network (http://www.lyra-network.com/)
+ * @copyright 2014-2017 Lyra Network and contributors
+ * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @category  payment
+ * @package   payzen
+ */
 
 /**
- * @var Payzen $payzen
- * @var PayzenResponse $payzen_resp
+ * Instant payment notification file. Wait for PayZen payment confirmation, then validate order.
  */
 
-require dirname(__FILE__) . '/payzen.php';
-$payzen = new Payzen();
+require_once dirname(dirname(dirname(__FILE__))).'/config/config.inc.php';
 
-$payzen_resp = new PayzenResponse($_REQUEST, Configuration::get('PAYZEN_MODE'), Configuration::get('PAYZEN_KEY_TEST'), Configuration::get('PAYZEN_KEY_PROD'));
-$from_server = $payzen_resp->get('hash') != null;
+if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_hash')) {
+    /* module main object */
+    require_once(dirname(__FILE__).'/payzen.php');
+    $payzen = new Payzen();
 
-// Check the authenticity of the request
-if (!$payzen_resp->isAuthentified()) {
-	if ($from_server) {
-		die($payzen_resp->getOutputForGateway('auth_fail'));
-	} else {
-		// Goto index
-		Tools::redirectLink(__PS_BASE_URI__);
-	}
+    /* module logger object */
+    $logger = PayzenTools::getLogger();
+    $logger->logInfo("Server call process starts for cart #$cart_id.");
+
+    /* shopping cart object */
+    $cart = new Cart($cart_id);
+
+    /* cart errors */
+    $trans_id = htmlspecialchars(Tools::getValue('vads_trans_id'), ENT_COMPAT, 'UTF-8');
+    if (!Validate::isLoadedObject($cart)) {
+        $logger->logError("Cart #$cart_id not found in database.");
+        die('<span style="display:none">KO-'.$trans_id."=Impossible de retrouver la commande\n</span>");
+    } elseif ($cart->nbProducts() <= 0) {
+        $logger->logError("Cart #$cart_id was emptied before redirection.");
+        die('<span style="display:none">KO-'.$trans_id."=Le panier a été vidé avant la redirection\n</span>");
+    }
+
+    /* rebuild context */
+    if (isset($cart->id_shop)) {
+        $_GET['id_shop'] = $cart->id_shop;
+        Context::getContext()->shop = Shop::initialize();
+    }
+
+    Context::getContext()->customer = new Customer((int)$cart->id_customer);
+    Context::getContext()->cart = $cart = new Cart((int)$cart_id); // reload cart to take into account customer group
+
+    $address = new Address((int)$cart->id_address_invoice);
+    Context::getContext()->country = new Country((int)$address->id_country);
+    Context::getContext()->language = new Language((int)$cart->id_lang);
+    Context::getContext()->currency = new Currency((int)$cart->id_currency);
+    Context::getContext()->link = new Link();
+
+    require_once _PS_MODULE_DIR_.'payzen/classes/PayzenResponse.php';
+
+    /** @var PayzenResponse $response */
+    $response = new PayzenResponse(
+        $_POST,
+        Configuration::get('PAYZEN_MODE'),
+        Configuration::get('PAYZEN_KEY_TEST'),
+        Configuration::get('PAYZEN_KEY_PROD'),
+        Configuration::get('PAYZEN_SIGN_ALGO')
+    );
+
+    /* check the authenticity of the request */
+    if (!$response->isAuthentified()) {
+        $ip = Tools::getRemoteAddr();
+        $logger->logError("{$ip} tries to access validation.php page without valid signature with parameters: ".print_r($_POST, true));
+        //$logger->logError('Signature algorithm selected in module settings must be the same as one selected in PayZen Back Office.');
+
+        die($response->getOutputForPlatform('auth_fail'));
+    }
+
+    /* search order in db */
+    $order_id = Order::getOrderByCartId($cart_id);
+
+    if ($order_id == false) {
+        /* order has not been processed yet */
+
+        $new_state = (int)Payzen::nextOrderState($response);
+
+        if ($response->isAcceptedPayment()) {
+            $logger->logInfo("Payment accepted for cart #$cart_id. New order state is $new_state.");
+
+            $order = $payzen->saveOrder($cart, $new_state, $response);
+
+            if (Payzen::hasAmountError($order)) {
+                /* amount paid not equals initial amount. */
+                $msg = "Error: amount paid {$order->total_paid_real} not equals initial amount {$order->total_paid}.";
+                $msg .= " Order is in a failed state, cart #$cart_id.";
+                $logger->logWarning($msg);
+
+                die($response->getOutputForPlatform('ko', 'Le montant payé est différent du montant intial'));
+            } else {
+                /* response to server */
+                die($response->getOutputForPlatform('payment_ok'));
+            }
+        } else {
+            /* payment KO */
+            $logger->logInfo("Payment failed for cart #$cart_id.");
+
+            $save_on_failure = (Configuration::get('PAYZEN_FAILURE_MANAGEMENT') == PayzenTools::ON_FAILURE_SAVE);
+            if ($save_on_failure || Payzen::isOney($response)) {
+                /* save on failure option is selected or Oney payment */
+                $msg = Payzen::isOney($response) ? 'FacilyPay Oney payment' : 'Save on failure option is selected';
+                $logger->logInfo("$msg : save failed order for cart #$cart_id. New order state is $new_state.");
+                $order = $payzen->saveOrder($cart, $new_state, $response);
+            }
+
+            die($response->getOutputForPlatform('payment_ko'));
+        }
+    } else {
+        /* order already registered */
+        $logger->logInfo("Order #$order_id already registered for cart #$cart_id.");
+
+        $order = new Order((int)$order_id);
+        $old_state = (int)$order->getCurrentState();
+
+        $logger->logInfo("The current state for order corresponding to cart #$cart_id is ($old_state).");
+
+        // check if a total refun of order was made
+        $total_refund = false;
+
+        if ($response->get('operation_type') === 'CREDIT') {
+            $currency = PayzenApi::findCurrency($response->get('currency'));
+            $decimals = $currency->getDecimals();
+            $paid_total = $currency->convertAmountToFloat($response->get('amount'));
+
+            if (number_format($order->total_paid_real, $decimals) == number_format($paid_total, $decimals)) {
+                $total_refund = true;
+            }
+        }
+
+        $outofstock = Payzen::isOutOfStock($order);
+        $new_state = (int)Payzen::nextOrderState($response, $total_refund, $outofstock);
+
+        // if the payment is not the first in sequence, do not update order state
+        $first_payment = ($response->get('sequence_number') == '1');
+
+        if (($old_state === $new_state) || !$first_payment) {
+            /* no changes, just display a confirmation message */
+            $logger->logInfo("No state change for order associated with cart #$cart_id, order remains in state ({$old_state}).");
+
+            $payzen->savePayment($order, $response);
+            $payzen->createMessage($order, $response);
+
+            if ($response->isAcceptedPayment()) {
+                $msg = 'payment_ok_already_done';
+            } else {
+                $msg = 'payment_ko_already_done';
+            }
+
+            die($response->getOutputForPlatform($msg));
+        } elseif (!$old_state || Payzen::isStateInArray($old_state, Payzen::getManagedStates())) {
+            if (($old_state == Configuration::get('PS_OS_ERROR')) && $response->isAcceptedPayment() && Payzen::hasAmountError($order)) {
+                /* amount paid not equals initial amount. */
+                $logger->logWarning(
+                    "Error: amount paid {$order->total_paid_real} not equals initial amount {$order->total_paid}. Order is in a failed state, cart #$cart_id."
+                );
+                die($response->getOutputForPlatform('ko', 'Le montant payé est différent du montant intial'));
+            }
+
+            if (!$old_state) {
+                $logger->logWarn("Old order state for cart #$cart_id is empty! Something went wrong. Try to set it anyway.");
+            }
+
+            $payzen->setOrderState($order, $new_state, $response);
+
+            $logger->logInfo("Order is successfully updated for cart #$cart_id.");
+            die($response->getOutputForPlatform($response->isAcceptedPayment() ? 'payment_ok' : 'payment_ko'));
+        } else {
+            $logger->logWarning("Unknown order state ID ($old_state) for cart #$cart_id. Managed by merchant.");
+            die($response->getOutputForPlatform('ok', 'Statut de commande inconnu'));
+        }
+    }
 }
-
-/*
- * response is authentified
- */
-
-// Retrieve cart
-$id_cart = $payzen_resp->get('order_id');
-$cart = new Cart($id_cart);
-if (!$cart) {
-	// unable to retrieve cart from db
-	if ($from_server) {
-		die($payzen_resp->getOutputForGateway('order_not_found'));
-	} else {
-		Tools::redirectLink(__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $id_cart . '&id_module=' . $payzen->id . '&error=yes');
-	}
-}
-
-// Retrieve order
-$id_order = intval(Order::getOrderByCartId($cart->id));
-$order = new Order($id_order);
-
-$extra_param = "";
-
-if ($payzen_resp->get('ctx_mode') == 'TEST') {
-	$extra_param .= "&prod_info=yes";
-}
-
-// Act according to case
-if (empty($order->id_cart)) {
-	// Order has not been accepted yet
-	if ($payzen_resp->isAcceptedPayment()) {
-		// Payment OK
-		
-		$order = $payzen->validate($id_cart, _PS_OS_PAYMENT_, $payzen_resp);
-
-		// Display success message
-		if ($from_server) {
-			// Display server code
-			die ($payzen_resp->getOutputForGateway('payment_ok'));
-		} else {
-			if ($payzen_resp->get('ctx_mode') == 'TEST') {
-				// !$from_server => this is a client return
-				// ctx_mode=TEST => the user is the webmaster
-				// order has not been paid, but we receive a successful payment code => automatic response didn't work
-				// So we display a warning about the not working check_url
-				$extra_param .= "&check_url_warn=yes";
-			}
-			
-			// Amount paid not equals initial amount. Error ! 
-			if (number_format($order->total_paid, 2) != number_format($payzen_resp->getFloatAmount(), 2)) {
-				$extra_param .= "&error=yes";
-			}
-			
-			Tools::redirectLink(
-					__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $id_cart
-							. '&id_module=' . $payzen->id . '&id_order=' . $order->id . '&key='
-							. $order->secure_key . $extra_param);
-		}
-	} else {
-		// Payment KO
-		$payzen->managePaymentFailure($payzen_resp, $id_cart, $from_server, $order);
-	}
-} else {
-	// Order already registered
-	if ($order->hasBeenPaid() && $payzen_resp->isAcceptedPayment()) {
-		// Just display a confirmation message
-		if ($from_server) {
-			die($payzen_resp->getOutputForGateway('payment_ok_already_done'));
-		} else {
-			Tools::redirectLink(
-					__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $id_cart
-							. '&id_module=' . $payzen->id . '&id_order=' . $order->id . '&key='
-							. $order->secure_key . $extra_param);
-		}
-	} if(!$order->hasBeenPaid() && !$payzen_resp->isAcceptedPayment()) {
-		// Order has been registred with payment error status. Payment failure reconfirmed. 
-		if ($from_server) {
-			die($payzen_resp->getOutputForGateway('payment_ko_already_done'));
-		} else {
-			Tools::redirectLink(__PS_BASE_URI__ . 'history.php');
-		}
-	} else {
-		// Invalid payment code received, but order has already been registered !
-		if ($from_server) {
-			die($payzen_resp->getOutputForGateway('payment_ko_on_order_ok'));
-		} else {
-			$extra_param .= "&error=yes";
-						
-			Tools::redirectLink(
-					__PS_BASE_URI__ . 'order-confirmation.php?id_cart=' . $id_cart
-							. '&id_module=' . $payzen->id . '&id_order=' . $order->id . '&key='
-							. $order->secure_key . $extra_param);
-		}
-	}
-}
-?>
