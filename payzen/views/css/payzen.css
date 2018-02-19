@@ -1,0 +1,81 @@
+.payzen_review .small {
+    font-size: 10px;
+}
+
+.payzen_review {
+    border: 1px solid black;
+    font-size: 13px !important;
+    margin-top: 5px;
+    min-width: 380px;
+}
+
+.payzen_review td.amount {
+    text-align: right;
+    font-weight: bold;
+}
+
+.payzen_review thead tr {
+    border-bottom: 1px solid black;
+}
+
+.payzen_review td, .payzen_review th {
+    padding: 3px 6px;
+}
+
+#payzen_iframe_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    background: #000 none repeat scroll 0 0;
+    opacity: 0.65; /* Safari, Opera */
+    filter: alpha(opacity=65); /* IE */
+    -moz-opacity: 0.65; /* FireFox */
+}
+
+#payzen_iframe_warn {
+    position: relative;
+    width: 100%;
+    text-align: center;
+    background: #ffffff none repeat scroll 0 0;
+    z-index: 10001;
+}
+
+#payzen_iframe {
+    position: relative;
+    width: 100%;
+    min-height: 440px;
+    border: 0 none;
+    background: #ffffff none repeat scroll 0 0;
+    z-index: 10001;
+}
+
+.payzen_choozeo_card {
+    margin-right: 5px;
+}
+
+.payzen_choozeo_card input { /* hide radio */
+    display: none !important;
+}
+
+.payzen_choozeo_card img {
+    cursor:pointer;
+    border:2px solid transparent;
+    opacity: 0.6;
+}
+
+.payzen_choozeo_card input:checked + img {
+    border: 2px solid black;
+    opacity: 1;
+}
+
+.payzen_choozeo_card img:HOVER, .payzen_choozeo_card img.hover {
+    opacity: 1;
+}
+
+/* .payment-option label img {
+    float: left;
+    width: 86px;
+} */

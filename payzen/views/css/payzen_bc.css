@@ -1,0 +1,60 @@
+div.payment_module.payzen15 {
+    padding-bottom: 20px;
+}
+
+div.payment_module.payzen16 a {
+    padding-left: 15px;
+}
+
+div.payment_module.payzen a.unclickable {
+    cursor: default !important;
+    text-decoration: none !important;
+}
+
+div.payment_module.payzen a.unclickable:HOVER {
+    text-decoration: none !important;
+}
+
+div.payment_module.payzen a img {
+    float: none !important;
+}
+
+div.payment_module.payzen a img.logo {
+    width: 86px; 
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+div.payment_module.payzen a form {
+    padding-left: 40px;
+    font-size: 13px;
+    text-transform: none !important;
+}
+
+div.payment_module.payzen a img.card, div.payment_module.payzen a span.card {
+    vertical-align: middle;
+    margin-right: 10px;
+    height: 25px;
+}
+
+div.payment_module.payzen.multi ul {
+    display: inline-block;
+    margin-bottom: 0;
+}
+
+div.payment_module.payzen.multi ul li {
+    font-weight: bold;
+    color: #777777;
+    cursor: pointer;
+    list-style-type: square;
+    margin-left: 15px;
+}
+
+div.payment_module.payzen.multi ul li:HOVER {
+    color: #000;
+}
+
+div.payment_module.payzen.multi p.tip {
+    padding-bottom: 5px !important;
+}
