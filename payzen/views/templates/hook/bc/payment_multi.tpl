@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,7 +9,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -22,11 +22,10 @@
 {if {$payzen_multi_options|@count} == 1 AND ($payzen_multi_card_mode == 1)}
   <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'} multi">
     {foreach from=$payzen_multi_options key="key" item="option"}
-      <a onclick="javascript: $('#payzen_opt').val('{$key|escape:'html':'UTF-8'}'); $('#payzen_multi').submit();"
-         title="{l s='Click to pay in several times' mod='payzen'}"
-         href="javascript: void(0);">
+      <a href="javascript: $('#payzen_opt').val('{$key|escape:'html':'UTF-8'}'); $('#payzen_multi').submit();"
+         title="{l s='Click to pay in installments' mod='payzen'}">
 
-        <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen"/>{$payzen_title|escape:'html':'UTF-8'}
+        <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
         ({$option.localized_label|escape:'html':'UTF-8'})
 
         <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_multi">
@@ -38,8 +37,8 @@
   </div>
 {else}
   <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'} multi">
-    <a class="unclickable" title="{l s='Click on a payment option to pay in several times' mod='payzen'}" href="javascript: void(0);">
-      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen"/>{$payzen_title|escape:'html':'UTF-8'}
+    <a class="unclickable" title="{l s='Click on a payment option to pay in installments' mod='payzen'}" href="javascript: void(0);">
+      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
 
       <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_multi">
         <input type="hidden" name="payzen_payment_type" value="multi" />

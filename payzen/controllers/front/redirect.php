@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -105,7 +105,12 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
             $this->payzenRedirect('index.php?controller='.$page);
         }
 
-        $type = Tools::getValue('payzen_payment_type'); // the selected PayZen payment sub-module
+        $type = Tools::getValue('payzen_payment_type', null); // the selected PayZen payment sub-module
+        if (!$type && $this->iframe) {
+            // only standard payment can be done inside iframe
+            $type = 'standard';
+        }
+
         if (!in_array($type, $this->accepted_payment_types)) {
             $this->logger->logWarning('Error: payment type "' . $type . '" is not supported. Load standard payment by default.');
 
@@ -214,7 +219,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         $fields = $request->getRequestFieldsArray(false, false /* data escape will be done in redirect template */);
 
         $dataToLog = $request->getRequestFieldsArray(true, false);
-        $this->logger->logInfo('Data to be sent to payment platform : ' . print_r($dataToLog, true));
+        $this->logger->logInfo('Data to be sent to payment gateway : ' . print_r($dataToLog, true));
 
         $this->context->smarty->assign('payzen_params', $fields);
         $this->context->smarty->assign('payzen_url', $request->get('platform_url'));

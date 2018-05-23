@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,7 +9,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -20,9 +20,9 @@
 {if $check_url_warn == true}
   <p style="{$warn_style|escape:'html':'UTF-8'}">
     {if $maintenance_mode == true}
-      {l s='The shop is in maintenance mode. The automatic notification (peer to peer connection between the payment platform and your shopping cart solution) cannot work.' mod='payzen'}
+      {l s='The shop is in maintenance mode.The automatic notification cannot work.' mod='payzen'}
     {else}
-      {l s='The automatic notification (peer to peer connection between the payment platform and your shopping cart solution) hasn\'t worked. Have you correctly set up the server URL in your store backoffice ?' mod='payzen'}
+      {l s='The automatic validation has not worked. Have you correctly set up the notification URL in your bank Back Office ?' mod='payzen'}
       <br />
       {l s='For understanding the problem, please read the documentation of the module : ' mod='payzen'}<br />
       &nbsp;&nbsp;&nbsp;- {l s='Chapter «To read carefully before going further»' mod='payzen'}<br />
@@ -39,7 +39,8 @@
 
 {if $prod_info == true}
   <p style="{$warn_style|escape:'html':'UTF-8'}">
-    <u><b>{l s='GOING INTO PRODUCTION' mod='payzen'}</b></u><br />
+    <span style="font-weight: bold; text-decoration: underline;">{l s='GOING INTO PRODUCTION' mod='payzen'}</span>
+    <br />
     {l s='You want to know how to put your shop into production mode, please go to this URL : ' mod='payzen'}
     <a href="https://secure.payzen.eu/html/faq/prod" target="_blank">https://secure.payzen.eu/html/faq/prod</a>
   </p>

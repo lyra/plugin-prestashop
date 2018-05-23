@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -87,8 +87,10 @@ abstract class AbstractPayzenPayment
             $max_amount = $all_max_amount;
         }
 
-        if (($min_amount && $cart->getOrderTotal() < $min_amount)
-            || ($max_amount && $cart->getOrderTotal() > $max_amount)) {
+        $amount = $cart->getOrderTotal();
+
+        if (($min_amount && $amount < $min_amount)
+            || ($max_amount && $amount > $max_amount)) {
             return false;
         }
 
@@ -204,6 +206,7 @@ abstract class AbstractPayzenPayment
         } else {
             $delivery_address = new Address((int)$cart->id_address_delivery);
         }
+
         $delivery_country = new Country((int)$delivery_address->id_country);
 
         PayzenTools::getLogger()->logInfo("Form data generation for cart #{$cart->id} with {$this->name} sub-module.");
@@ -212,10 +215,11 @@ abstract class AbstractPayzenPayment
         /* @var $request PayzenRequest */
         $request = new PayzenRequest();
 
-        $contrib = 'PrestaShop1.5-1.7_1.9.0/'._PS_VERSION_.'/'.PHP_VERSION;
+        $contrib = 'PrestaShop1.5-1.7_1.10.0/'._PS_VERSION_.'/'.PHP_VERSION;
         if (defined('_PS_HOST_MODE_')) {
             $contrib = str_replace('PrestaShop', 'PrestaShop_Cloud', $contrib);
         }
+
         $request->set('contrib', $contrib);
 
         foreach (PayzenTools::getAdminParameters() as $param) {
@@ -339,7 +343,7 @@ abstract class AbstractPayzenPayment
         $tax_amount_in_cents = $request->get('amount') - $subtotal - $request->get('shipping_amount');
         if ($tax_amount_in_cents < 0) {
             // when order is discounted
-            $tax_amount = $cart->getOrderTotal() - $cart->getOrderTotal(false);
+            $tax_amount = $cart->getOrderTotal(true) - $cart->getOrderTotal(false);
             $tax_amount_in_cents = ($tax_amount <= 0) ? 0 : $currency->convertAmountToInteger($tax_amount);
         }
 
@@ -362,11 +366,33 @@ abstract class AbstractPayzenPayment
 
         $request->set('order_info', $this->getTitle((int)$cart->id_lang));
 
-        // activate 3-DS ?
-        $threeds_min_amount = Configuration::get('PAYZEN_3DS_MIN_AMOUNT');
+        // activate 3DS ?
         $threeds_mpi = null;
-        if ($threeds_min_amount != '' && $amount < $threeds_min_amount) {
-            $threeds_mpi = '2';
+        $threeds_min_amount_options = @unserialize(Configuration::get('PAYZEN_3DS_MIN_AMOUNT'));
+        if (is_array($threeds_min_amount_options) && !empty($threeds_min_amount_options)) {
+            $customer_group = (int)Customer::getDefaultGroupId($cart->id_customer);
+
+            $all_min_amount = $threeds_min_amount_options[0]['min_amount']; // value configured for all groups
+
+            $min_amount = null;
+            foreach ($threeds_min_amount_options as $key => $value) {
+                if (empty($value) || $key === 0) {
+                    continue;
+                }
+
+                if ($key === $customer_group) {
+                    $min_amount = $value['min_amount'];
+                    break;
+                }
+            }
+
+            if (!$min_amount) {
+                $min_amount = $all_min_amount;
+            }
+
+            if ($min_amount && ($amount < $min_amount)) {
+                $threeds_mpi = '2';
+            }
         }
 
         $request->set('threeds_mpi', $threeds_mpi);
@@ -408,8 +434,10 @@ abstract class AbstractPayzenPayment
             $payzen_request->set('ship_to_type', 'ETICKET');
             $payzen_request->set('ship_to_speed', 'EXPRESS');
 
-            $shop = Shop::getShop($cart->id_shop);
-            $payzen_request->set('ship_to_delivery_company_name', preg_replace($not_allowed_chars, ' ', $shop['name']));
+            $payzen_request->set(
+                'ship_to_delivery_company_name',
+                preg_replace($not_allowed_chars, ' ', Configuration::get('PS_SHOP_NAME'))
+            );
         } elseif (self::isSupportedRelayPoint($carrier_id)) {
             // specific supported relay point carrier
             $payzen_request->set('ship_to_type', 'RELAY_POINT');
@@ -425,6 +453,10 @@ abstract class AbstractPayzenPayment
                     $sql = 'SELECT * FROM `'._DB_PREFIX_."tnt_carrier_drop_off` WHERE `id_cart` = '".(int)$cart->id."'";
                     $row = Db::getInstance()->getRow($sql);
 
+                    if (!$row) {
+                        break;
+                    }
+
                     // relay point name + address
                     $address = $row['name'].' '.$row['address'];
                     $city = $row['city'];
@@ -434,6 +466,10 @@ abstract class AbstractPayzenPayment
                 case self::isMondialRelay($carrier_id):
                     $sql = 'SELECT * FROM `'._DB_PREFIX_.'mr_selected` s WHERE s.`id_cart` = '.(int)$cart->id;
                     $row = Db::getInstance()->getRow($sql);
+
+                    if (!$row) {
+                        break;
+                    }
 
                     // relay point name + address
                     $address = $row['MR_Selected_LgAdr1'].' '.$row['MR_Selected_LgAdr3'];
@@ -445,6 +481,10 @@ abstract class AbstractPayzenPayment
                 case self::isDpdFranceRelais($carrier_id):
                     $sql = 'SELECT * FROM `'._DB_PREFIX_.'dpdfrance_shipping` WHERE `id_cart` = '.(int)$cart->id;
                     $row = Db::getInstance()->getRow($sql);
+
+                    if (!$row) {
+                        break;
+                    }
 
                     // relay point name + address
                     $address = $row['company'].' '.$row['address1'].' '.$row['address2'];
@@ -488,8 +528,7 @@ abstract class AbstractPayzenPayment
             $company_name = $shipping_options[$carrier_id]['label'];
 
             if ($delivery_type === 'RECLAIM_IN_SHOP') {
-                $shop = Shop::getShop($cart->id_shop);
-                $shop_name = preg_replace($not_allowed_chars, ' ', $shop['name']);
+                $shop_name = preg_replace($not_allowed_chars, ' ', Configuration::get('PS_SHOP_NAME'));
 
                 $payzen_request->set('ship_to_street', $shop_name.' '.$shipping_options[$carrier_id]['address']);
                 $payzen_request->set('ship_to_street2', null); // not sent to FacilyPay Oney
@@ -519,6 +558,7 @@ abstract class AbstractPayzenPayment
                 $payzen_request->set('ship_to_street', preg_replace($address_not_allowed_chars, ' ', $address));
                 $payzen_request->set('ship_to_street2', null); // not sent to FacilyPay Oney
 
+                // send FR even address is in DOM-TOM unless form is rejected
                 $payzen_request->set('ship_to_country', 'FR');
             }
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -62,9 +62,29 @@ class PayzenHelperForm
             'TELEPHONY' => $payzen->l('Telephony', 'payzenhelperform')
         );
 
-        return array(
+        // get documentation links
+        $doc_files = array();
+        $filenames = glob(_PS_MODULE_DIR_.'payzen/installation_doc/PayZen_PrestaShop_1.5-1.7_v1.10.0*.pdf');
+
+        $doc_languages = array(
+            'fr' => 'Français',
+            'en' => 'English',
+            'es' => 'Español'
+            // complete when other languages are managed
+        );
+
+        foreach ($filenames as $filename) {
+            $base_filename = basename($filename, '.pdf');
+            $lang = Tools::substr($base_filename, -2); // extract language code
+
+            $doc_files[$base_filename.'.pdf'] = $doc_languages[$lang];
+        }
+
+        $tpl_vars = array(
+            'payzen_plugin_features' => PayzenTools::$plugin_features,
             'payzen_request_uri' => $_SERVER['REQUEST_URI'],
 
+            'payzen_doc_files' => $doc_files,
             'payzen_enable_disable_options' => array(
                 'False' => $payzen->l('Disabled', 'payzenhelperform'),
                 'True' => $payzen->l('Enabled', 'payzenhelperform')
@@ -112,9 +132,9 @@ class PayzenHelperForm
                 PayzenTools::KEEP_CART => $payzen->l('Keep cart (PrestaShop default behavior)', 'payzenhelperform')
             ),
             'payzen_card_data_mode_options' => array(
-                '1' => $payzen->l('Card data entry on payment gateway', 'payzenhelperform'),
+                '1' => $payzen->l('Bank data acquisition on payment gateway', 'payzenhelperform'),
                 '2' => $payzen->l('Card type selection on merchant site', 'payzenhelperform'),
-                '3' => $payzen->l('Card data entry on merchant site', 'payzenhelperform'),
+                '3' => $payzen->l('Bank data acquisition on merchant site', 'payzenhelperform'),
                 '4' => $payzen->l('Payment page integrated to checkout process (iframe mode)', 'payzenhelperform')
             ),
             'payzen_card_selection_mode_options' => array(
@@ -173,7 +193,7 @@ class PayzenHelperForm
             'PAYZEN_SHOP_NAME' => Configuration::get('PAYZEN_SHOP_NAME'),
             'PAYZEN_SHOP_URL' => Configuration::get('PAYZEN_SHOP_URL'),
 
-            'PAYZEN_3DS_MIN_AMOUNT' => Configuration::get('PAYZEN_3DS_MIN_AMOUNT'),
+            'PAYZEN_3DS_MIN_AMOUNT' => self::getArrayConfig('PAYZEN_3DS_MIN_AMOUNT'),
 
             'PAYZEN_REDIRECT_ENABLED' => Configuration::get('PAYZEN_REDIRECT_ENABLED'),
             'PAYZEN_REDIRECT_SUCCESS_T' => Configuration::get('PAYZEN_REDIRECT_SUCCESS_T'),
@@ -240,8 +260,6 @@ class PayzenHelperForm
             'PAYZEN_SOFORT_TITLE' => self::getLangConfig('PAYZEN_SOFORT_TITLE'),
             'PAYZEN_SOFORT_ENABLED' => Configuration::get('PAYZEN_SOFORT_ENABLED'),
             'PAYZEN_SOFORT_AMOUNTS' => self::getArrayConfig('PAYZEN_SOFORT_AMOUNTS'),
-            'PAYZEN_SOFORT_DELAY' => Configuration::get('PAYZEN_SOFORT_DELAY'),
-            'PAYZEN_SOFORT_VALIDATION' => Configuration::get('PAYZEN_SOFORT_VALIDATION'),
 
             'PAYZEN_PAYPAL_TITLE' => self::getLangConfig('PAYZEN_PAYPAL_TITLE'),
             'PAYZEN_PAYPAL_ENABLED' => Configuration::get('PAYZEN_PAYPAL_ENABLED'),
@@ -255,9 +273,15 @@ class PayzenHelperForm
             'PAYZEN_CHOOZEO_DELAY' => Configuration::get('PAYZEN_CHOOZEO_DELAY'),
             'PAYZEN_CHOOZEO_OPTIONS' => self::getArrayConfig('PAYZEN_CHOOZEO_OPTIONS')
         );
+
+        if (!PayzenTools::$plugin_features['acquis']) {
+            unset($tpl_vars['payzen_card_data_mode_options']['3']);
+        }
+
+        return $tpl_vars;
     }
 
-    private static function getIpnUrl($rest = false)
+    private static function getIpnUrl()
     {
         $shop = new Shop(Configuration::get('PS_SHOP_DEFAULT'));
 
@@ -266,7 +290,7 @@ class PayzenHelperForm
         $ssl = Configuration::get('PS_SSL_ENABLED', null, $id_shop_group, $shop->id);
 
         $ipn = ($ssl ? 'https://'.$shop->domain_ssl : 'http://'.$shop->domain)
-               .$shop->getBaseURI().'modules/payzen/validation'.($rest ? '_rest' : '').'.php';
+               .$shop->getBaseURI().'modules/payzen/validation.php';
 
         return $ipn;
     }

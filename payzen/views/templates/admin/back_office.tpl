@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,7 +9,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -35,13 +35,17 @@
         <img style="width: 20px; vertical-align: middle;" src="../modules/payzen/logo.png" alt="PayZen">PayZen
       </legend>
 
-      {l s='Developed by' mod='payzen'} : <b><a href="http://www.lyra-network.com/" target="_blank">Lyra Network</a></b><br/>
-      {l s='Contact us' mod='payzen'} : <b><a href="mailto:support@payzen.eu">support@payzen.eu</a></b><br/>
-      {l s='Module version' mod='payzen'} : <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}1.9.0</b><br/>
-      {l s='Platform version' mod='payzen'} : <b>V2</b><br/>
-      <a style="color: red;" href="../modules/payzen/installation_doc/Integration_PayZen_PrestaShop_1.5-1.7_v1.9.0.pdf" target="_blank">
-        <b>{l s='CLICK HERE TO VIEW THE MODULE CONFIGURATION DOCUMENTATION' mod='payzen'}</b>
-      </a>
+      {l s='Developed by' mod='payzen'} : <b><a href="http://www.lyra-network.com/" target="_blank">Lyra Network</a></b><br />
+      {l s='Contact us' mod='payzen'} : <b><a href="mailto:support@payzen.eu">support@payzen.eu</a></b><br />
+      {l s='Module version' mod='payzen'} : <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}1.10.0</b><br />
+      {l s='Gateway version' mod='payzen'} : <b>V2</b><br />
+
+      {if !empty($payzen_doc_files)}
+        <span style="color: red; font-weight: bold; text-transform: uppercase;">{l s='Click to view the module configuration documentation :' mod='payzen'}</span>
+        {foreach from=$payzen_doc_files key="file" item="lang"}
+          <a style="margin-left: 10px; font-weight: bold; text-transform: uppercase;" href="../modules/payzen/installation_doc/{$file|escape:'html':'UTF-8'}" target="_blank">{$lang|escape:'html':'UTF-8'}</a>
+        {/foreach}
+      {/if}
     </fieldset>
   </div>
 
@@ -76,11 +80,13 @@
           <p>{l s='The identifier provided by your bank.' mod='payzen'}</p>
         </div>
 
+        {if !$payzen_plugin_features['qualif']}
         <label for="PAYZEN_KEY_TEST">{l s='Certificate in test mode' mod='payzen'}</label>
         <div class="margin-form">
           <input type="text" id="PAYZEN_KEY_TEST" name="PAYZEN_KEY_TEST" value="{$PAYZEN_KEY_TEST|escape:'html':'UTF-8'}" autocomplete="off">
           <p>{l s='Certificate provided by your bank for test mode (available in your store Back Office).' mod='payzen'}</p>
         </div>
+        {/if}
 
         <label for="PAYZEN_KEY_PROD">{l s='Certificate in production mode' mod='payzen'}</label>
         <div class="margin-form">
@@ -90,7 +96,7 @@
 
         <label for="PAYZEN_MODE">{l s='Mode' mod='payzen'}</label>
         <div class="margin-form">
-          <select id="PAYZEN_MODE" name="PAYZEN_MODE">
+          <select id="PAYZEN_MODE" name="PAYZEN_MODE" {if $payzen_plugin_features['qualif']} disabled="disabled"{/if}>
             {foreach from=$payzen_mode_options key="key" item="option"}
               <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_MODE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
@@ -98,28 +104,34 @@
           <p>{l s='The context mode of this module.' mod='payzen'}</p>
         </div>
 
-        <!-- <label for="PAYZEN_SIGN_ALGO">{l s='Signature algorithm' mod='payzen'}</label>
+        <label for="PAYZEN_SIGN_ALGO">{l s='Signature algorithm' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_SIGN_ALGO" name="PAYZEN_SIGN_ALGO">
             <option value="SHA-1"{if $PAYZEN_SIGN_ALGO === 'SHA-1'} selected="selected"{/if}>SHA-1</option>
             <option value="SHA-256"{if $PAYZEN_SIGN_ALGO === 'SHA-256'} selected="selected"{/if}>SHA-256</option>
           </select>
           <p>
-            {l s='Algorithm used to compute the payment form signature.' mod='payzen'}<br />
-            <b>{l s='Selected algorithm must be the same as one configured in your store Back Office for the current context mode.' mod='payzen'}</b>
+            {l s='Algorithm used to compute the payment form signature. Selected algorithm must be the same as one configured in your store Back Office.' mod='payzen'}<br />
+            <b>{l s='The SHA-256 algorithm should not be activated if it is not yet available in your store Back Office, the feature will be available soon.' mod='payzen'}</b>
           </p>
-        </div> -->
+        </div>
+
+        <label>{l s='Instant Payment Notification URL' mod='payzen'}</label>
+        <div class="margin-form">
+          <span style="font-weight: bold;">{$PAYZEN_NOTIFY_URL|escape:'html':'UTF-8'}</span><br />
+          <p>
+            <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/warn.png">
+            <span style="color: red; display: inline-block;">
+              {l s='URL to copy into your bank Back Office > Settings > Notification rules.' mod='payzen'}<br />
+              {l s='In multistore mode, notification URL is the same for all the stores.' mod='payzen'}
+            </span>
+          </p>
+        </div>
 
         <label for="PAYZEN_PLATFORM_URL">{l s='Payment page URL' mod='payzen'}</label>
         <div class="margin-form">
           <input type="text" id="PAYZEN_PLATFORM_URL" name="PAYZEN_PLATFORM_URL" value="{$PAYZEN_PLATFORM_URL|escape:'html':'UTF-8'}" style="width: 470px;">
           <p>{l s='Link to the payment page.' mod='payzen'}</p>
-        </div>
-
-        <label>{l s='Instant Payment Notification URL to copy into your store Back Office:' mod='payzen'}</label>
-        <div class="margin-form">
-          {$PAYZEN_NOTIFY_URL|escape:'html':'UTF-8'}<br />
-          <p><span style="color: red;">{l s='In multistore mode, notification URL is the same for all the stores.' mod='payzen'}</span></p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -153,7 +165,7 @@
           <p>{l s='The number of days before the bank capture (adjustable in your store Back Office).' mod='payzen'}</p>
         </div>
 
-        <label for="PAYZEN_VALIDATION_MODE">{l s='Payment validation' mod='payzen'}</label>
+        <label for="PAYZEN_VALIDATION_MODE">{l s='Validation mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_VALIDATION_MODE" name="PAYZEN_VALIDATION_MODE">
             {foreach from=$payzen_validation_mode_options key="key" item="option"}
@@ -191,10 +203,15 @@
       <fieldset>
         <legend>{l s='SELECTIVE 3DS' mod='payzen'}</legend>
 
-        <label for="PAYZEN_3DS_MIN_AMOUNT">{l s='Minimum amount to activate 3-DS' mod='payzen'}</label>
+        <label for="PAYZEN_3DS_MIN_AMOUNT">{l s='Disable 3DS by customer group' mod='payzen'}</label>
         <div class="margin-form">
-          <input type="text" id="PAYZEN_3DS_MIN_AMOUNT" name="PAYZEN_3DS_MIN_AMOUNT" value="{$PAYZEN_3DS_MIN_AMOUNT|escape:'html':'UTF-8'}">
-          <p>{l s='Needs subscription to Selective 3-D Secure option.' mod='payzen'}</p>
+          {include file="./table_amount_group.tpl"
+            groups=$prestashop_groups
+            input_name="PAYZEN_3DS_MIN_AMOUNT"
+            input_value=$PAYZEN_3DS_MIN_AMOUNT
+            min_only=true
+          }
+          <p>{l s='Amount below which 3DS will be disabled for each customer group. Needs subscription to selective 3DS option. For more information, refer to the module documentation.' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -469,6 +486,16 @@
       <fieldset>
         <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
 
+       <label for="PAYZEN_STD_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_STD_ENABLED" name="PAYZEN_STD_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='standard' mod='payzen'}</p>
+        </div>
+
         <label>{l s='Payment method title' mod='payzen'}</label>
         <div class="margin-form">
           {include file="./input_text_lang.tpl"
@@ -479,16 +506,6 @@
             style="width: 330px;"
           }
           <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_STD_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_STD_ENABLED" name="PAYZEN_STD_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='standard' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -517,7 +534,7 @@
           <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
         </div>
 
-        <label for="PAYZEN_STD_VALIDATION">{l s='Payment validation' mod='payzen'}</label>
+        <label for="PAYZEN_STD_VALIDATION">{l s='Validation mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_STD_VALIDATION" name="PAYZEN_STD_VALIDATION">
             <option value="-1"{if $PAYZEN_STD_VALIDATION === '-1'} selected="selected"{/if}>{l s='Base settings configuration' mod='payzen'}</option>
@@ -535,10 +552,10 @@
               <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_STD_PAYMENT_CARDS)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
-          <p>{l s='The card type(s) that can be used for the payment. Select none to use platform configuration.' mod='payzen'}</p>
+          <p>{l s='The card type(s) that can be used for the payment. Select none to use gateway configuration.' mod='payzen'}</p>
         </div>
 
-        <!--BEGIN_ONEY_OPTION_CODE-->
+        {if $payzen_plugin_features['oney']}
         <label for="PAYZEN_STD_PROPOSE_ONEY">{l s='Propose FacilyPay Oney' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_STD_PROPOSE_ONEY" name="PAYZEN_STD_PROPOSE_ONEY">
@@ -546,9 +563,9 @@
               <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_PROPOSE_ONEY === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
-          <p>{l s='Select «Yes» if you want to propose FacilyPay Oney in standard payment. Attention, you must ensure that you have a FacilyPay Oney contract.' mod='payzen'}</p>
+          <p>{l s='Select «Yes» if you want to propose FacilyPay Oney in one-time payment. Attention, you must ensure that you have a FacilyPay Oney contract.' mod='payzen'}</p>
         </div>
-        <!--END_ONEY_OPTION_CODE-->
+        {/if}
       </fieldset>
       <div class="clear">&nbsp;</div>
 
@@ -562,18 +579,37 @@
               <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_CARD_DATA_MODE === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
-          <p>{l s='Select how the credit card infos will be entered. Attention, to use data acquisition on the merchant site, you must ensure that you have subscribed to this option with your bank.' mod='payzen'}</p>
+          <p>{l s='Select how the card data will be entered. Attention, to use bank data acquisition on the merchant site, you must ensure that you have subscribed to this option with your bank.' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
 
+    {if $payzen_plugin_features['multi']}
     <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
-      <a href="#">{l s='PAYMENT IN SEVERAL TIMES' mod='payzen'}</a>
+      <a href="#">{l s='PAYMENT IN INSTALLMENTS' mod='payzen'}</a>
     </h4>
     <div>
+
+      {if $payzen_plugin_features['restrictmulti']}
+      <p style="background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 20px; padding: 10px;">
+        {l s='ATTENTION: The payment in installments feature activation is subject to the prior agreement of Société Générale.' mod='payzen'}<br />
+        {l s='If you enable this feature while you have not the associated option, an error 07 - PAYMENT_CONFIG will occur and the buyer will not be able to pay.' mod='payzen'}
+      </p>
+      {/if}
+
       <fieldset>
         <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_MULTI_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_MULTI_ENABLED" name="PAYZEN_MULTI_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_MULTI_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='multiple' mod='payzen'}</p>
+        </div>
 
         <label>{l s='Payment method title' mod='payzen'}</label>
         <div class="margin-form">
@@ -585,16 +621,6 @@
             style="width: 330px;"
           }
           <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_MULTI_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_MULTI_ENABLED" name="PAYZEN_MULTI_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_MULTI_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='multiple' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -623,7 +649,7 @@
           <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
         </div>
 
-        <label for="PAYZEN_MULTI_VALIDATION">{l s='Payment validation' mod='payzen'}</label>
+        <label for="PAYZEN_MULTI_VALIDATION">{l s='Validation mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_MULTI_VALIDATION" name="PAYZEN_MULTI_VALIDATION">
             <option value="-1"{if $PAYZEN_MULTI_VALIDATION === '-1'} selected="selected"{/if}>{l s='Base settings configuration' mod='payzen'}</option>
@@ -641,7 +667,7 @@
               <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_MULTI_PAYMENT_CARDS)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
-          <p>{l s='The card type(s) that can be used for the payment. Select none to use platform configuration.' mod='payzen'}</p>
+          <p>{l s='The card type(s) that can be used for the payment. Select none to use gateway configuration.' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -649,14 +675,14 @@
       <fieldset>
         <legend>{l s='ADVANCED OPTIONS' mod='payzen'}</legend>
 
-        <label for="PAYZEN_MULTI_CARD_MODE">{l s='Card selection mode' mod='payzen'}</label>
+        <label for="PAYZEN_MULTI_CARD_MODE">{l s='Card type selection' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_MULTI_CARD_MODE" name="PAYZEN_MULTI_CARD_MODE">
             {foreach from=$payzen_card_selection_mode_options key="key" item="option"}
               <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_MULTI_CARD_MODE === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
-          <p>{l s='Select where card type will be selected by buyer.' mod='payzen'}</p>
+          <p>{l s='Select where the card type will be selected by the buyer.' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -728,14 +754,138 @@
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
+    {/if}
 
-    <!--BEGIN_ONEY_CODE-->
+    {if $payzen_plugin_features['choozeo']}
+    <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
+      <a href="#">{l s='CHOOZEO PAYMENT' mod='payzen'}</a>
+    </h4>
+    <div>
+      <fieldset>
+        <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_CHOOZEO_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_CHOOZEO_ENABLED" name="PAYZEN_CHOOZEO_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_CHOOZEO_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='Choozeo' mod='payzen'}</p>
+        </div>
+
+        <label>{l s='Payment method title' mod='payzen'}</label>
+        <div class="margin-form">
+          {include file="./input_text_lang.tpl"
+            languages=$prestashop_languages
+            current_lang=$prestashop_lang
+            input_name="PAYZEN_CHOOZEO_TITLE"
+            input_value=$PAYZEN_CHOOZEO_TITLE
+            style="width: 330px;"
+          }
+          <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
+        </div>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+
+      <fieldset>
+        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+
+        <label>{l s='Customer group amount restriction' mod='payzen'}</label>
+        <div class="margin-form">
+          {include file="./table_amount_group.tpl"
+            groups=$prestashop_groups
+            input_name="PAYZEN_CHOOZEO_AMOUNTS"
+            input_value=$PAYZEN_CHOOZEO_AMOUNTS
+          }
+          <p>{l s='Define amount restriction for each customer group.' mod='payzen'}</p>
+        </div>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+
+      <fieldset>
+        <legend>{l s='PAYMENT PAGE' mod='payzen'}</legend>
+
+        <label for="PAYZEN_CHOOZEO_DELAY">{l s='Capture delay' mod='payzen'}</label>
+        <div class="margin-form">
+          <input id="PAYZEN_CHOOZEO_DELAY" name="PAYZEN_CHOOZEO_DELAY" value="{$PAYZEN_CHOOZEO_DELAY|escape:'html':'UTF-8'}" type="text">
+          <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
+        </div>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+
+      <fieldset>
+        <legend>{l s='PAYMENT OPTIONS' mod='payzen'}</legend>
+
+        <label>{l s='Payment options' mod='payzen'}</label>
+        <div class="margin-form">
+         <table class="table" cellpadding="10" cellspacing="0">
+            <thead>
+              <tr>
+                <th>{l s='Label' mod='payzen'}</th>
+                <th>{l s='Min amount' mod='payzen'}</th>
+                <th>{l s='Max amount' mod='payzen'}</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Choozeo 3X CB</td>
+                <td>
+                  <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_3X][min_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_3X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_3X']['min_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                </td>
+                <td>
+                  <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_3X][max_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_3X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_3X']['max_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                </td>
+              </tr>
+
+              <tr>
+                <td>Choozeo 4X CB</td>
+                <td>
+                  <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_4X][min_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_4X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_4X']['min_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                </td>
+                <td>
+                  <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_4X][max_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_4X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_4X']['max_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>{l s='Define amount restriction for each card.' mod='payzen'}</p>
+        </div>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+    </div>
+    {/if}
+
+    {if $payzen_plugin_features['oney']}
     <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
       <a href="#">{l s='FACILYPAY ONEY PAYMENT' mod='payzen'}</a>
     </h4>
     <div>
       <fieldset>
         <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_ONEY_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_ONEY_ENABLED" name="PAYZEN_ONEY_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_ONEY_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='FacilyPay Oney' mod='payzen'}</p>
+        </div>
 
         <label>{l s='Payment method title' mod='payzen'}</label>
         <div class="margin-form">
@@ -747,16 +897,6 @@
             style="width: 330px;"
           }
           <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_ONEY_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_ONEY_ENABLED" name="PAYZEN_ONEY_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_ONEY_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='FacilyPay Oney' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -785,7 +925,7 @@
           <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
         </div>
 
-        <label for="PAYZEN_ONEY_VALIDATION">{l s='Payment validation' mod='payzen'}</label>
+        <label for="PAYZEN_ONEY_VALIDATION">{l s='Validation mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_ONEY_VALIDATION" name="PAYZEN_ONEY_VALIDATION">
             <option value="-1"{if $PAYZEN_ONEY_VALIDATION === '-1'} selected="selected"{/if}>{l s='Base settings configuration' mod='payzen'}</option>
@@ -875,15 +1015,25 @@
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
-    <!--END_ONEY_CODE-->
+    {/if}
 
-    <!--BEGIN_FULLCB_CODE-->
+    {if $payzen_plugin_features['fullcb']}
     <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
       <a href="#">{l s='FULLCB PAYMENT' mod='payzen'}</a>
     </h4>
     <div>
       <fieldset>
         <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_FULLCB_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_FULLCB_ENABLED" name="PAYZEN_FULLCB_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_FULLCB_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='FullCB' mod='payzen'}</p>
+        </div>
 
         <label>{l s='Payment method title' mod='payzen'}</label>
         <div class="margin-form">
@@ -895,16 +1045,6 @@
             style="width: 330px;"
           }
           <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_FULLCB_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_FULLCB_ENABLED" name="PAYZEN_FULLCB_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_FULLCB_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='FullCB' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -1010,15 +1150,25 @@
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
-    <!--END_FULLCB_CODE-->
+    {/if}
 
-    <!--BEGIN_ANCV_CODE-->
+    {if $payzen_plugin_features['ancv']}
     <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
       <a href="#">{l s='ANCV PAYMENT' mod='payzen'}</a>
     </h4>
     <div>
       <fieldset>
         <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_ANCV_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_ANCV_ENABLED" name="PAYZEN_ANCV_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_ANCV_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='ANCV' mod='payzen'}</p>
+        </div>
 
         <label>{l s='Payment method title' mod='payzen'}</label>
         <div class="margin-form">
@@ -1030,16 +1180,6 @@
             style="width: 330px;"
           }
           <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_ANCV_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_ANCV_ENABLED" name="PAYZEN_ANCV_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_ANCV_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='ANCV' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -1068,7 +1208,7 @@
           <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
         </div>
 
-        <label for="PAYZEN_ANCV_VALIDATION">{l s='Payment validation' mod='payzen'}</label>
+        <label for="PAYZEN_ANCV_VALIDATION">{l s='Validation mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_ANCV_VALIDATION" name="PAYZEN_ANCV_VALIDATION">
             <option value="-1"{if $PAYZEN_ANCV_VALIDATION === '-1'} selected="selected"{/if}>{l s='Base settings configuration' mod='payzen'}</option>
@@ -1081,15 +1221,25 @@
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
-    <!--END_ANCV_CODE-->
+    {/if}
 
-    <!--BEGIN_SEPA_CODE-->
+    {if $payzen_plugin_features['sepa']}
     <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
       <a href="#">{l s='SEPA PAYMENT' mod='payzen'}</a>
     </h4>
     <div>
       <fieldset>
         <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_SEPA_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_SEPA_ENABLED" name="PAYZEN_SEPA_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SEPA_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='SEPA' mod='payzen'}</p>
+        </div>
 
         <label>{l s='Payment method title' mod='payzen'}</label>
         <div class="margin-form">
@@ -1101,16 +1251,6 @@
             style="width: 330px;"
           }
           <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_SEPA_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_SEPA_ENABLED" name="PAYZEN_SEPA_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SEPA_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='SEPA' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -1139,7 +1279,7 @@
           <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
         </div>
 
-        <label for="PAYZEN_SEPA_VALIDATION">{l s='Payment validation' mod='payzen'}</label>
+        <label for="PAYZEN_SEPA_VALIDATION">{l s='Validation mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_SEPA_VALIDATION" name="PAYZEN_SEPA_VALIDATION">
             <option value="-1"{if $PAYZEN_SEPA_VALIDATION === '-1'} selected="selected"{/if}>{l s='Base settings configuration' mod='payzen'}</option>
@@ -1152,86 +1292,25 @@
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
-    <!--END_SEPA_CODE-->
+    {/if}
 
-    <!--BEGIN_SOFORT_CODE-->
-    <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
-      <a href="#">{l s='SOFORT BANKING PAYMENT' mod='payzen'}</a>
-    </h4>
-    <div>
-      <fieldset>
-        <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
-
-        <label>{l s='Payment method title' mod='payzen'}</label>
-        <div class="margin-form">
-          {include file="./input_text_lang.tpl"
-            languages=$prestashop_languages
-            current_lang=$prestashop_lang
-            input_name="PAYZEN_SOFORT_TITLE"
-            input_value=$PAYZEN_SOFORT_TITLE
-            style="width: 330px;"
-          }
-          <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_SOFORT_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_SOFORT_ENABLED" name="PAYZEN_SOFORT_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SOFORT_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='SOFORT Banking' mod='payzen'}</p>
-        </div>
-      </fieldset>
-      <div class="clear">&nbsp;</div>
-
-      <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
-
-        <label>{l s='Customer group amount restriction' mod='payzen'}</label>
-        <div class="margin-form">
-          {include file="./table_amount_group.tpl"
-            groups=$prestashop_groups
-            input_name="PAYZEN_SOFORT_AMOUNTS"
-            input_value=$PAYZEN_SOFORT_AMOUNTS
-          }
-          <p>{l s='Define amount restriction for each customer group.' mod='payzen'}</p>
-        </div>
-      </fieldset>
-      <div class="clear">&nbsp;</div>
-
-      <fieldset>
-        <legend>{l s='PAYMENT PAGE' mod='payzen'}</legend>
-
-        <label for="PAYZEN_SOFORT_DELAY">{l s='Capture delay' mod='payzen'}</label>
-        <div class="margin-form">
-          <input id="PAYZEN_SOFORT_DELAY" name="PAYZEN_SOFORT_DELAY" value="{$PAYZEN_SOFORT_DELAY|escape:'html':'UTF-8'}" type="text">
-          <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_SOFORT_VALIDATION">{l s='Payment validation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_SOFORT_VALIDATION" name="PAYZEN_SOFORT_VALIDATION">
-            <option value="-1"{if $PAYZEN_SOFORT_VALIDATION === '-1'} selected="selected"{/if}>{l s='Base settings configuration' mod='payzen'}</option>
-            {foreach from=$payzen_validation_mode_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SOFORT_VALIDATION === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='If manual is selected, you will have to confirm payments manually in your bank Back Office.' mod='payzen'}</p>
-        </div>
-      </fieldset>
-      <div class="clear">&nbsp;</div>
-    </div>
-    <!--END_SOFORT_CODE-->
-
-    <!--BEGIN_PAYPAL_CODE-->
+    {if $payzen_plugin_features['paypal']}
     <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
       <a href="#">{l s='PAYPAL PAYMENT' mod='payzen'}</a>
     </h4>
     <div>
       <fieldset>
         <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_PAYPAL_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_PAYPAL_ENABLED" name="PAYZEN_PAYPAL_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_PAYPAL_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='PayPal' mod='payzen'}</p>
+        </div>
 
         <label>{l s='Payment method title' mod='payzen'}</label>
         <div class="margin-form">
@@ -1243,16 +1322,6 @@
             style="width: 330px;"
           }
           <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
-        </div>
-
-        <label for="PAYZEN_PAYPAL_ENABLED">{l s='Activation' mod='payzen'}</label>
-        <div class="margin-form">
-          <select id="PAYZEN_PAYPAL_ENABLED" name="PAYZEN_PAYPAL_ENABLED">
-            {foreach from=$payzen_enable_disable_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_PAYPAL_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-            {/foreach}
-          </select>
-          <p>{l s='Enables / disables %s payment.' sprintf='PayPal' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
@@ -1281,7 +1350,7 @@
           <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
         </div>
 
-        <label for="PAYZEN_PAYPAL_VALIDATION">{l s='Payment validation' mod='payzen'}</label>
+        <label for="PAYZEN_PAYPAL_VALIDATION">{l s='Validation mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_PAYPAL_VALIDATION" name="PAYZEN_PAYPAL_VALIDATION">
             <option value="-1"{if $PAYZEN_PAYPAL_VALIDATION === '-1'} selected="selected"{/if}>{l s='Base settings configuration' mod='payzen'}</option>
@@ -1294,7 +1363,56 @@
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
-    <!--END_PAYPAL_CODE-->
+    {/if}
+
+    {if $payzen_plugin_features['sofort']}
+    <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
+      <a href="#">{l s='SOFORT BANKING PAYMENT' mod='payzen'}</a>
+    </h4>
+    <div>
+      <fieldset>
+        <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_SOFORT_ENABLED">{l s='Activation' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_SOFORT_ENABLED" name="PAYZEN_SOFORT_ENABLED">
+            {foreach from=$payzen_enable_disable_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SOFORT_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Enables / disables %s payment.' sprintf='SOFORT Banking' mod='payzen'}</p>
+        </div>
+
+        <label>{l s='Payment method title' mod='payzen'}</label>
+        <div class="margin-form">
+          {include file="./input_text_lang.tpl"
+            languages=$prestashop_languages
+            current_lang=$prestashop_lang
+            input_name="PAYZEN_SOFORT_TITLE"
+            input_value=$PAYZEN_SOFORT_TITLE
+            style="width: 330px;"
+          }
+          <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
+        </div>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+
+      <fieldset>
+        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+
+        <label>{l s='Customer group amount restriction' mod='payzen'}</label>
+        <div class="margin-form">
+          {include file="./table_amount_group.tpl"
+            groups=$prestashop_groups
+            input_name="PAYZEN_SOFORT_AMOUNTS"
+            input_value=$PAYZEN_SOFORT_AMOUNTS
+          }
+          <p>{l s='Define amount restriction for each customer group.' mod='payzen'}</p>
+        </div>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+    </div>
+    {/if}
    </div>
 
   {if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}

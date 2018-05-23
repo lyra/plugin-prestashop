@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -160,6 +160,11 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             // override payemnt_cards parameter
             $request->set('payment_cards', $data['card_type']);
 
+            if ($data['card_type'] === 'BANCONTACT') {
+                // may not disable 3DS for Bancontact Mistercash
+                $request->set('threeds_mpi', null);
+            }
+
             if (isset($data['card_number']) && $data['card_number']) {
                 $request->set('card_number', $data['card_number']);
                 $request->set('cvv', $data['cvv']);
@@ -192,6 +197,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
     protected function getDefaultTitle()
     {
-        return $this->l('Payment by bank card');
+        return $this->l('Payment by credit card');
     }
 }

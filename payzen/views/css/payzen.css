@@ -35,12 +35,28 @@
     -moz-opacity: 0.65; /* FireFox */
 }
 
-#payzen_iframe_warn {
+#payzen_iframe_warn, #payzen_iframe_actions {
     position: relative;
     width: 100%;
-    text-align: center;
     background: #ffffff none repeat scroll 0 0;
     z-index: 10001;
+}
+
+#payzen_iframe_warn {
+    text-align: center;
+    color: #7f7f7f;
+    margin-bottom: 10px;
+}
+
+#payzen_iframe_actions a {
+    font-size: 12px;
+    text-decoration: none;
+    border: 0;
+    margin-left: 15px;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    display: inline;
 }
 
 #payzen_iframe {
@@ -50,6 +66,7 @@
     border: 0 none;
     background: #ffffff none repeat scroll 0 0;
     z-index: 10001;
+    margin-bottom: -6px;
 }
 
 .payzen_choozeo_card {

@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -52,7 +52,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.9.0';
+        $this->version = '1.10.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -127,8 +127,7 @@ class Payzen extends PaymentModule
         }
 
         // create custom order states
-        ###BEGIN_ONEY_CODE###
-        if (!Configuration::get('PAYZEN_OS_ONEY_PENDING')) {
+        if (PayzenTools::$plugin_features['oney'] && !Configuration::get('PAYZEN_OS_ONEY_PENDING')) {
             // create FacilyPay Oney pending confirmation order state
             $name = array (
                 'en' => 'Funding request in progress',
@@ -159,7 +158,6 @@ class Payzen extends PaymentModule
                 _PS_IMG_DIR_.'os/'.Configuration::get('PAYZEN_OS_ONEY_PENDING').'.gif'
             );
         }
-        ###END_ONEY_CODE###
 
         if (!Configuration::get('PAYZEN_OS_TO_VALIDATE')) {
             // create to validate payment order state
@@ -258,8 +256,8 @@ class Payzen extends PaymentModule
             );
         }
 
-        ###BEGIN_SOFORT_CODE###
-        if (!Configuration::get('PAYZEN_OS_TRANS_PENDING')) {
+        if ((PayzenTools::$plugin_features['sofort'] || PayzenTools::$plugin_features['sepa'])
+            && !Configuration::get('PAYZEN_OS_TRANS_PENDING')) {
             // create SOFORT and SEPA pending funds order state
             $name = array (
                 'en' => 'Pending funds transfer',
@@ -290,7 +288,6 @@ class Payzen extends PaymentModule
                 _PS_IMG_DIR_.'os/'.Configuration::get('PAYZEN_OS_TRANS_PENDING').'.gif'
             );
         }
-        ###END_SOFORT_CODE###
 
         // clear module compiled templates
         $tpls = array(
@@ -389,12 +386,12 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
-                        if ($option['min_amount'] && !is_numeric($option['min_amount']) || $option['min_amount'] < 0) {
+                        if (isset($option['min_amount']) && $option['min_amount'] && (!is_numeric($option['min_amount']) || $option['min_amount'] < 0)) {
                             $value[$id]['min_amount'] = ''; // error, reset incorrect value
                             $error = true;
                         }
 
-                        if ($option['max_amount'] && !is_numeric($option['max_amount']) || $option['max_amount'] < 0) {
+                        if (isset($option['max_amount']) && $option['max_amount'] && (!is_numeric($option['max_amount']) || $option['max_amount'] < 0)) {
                             $value[$id]['max_amount'] = ''; // error, reset incorrect value
                             $error = true;
                         }
@@ -493,7 +490,7 @@ class Payzen extends PaymentModule
                 }
             } elseif ($key === 'PAYZEN_STD_CARD_DATA_MODE' && $value == '3' && !Configuration::get('PS_SSL_ENABLED')) {
                 $value = '1'; // force default mode
-                $this->_errors[] = $this->l('The card data entry on merchant site cannot be used without enabling SSL.');
+                $this->_errors[] = $this->l('The bank data acquisition on merchant site cannot be used without enabling SSL.');
                 continue;
             } elseif (($key === 'PAYZEN_STD_PROPOSE_ONEY') && ($value == 'True')) {
                 $oney_enabled = Tools::getValue('PAYZEN_ONEY_ENABLED', 'False') == 'True' ? true : false;
@@ -599,7 +596,7 @@ class Payzen extends PaymentModule
 
             // valid field : try to save into DB
             if (!Configuration::updateValue($key, $value)) {
-                $this->_errors[] = sprintf($this->l('Problem occured while saving field «%s».'), $label);
+                $this->_errors[] = sprintf($this->l('Problem occurred while saving field «%s».'), $label);
             } else {
                 // temporary variable set to update PrestaShop cache
                 Configuration::set($key, $value);
@@ -623,7 +620,8 @@ class Payzen extends PaymentModule
                 return $this->l('Please, enter minimum and maximum amounts in FacilyPay Oney payment tab as agreed with Banque Accord.');
             }
 
-            $label = $this->l('FacilyPay Oney payment - Customer group amount restriction', 'back_office');
+            $msg = 'FacilyPay Oney payment - Customer group amount restriction';
+            $label = $this->l($msg, 'back_office');
 
             foreach ($group_amounts as $id => $group) {
                 if (empty($group) || $id === 0) { // all groups
@@ -876,16 +874,16 @@ class Payzen extends PaymentModule
             $html .= $this->display(__FILE__, 'bc/'.$sepa->getTplName());
         }
 
-        $sofort = new PayzenSofortPayment();
-        if ($sofort->isAvailable($cart)) {
-            $this->context->smarty->assign($sofort->getTplVars($cart));
-            $html .= $this->display(__FILE__, 'bc/'.$sofort->getTplName());
-        }
-
         $paypal = new PayzenPaypalPayment();
         if ($paypal->isAvailable($cart)) {
             $this->context->smarty->assign($paypal->getTplVars($cart));
             $html .= $this->display(__FILE__, 'bc/'.$paypal->getTplName());
+        }
+
+        $sofort = new PayzenSofortPayment();
+        if ($sofort->isAvailable($cart)) {
+            $this->context->smarty->assign($sofort->getTplVars($cart));
+            $html .= $this->display(__FILE__, 'bc/'.$sofort->getTplName());
         }
 
         return $html;
@@ -908,10 +906,19 @@ class Payzen extends PaymentModule
         }
 
         $cart = $this->context->cart;
+
+        /**
+         * @var array[\PrestaShop\PrestaShop\Core\Payment\PaymentOption]
+         */
         $options = array();
 
         // version tag for specific styles
         $this->context->smarty->assign('payzen_tag', 'payzen17');
+
+        /**
+         * AbstractPayzenPayment::getPaymentOption() returns a payment option of type
+         * PrestaShop\PrestaShop\Core\Payment\PaymentOption
+         */
 
         $standard = new PayzenStandardPayment();
         if ($standard->isAvailable($cart)) {
@@ -995,14 +1002,14 @@ class Payzen extends PaymentModule
             $options[] = $sepa->getPaymentOption($cart);
         }
 
-        $sofort = new PayzenSofortPayment();
-        if ($sofort->isAvailable($cart)) {
-            $options[] = $sofort->getPaymentOption($cart);
-        }
-
         $paypal = new PayzenPaypalPayment();
         if ($paypal->isAvailable($cart)) {
             $options[] = $paypal->getPaymentOption($cart);
+        }
+
+        $sofort = new PayzenSofortPayment();
+        if ($sofort->isAvailable($cart)) {
+            $options[] = $sofort->getPaymentOption($cart);
         }
 
         return $options;
@@ -1038,28 +1045,29 @@ class Payzen extends PaymentModule
     {
         $order = isset($params['order']) ? $params['order'] : $params['objOrder'];
 
-        if (!$this->active || $order->module != $this->name) {
+        if (!$this->active || ($order->module != $this->name)) {
             return;
         }
 
-        $error_msg = (Tools::getValue('error') == 'yes');
+        $error = (Tools::getValue('error') == 'yes');
 
         $array = array(
             'check_url_warn' => (Tools::getValue('check_url_warn') == 'yes'),
             'maintenance_mode' => !Configuration::get('PS_SHOP_ENABLE'),
             'prod_info' => (Tools::getValue('prod_info') == 'yes'),
-            'error_msg' => $error_msg
+            'error_msg' => $error
         );
 
-        if ($error_msg === false) {
+        if (!$error) {
             $array['total_to_pay'] = Tools::displayPrice(
                 $order->getOrdersTotalPaid(),
                 new Currency($order->id_currency),
                 false
             );
+
             $array['id_order'] = $order->id;
             $array['status'] = 'ok';
-            $array['shop_name'] = $this->context->shop->name;
+            $array['shop_name'] = Configuration::get('PS_SHOP_NAME');
 
             if (isset($order->reference) && !empty($order->reference)) {
                 $array['reference'] = $order->reference;
@@ -1118,7 +1126,7 @@ class Payzen extends PaymentModule
         // PrestaShop id_currency from currency iso num code
         $currency_id = Currency::getIdByIsoCode($currency->getAlpha3());
 
-        // real paid total on platform
+        // real paid total on gateway
         $paid_total = $currency->convertAmountToFloat($response->get('amount'));
         if (number_format($cart->getOrderTotal(), $decimals) == number_format($paid_total, $decimals)) {
             // to avoid rounding issues and bypass PaymentModule::validateOrder() check
@@ -1130,7 +1138,7 @@ class Payzen extends PaymentModule
             $cart->id,
             $state,
             $paid_total,
-            $response->get('order_info'), // title defined in admin panel and sent to platform as order_info
+            $response->get('order_info'), // title defined in admin panel and sent to gateway as order_info
             null, // $message
             array(), // $extraVars
             $currency_id, // $currency_special
@@ -1188,7 +1196,7 @@ class Payzen extends PaymentModule
             }
         }
 
-        // 3-DS extra message
+        // 3DS extra message
         $msg_3ds = "\n".$this->l('3DS authentication : ');
         if ($response->get('threeds_status') == 'Y') {
             $msg_3ds .= $this->l('YES');
@@ -1223,7 +1231,8 @@ class Payzen extends PaymentModule
 
         // delete payments created by default and cancelled payments
         if (is_array($payments) && !empty($payments)) {
-            $trans_id = $response->get('sequence_number').'-'.$response->get('trans_id');
+            $number = $response->get('sequence_number') ?: '1';
+            $trans_id = $number.'-'.$response->get('trans_id');
             $cancelled = $response->getTransStatus() === 'CANCELLED';
 
             $update = false;
@@ -1263,7 +1272,7 @@ class Payzen extends PaymentModule
 
             $last_trs = end($transactions); // last transaction
             foreach ($transactions as $trs) {
-                // real paid total on platform
+                // real paid total on gateway
                 $amount = $currency->convertAmountToFloat($trs->{'amount'});
 
                 if ($trs === $last_trs) {
@@ -1352,7 +1361,7 @@ class Payzen extends PaymentModule
                 $payment_ids[] = $pccId;
             }
         } else {
-            // real paid total on platform
+            // real paid total on gateway
             $amount_in_cents = $response->get('amount');
             if ($response->get('effective_currency') && ($response->get('effective_currency') == $response->get('currency'))) {
                 $amount_in_cents = $response->get('effective_amount'); // use effective amount to get modified amount
@@ -1371,7 +1380,9 @@ class Payzen extends PaymentModule
             }
 
             $timestamp = strtotime($response->get('presentation_date').' UTC');
-            $trans_id = $response->get('sequence_number').'-'.$response->get('trans_id');
+
+            $number = $response->get('sequence_number') ?: '1';
+            $trans_id = $number.'-'.$response->get('trans_id');
 
             $data = array(
                 'card_number' => $response->get('card_number'),
@@ -1472,35 +1483,6 @@ class Payzen extends PaymentModule
         return $trs->{'operation_type'} == 'DEBIT' && in_array($trs->{'trans_status'}, $successful_states);
     }
 
-    /**
-     * Return true if order is in a successful state.
-     *
-     * @param Order $order
-     * @return boolean
-     */
-    public static function isSuccessState($order)
-    {
-        $os = new OrderState((int)$order->getCurrentState());
-        if (!$os->id) {
-            return false;
-        }
-
-        $s_states = array(
-            'PS_OS_PAYMENT',
-            'PS_OS_OUTOFSTOCK_UNPAID', // override pending states since prestashop 1.6.1
-            'PS_OS_OUTOFSTOCK_PAID', // override paid state since prestashop 1.6.1
-            'PS_OS_OUTOFSTOCK',
-            'PAYZEN_OS_ONEY_PENDING',
-            'PAYZEN_OS_TRANS_PENDING',
-            'PAYZEN_OS_AUTH_PENDING',
-            'PAYZEN_OS_PAYMENT_OUTOFSTOCK',
-            'PAYZEN_OS_TO_VALIDATE'
-        );
-
-        // if state is one of supported states or custom state with paid flag
-        return self::isStateInArray($os->id, $s_states) || (bool)$os->paid;
-    }
-
     public static function nextOrderState($response, $total_refund = false, $outofstock = false)
     {
         if ($response->isAcceptedPayment()) {
@@ -1554,30 +1536,78 @@ class Payzen extends PaymentModule
         return Configuration::get($new_state);
     }
 
+    /**
+     * Return true if order is in a successful state (paid or pending confirmation).
+     *
+     * @param Order $order
+     * @return boolean
+     */
+    public static function isSuccessState($order)
+    {
+        $os = new OrderState((int)$order->getCurrentState());
+        if (!$os->id) {
+            return false;
+        }
+
+        if (self::isOutOfStock($order)) {
+            return true;
+        }
+
+        $s_states = array(
+            'PS_OS_PAYMENT',
+            'PAYZEN_OS_TRANS_PENDING',
+            'PAYZEN_OS_TO_VALIDATE',
+            'PAYZEN_OS_ONEY_PENDING',
+            'PAYZEN_OS_AUTH_PENDING'
+        );
+
+        // if state is one of supported states or custom state with paid flag
+        return self::isStateInArray($os->id, $s_states) || (bool)$os->paid;
+    }
+
     public static function isOutOfStock($order)
     {
         $state = $order->getCurrentState();
         $oos_states = array(
-            'PS_OS_OUTOFSTOCK_UNPAID',
-            'PS_OS_OUTOFSTOCK_PAID',
-            'PS_OS_OUTOFSTOCK',
-            'PAYZEN_OS_PAYMENT_OUTOFSTOCK'
+            'PS_OS_OUTOFSTOCK_UNPAID', // override pending states since PrestaShop 1.6.1
+            'PS_OS_OUTOFSTOCK_PAID', // override paid state since PrestaShop 1.6.1
+            'PS_OS_OUTOFSTOCK', // considered as pending by PayZen module for PrestaShop < 1.6.1
+            'PAYZEN_OS_PAYMENT_OUTOFSTOCK' // paid state for PrestaShop < 1.6.1
         );
 
         return self::isStateInArray($state, $oos_states);
     }
 
+    public static function isPaidOrder($order)
+    {
+        $os = new OrderState((int)$order->getCurrentState());
+        if (!$os->id) {
+            return false;
+        }
+
+        // final states
+        $paid_states = array(
+            'PS_OS_OUTOFSTOCK_PAID', // override paid state since PrestaShop 1.6.1
+            'PAYZEN_OS_PAYMENT_OUTOFSTOCK', // paid state for PrestaShop < 1.6.1
+            'PS_OS_PAYMENT',
+            'PAYZEN_OS_TRANS_PENDING'
+        );
+
+        return self::isStateInArray($os->id, $paid_states) || (bool)$os->paid;
+    }
+
     public static function getManagedStates()
     {
         $managed_states = array(
+            'PS_OS_OUTOFSTOCK_UNPAID', // override pending states since PrestaShop 1.6.1
+            'PS_OS_OUTOFSTOCK_PAID', // override paid state since PrestaShop 1.6.1
+            'PS_OS_OUTOFSTOCK', // considered as pending by PayZen module for PrestaShop < 1.6.1
+            'PAYZEN_OS_PAYMENT_OUTOFSTOCK', // paid state for PrestaShop < 1.6.1
+
             'PS_OS_PAYMENT',
-            'PS_OS_OUTOFSTOCK_UNPAID', // override pending states since prestashop 1.6.1
-            'PS_OS_OUTOFSTOCK_PAID', // override paid state since prestashop 1.6.1
-            'PS_OS_OUTOFSTOCK',
             'PAYZEN_OS_ONEY_PENDING',
             'PAYZEN_OS_TRANS_PENDING',
             'PAYZEN_OS_AUTH_PENDING',
-            'PAYZEN_OS_PAYMENT_OUTOFSTOCK',
             'PAYZEN_OS_TO_VALIDATE',
             'PS_OS_ERROR',
             'PS_OS_CANCELED',
@@ -1603,7 +1633,7 @@ class Payzen extends PaymentModule
                 continue;
             }
 
-            if ((int)$state_id == (int)Configuration::get($state_name)) {
+            if ((int)$state_id === (int)Configuration::get($state_name)) {
                 return true;
             }
         }

@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -39,12 +39,12 @@ class PayzenTools
         'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_CHOOZEO_TITLE',
         'PAYZEN_FULLCB_TITLE'
     );
-    public static $amount_fields = array('PAYZEN_3DS_MIN_AMOUNT');
+    public static $amount_fields = array();
     public static $group_amount_fields = array(
         'PAYZEN_STD_AMOUNTS', 'PAYZEN_MULTI_AMOUNTS', 'PAYZEN_ANCV_AMOUNTS',
         'PAYZEN_ONEY_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS', 'PAYZEN_SOFORT_AMOUNTS',
         'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_CHOOZEO_AMOUNTS', 'PAYZEN_CHOOZEO_OPTIONS',
-        'PAYZEN_FULLCB_AMOUNTS'
+        'PAYZEN_FULLCB_AMOUNTS', 'PAYZEN_3DS_MIN_AMOUNT'
     );
     public static $address_regex = array(
         'oney' => array(
@@ -64,6 +64,21 @@ class PayzenTools
             'phone' => '#^(0|33)[0-9]{9}$#'
         )
     );
+    public static $plugin_features = array(
+        'qualif' => false,
+        'acquis' => true,
+        'prodfaq' => true,
+        'restrictmulti' => false,
+
+        'multi' => true,
+        'choozeo' => false,
+        'oney' => true,
+        'ancv' => true,
+        'sepa' => true,
+        'sofort' => true,
+        'paypal' => true,
+        'fullcb' => true
+    );
 
     public static function checkAddress($address, $type, $payment)
     {
@@ -74,7 +89,8 @@ class PayzenTools
         $invalid_msg = $payzen->l('The field %1$s of your %2$s is invalid.', 'payzentools');
         $empty_msg = $payzen->l('The field %1$s of your %2$s is mandatory.', 'payzentools');
 
-        $address_type = $type == 'billing' ? $payzen->l('billing address', 'payzentools') : $payzen->l('delivery address', 'payzentools');
+        $address_type = $type == 'billing' ? $payzen->l('billing address', 'payzentools') :
+            $payzen->l('delivery address', 'payzentools');
 
         $errors = array();
 
@@ -164,7 +180,7 @@ class PayzenTools
                 array('key' => 'PAYZEN_SHOP_NAME', 'name' => 'shop_name', 'default' => '', 'label' => 'Shop name'),
                 array('key' => 'PAYZEN_SHOP_URL', 'name' => 'shop_url', 'default' => '', 'label' => 'Shop URL'),
 
-                array('key' => 'PAYZEN_3DS_MIN_AMOUNT', 'default' => '', 'label' => 'Minimum amount to activate 3-DS'),
+                array('key' => 'PAYZEN_3DS_MIN_AMOUNT', 'default' => '', 'label' => 'Disable 3DS by customer group'),
 
                 array('key' => 'PAYZEN_REDIRECT_ENABLED', 'name' => 'redirect_enabled', 'default' => 'False',
                     'label' => 'Automatic redirection'),
@@ -201,7 +217,7 @@ class PayzenTools
 
                 array('key' => 'PAYZEN_STD_TITLE',
                     'default' => array(
-                        'en' => 'Payment by bank card',
+                        'en' => 'Payment by credit card',
                         'fr' => 'Paiement par carte bancaire',
                         'de' => 'Zahlung mit EC-/Kreditkarte'
                     ),
@@ -213,16 +229,10 @@ class PayzenTools
                 array('key' => 'PAYZEN_STD_PROPOSE_ONEY', 'default' => 'False', 'label' => 'Propose FacilyPay Oney'),
                 array('key' => 'PAYZEN_STD_AMOUNTS', 'default' => array(), 'label' => 'One-time payment - Customer group amount restriction'),
                 array('key' => 'PAYZEN_STD_CARD_DATA_MODE', 'default' => '1', 'label' => 'Card data entry mode'),
-                array('key' => 'PAYZEN_STD_PUBKEY_TEST', 'default' => '', 'label' => 'Public test key'),
-                array('key' => 'PAYZEN_STD_PRIVKEY_TEST', 'default' => '', 'label' => 'Private test key'),
-                array('key' => 'PAYZEN_STD_PUBKEY_PROD', 'default' => '', 'label' => 'Public production key'),
-                array('key' => 'PAYZEN_STD_PRIVKEY_PROD', 'default' => '', 'label' => 'Private production key'),
-                array('key' => 'PAYZEN_STD_RETKEY_TEST', 'default' => '', 'label' => 'Test return key'),
-                array('key' => 'PAYZEN_STD_RETKEY_PROD', 'default' => '', 'label' => 'Production return key'),
 
                 array('key' => 'PAYZEN_MULTI_TITLE',
                     'default' => array(
-                        'en' => 'Payment by bank card in several times',
+                        'en' => 'Payment by credit card in installments',
                         'fr' => 'Paiement par carte bancaire en plusieurs fois',
                         'de' => 'Ratenzahlung mit EC-/Kreditkarte'
                     ),
@@ -232,8 +242,8 @@ class PayzenTools
                 array('key' => 'PAYZEN_MULTI_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
                 array('key' => 'PAYZEN_MULTI_PAYMENT_CARDS', 'default' => '', 'label' => 'Card Types'),
                 array('key' => 'PAYZEN_MULTI_CARD_MODE', 'default' => '1', 'label' => 'Card selection mode'),
-                array('key' => 'PAYZEN_MULTI_AMOUNTS', 'default' => array(), 'label' => 'Payment in several times - Customer group amount restriction'),
-                array('key' => 'PAYZEN_MULTI_OPTIONS', 'default' => array(), 'label' => 'Payment in several times - Payment options'),
+                array('key' => 'PAYZEN_MULTI_AMOUNTS', 'default' => array(), 'label' => 'Payment in installments - Customer group amount restriction'),
+                array('key' => 'PAYZEN_MULTI_OPTIONS', 'default' => array(), 'label' => 'Payment in installments - Payment options'),
 
                 array('key' => 'PAYZEN_ONEY_TITLE',
                     'default' => array(
@@ -324,8 +334,6 @@ class PayzenTools
                     ),
                     'label' => 'Method title'),
                 array('key' => 'PAYZEN_SOFORT_ENABLED', 'default' => 'False', 'label' => 'Activation'),
-                array('key' => 'PAYZEN_SOFORT_DELAY', 'default' => '', 'label' => 'Capture delay'),
-                array('key' => 'PAYZEN_SOFORT_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
                 array('key' => 'PAYZEN_SOFORT_AMOUNTS', 'default' => array(), 'label' => 'SOFORT Banking payment - Customer group amount restriction'),
 
                 array('key' => 'PAYZEN_PAYPAL_TITLE',
@@ -466,6 +474,10 @@ class PayzenTools
             'SELECT * FROM '._DB_PREFIX_.'socolissimo_delivery_info WHERE id_cart = \''.
             (int)$cart->id.'\' AND id_customer = \''.(int)$cart->id_customer.'\''
         );
+
+        if (!$row) {
+            return null;
+        }
 
         $not_allowed_chars = array(' ', '.', '-', ',', ';', '+', '/', '\\', '+', '(', ')');
         $so_address = new Address();
