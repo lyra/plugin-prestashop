@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -35,13 +35,12 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
     $cart = new Cart($cart_id);
 
     /* cart errors */
-    $trans_id = htmlspecialchars(Tools::getValue('vads_trans_id'), ENT_COMPAT, 'UTF-8');
     if (!Validate::isLoadedObject($cart)) {
         $logger->logError("Cart #$cart_id not found in database.");
-        die('<span style="display:none">KO-'.$trans_id."=Impossible de retrouver la commande\n</span>");
+        die('<span style="display:none">KO-Order not found.'."\n".'</span>');
     } elseif ($cart->nbProducts() <= 0) {
         $logger->logError("Cart #$cart_id was emptied before redirection.");
-        die('<span style="display:none">KO-'.$trans_id."=Le panier a été vidé avant la redirection\n</span>");
+        die('<span style="display:none">KO-Empty cart detected before order processing.'."\n".'</span>');
     }
 
     /* rebuild context */
@@ -51,6 +50,8 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
     }
 
     Context::getContext()->customer = new Customer((int)$cart->id_customer);
+    Context::getContext()->customer->logged = 1;
+
     Context::getContext()->cart = $cart = new Cart((int)$cart_id); // reload cart to take into account customer group
 
     $address = new Address((int)$cart->id_address_invoice);
@@ -74,7 +75,7 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
     if (!$response->isAuthentified()) {
         $ip = Tools::getRemoteAddr();
         $logger->logError("{$ip} tries to access validation.php page without valid signature with parameters: ".print_r($_POST, true));
-        //$logger->logError('Signature algorithm selected in module settings must be the same as one selected in PayZen Back Office.');
+        $logger->logError('Signature algorithm selected in module settings must be the same as one selected in PayZen Back Office.');
 
         die($response->getOutputForPlatform('auth_fail'));
     }
@@ -94,11 +95,11 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
 
             if (Payzen::hasAmountError($order)) {
                 /* amount paid not equals initial amount. */
-                $msg = "Error: amount paid {$order->total_paid_real} not equals initial amount {$order->total_paid}.";
+                $msg = "Error: amount paid {$order->total_paid_real} is not equal to initial amount {$order->total_paid}.";
                 $msg .= " Order is in a failed state, cart #$cart_id.";
                 $logger->logWarning($msg);
 
-                die($response->getOutputForPlatform('ko', 'Le montant payé est différent du montant intial'));
+                die($response->getOutputForPlatform('ko', 'Total paid is different from order amount.'));
             } else {
                 /* response to server */
                 die($response->getOutputForPlatform('payment_ok'));
@@ -126,7 +127,7 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
 
         $logger->logInfo("The current state for order corresponding to cart #$cart_id is ($old_state).");
 
-        // check if a total refun of order was made
+        // check if a total refund of order was made
         $total_refund = false;
 
         if ($response->get('operation_type') === 'CREDIT') {
@@ -142,8 +143,18 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
         $outofstock = Payzen::isOutOfStock($order);
         $new_state = (int)Payzen::nextOrderState($response, $total_refund, $outofstock);
 
+        // final states
+        $consistent_states = array(
+            'PS_OS_OUTOFSTOCK_PAID', // override paid state since PrestaShop 1.6.1
+            'PAYZEN_OS_PAYMENT_OUTOFSTOCK', // paid state for PrestaShop < 1.6.1
+            'PS_OS_PAYMENT',
+            'PAYZEN_OS_TRANS_PENDING',
+            'PS_OS_REFUND',
+            'PS_OS_CANCELED'
+        );
+
         // if the payment is not the first in sequence, do not update order state
-        $first_payment = ($response->get('sequence_number') == '1');
+        $first_payment = ($response->get('sequence_number') === '1') || !$response->get('sequence_number');
 
         if (($old_state === $new_state) || !$first_payment) {
             /* no changes, just display a confirmation message */
@@ -159,17 +170,21 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
             }
 
             die($response->getOutputForPlatform($msg));
+        } elseif (Payzen::isPaidOrder($order) && (!Payzen::isStateInArray($new_state, $consistent_states) || ($response->get('url_check_src') === 'PAY'))) {
+            /* order cannot move from final paid state to not completed states */
+            $logger->logInfo("Order is successfully registered for cart #$cart_id but platform returns a payment error, transaction status is {$response->getTransStatus()}.");
+            die($response->getOutputForPlatform('payment_ko_on_order_ok'));
         } elseif (!$old_state || Payzen::isStateInArray($old_state, Payzen::getManagedStates())) {
-            if (($old_state == Configuration::get('PS_OS_ERROR')) && $response->isAcceptedPayment() && Payzen::hasAmountError($order)) {
+            if (($old_state === Configuration::get('PS_OS_ERROR')) && $response->isAcceptedPayment() && Payzen::hasAmountError($order)) {
                 /* amount paid not equals initial amount. */
                 $logger->logWarning(
-                    "Error: amount paid {$order->total_paid_real} not equals initial amount {$order->total_paid}. Order is in a failed state, cart #$cart_id."
+                    "Error: amount paid {$order->total_paid_real} is not equal to initial amount {$order->total_paid}. Order is in a failed state, cart #$cart_id."
                 );
-                die($response->getOutputForPlatform('ko', 'Le montant payé est différent du montant intial'));
+                die($response->getOutputForPlatform('ko', 'Total paid is different from order amount.'));
             }
 
             if (!$old_state) {
-                $logger->logWarn("Old order state for cart #$cart_id is empty! Something went wrong. Try to set it anyway.");
+                $logger->logWarning("Current order state for cart #$cart_id is empty! Something went wrong. Try to set it anyway.");
             }
 
             $payzen->setOrderState($order, $new_state, $response);
@@ -178,7 +193,7 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
             die($response->getOutputForPlatform($response->isAcceptedPayment() ? 'payment_ok' : 'payment_ko'));
         } else {
             $logger->logWarning("Unknown order state ID ($old_state) for cart #$cart_id. Managed by merchant.");
-            die($response->getOutputForPlatform('ok', 'Statut de commande inconnu'));
+            die($response->getOutputForPlatform('ok', 'Unknown order status.'));
         }
     }
 }

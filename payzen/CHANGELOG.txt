@@ -1,7 +1,20 @@
+1.10.0, 2018-05-23:
+- Bug fix: relative to JavaScript action of payment button on order validation page (with one page checkout only).
+- Bug fix: fatal error when creating order from PrestaShop backend with Colissimo carrier enabled.
+- Bug fix: use frontend shop name available under "Preferences > Store contacts".
+- Bug fix: do not update order state from "Accepted payment" to "Payment error" when replaying IPN URL for orders with many attempts.
+- Enable signature algorithm selection (SHA-1 or SHA-256).
+- Improve JS code redirecting to payment gateway to avoid possible conflicts with other modules.
+- Re-order configuration options in sub-modules backend.
+- Display all links to multilingual documentation files in module backend.
+- Possibility to cancel payment in iframe mode.
+- Possibility to configure 3D Secure by customer group.
+- [technical]Manage enabled/disabled features by plugin variant.
+
 1.9.0, 2017-10-16:
 - Bug fix: send selected cards in payment in installments sub-module.
-- Bug fix: correct simulated FacilyPay Oney funding fees calculation.
-- Bug fix: save failed and cancelled orders to avoid sending same order ID for FacilyPay Oney payments.
+- [oney]Bug fix: correct simulated FacilyPay Oney funding fees calculation.
+- [oney]Bug fix: save failed and cancelled orders to avoid sending same order ID for FacilyPay Oney payments.
 - Bug fix: error relative to missed checkout header and footer templates (PrestaShop 1.7 only).
 - Bug fix: set negative tax amount to 0.
 - Fix authentication error when shopping cart is shared between more than one shop.
@@ -9,36 +22,36 @@
 - No longer use jQuery in redirection to gateway page to avoid compatibility errors.
 - Disable payment button after redirect starts.
 - Display payment in installments option label if only one option is available (PrestaShop 1.5 & 1.6).
-- Consider Mondial Relay delivery method by sending selected relay point address to FacilyPay Oney.
-- Consider DPD France Relais delivery method by sending selected relay point address to FacilyPay Oney.
-- Consider SoColissimo delivery method by sending selected relay point address to FacilyPay Oney.
+- [oney]Consider Mondial Relay delivery method by sending selected relay point address to FacilyPay Oney.
+- [oney]Consider DPD France Relais delivery method by sending selected relay point address to FacilyPay Oney.
+- [oney]Consider SoColissimo delivery method by sending selected relay point address to FacilyPay Oney.
 - Display card brand user choice if any in backend order details.
-- Added FullCB sub-module.
+- [fullcb]Added FullCB sub-module.
 - Disbale payment sub-modules for unsupported currencies.
 - Add new "To validate payment" order state.
 - Manage extended IPN calls (transaction validation, refund, modification and cancellation).
 - Add "Delay" field and update "Rapidity" field in shipping options configuration.
 
 1.8.2, 2017-05-01:
-- Bug fix: order total really paid doubled for validated FacilyPay Oney payments in some PrestaShop versions.
+- [oney]Bug fix: order total really paid doubled for validated FacilyPay Oney payments in some PrestaShop versions.
 - Use merchant server timezone to display payment times.
 
 1.8.1, 2016-03-27:
 - Bug fix: relative to default language for multilingual fields.
-- Bug fix: relative to sending shipping data when using reclaim in shop carrier with FacilyPay Oney payments.
+- [oney]Bug fix: relative to sending shipping data when using reclaim in shop carrier with FacilyPay Oney payments.
 - Bug fix: default values lost for disabled fields after saving configuration.
 - Bug fix: minor graphic bug in one page checkout mode (PrestaShop < 1.7).
 - Bug fix: fix the potential error "Cannot redeclare class FileLoggerCore" when file logger is used by other installed modules.
 - Update supported cards for payment in installments sub-module.
 - Use PHP 5.2 syntax to remain compatible with PrestaShop installations.
 - Improve CSS and templates management.
-- Possibility to configure FacilyPay Oney options inside merchant website.
-- Do not create order if cancelled or failed FacilyPay Oney payment unless merchant enables "Order creation on failure" option.
+- [oney]Possibility to configure FacilyPay Oney options inside merchant website.
+- [oney]Do not create order if cancelled or failed FacilyPay Oney payment unless merchant enables "Order creation on failure" option.
 - Sending customer cellular phone number if any.
-- Possibility to manage empty cart before redirection to platform in admin interface.
+- Possibility to manage empty cart before redirection to gateway in admin interface.
 
 1.8.0, 2016-12-30:
-- Bug fix: empty cart before redirection to platform to avoid cart modification after submitting order. The cart is restored after cancelled / failed payment.
+- Bug fix: empty cart before redirection to gateway to avoid cart modification after submitting order. The cart is restored after cancelled / failed payment.
 - Bug fix: relative to order total precision when displaying prices without taxes option is enabled for a customer group.
 - Bug fix: in some themes, module interface in frontend is not correctly displayed.
 - Displaying of payment installments in order details on PrestaShop backend.
@@ -46,15 +59,15 @@
 - Adding support of "Advanced EU compliance" module by implementing displayPaymentEU hook. In this case, only standard payment is available.
 - Use of AFL license (instead of OSL) as other PrestaShop modules and themes.
 - Save presentation date in payment order table (displayed in order view on PrestaShop backend).
-- Send delivery address in vads_ship_to_street for FacilyPay Oney payments.
+- [oney]Send delivery address in vads_ship_to_street for FacilyPay Oney payments.
 - Do not send cart data if too big cart (more than 85 products) unless it is mandatory.
 - Take in account theme left and right column configurations.
 - Module code refacting to improve performance and pass PrestaShop Addons validator.
 - Improve management of regular expressions with UTF-8 special characters.
-- Remove control over certificate format modified on the platform.
+- Remove control over certificate format modified on the gateway.
 - Compatibility with PrestaShop 1.7.x versions (imlementing paymentOptions hook).
 - Perform data validation (customer address and card data) if necessary after payment mean selection.
-- Give user the choice to enable / disable FacilyPay Oney payment in standard sub-module.
+- [oney]Give user the choice to enable / disable FacilyPay Oney payment in standard sub-module.
 - Make payment in installments option labels translatable.
 - Possibility to choose payment types to allow in payment in installments sub-module.
 - Possibility to enable payment card selection on merchant website.
@@ -76,8 +89,8 @@
 - Creation of an order state for "Pending authorisation" payments.
 
 1.5.0, 2015-07-16:
-- Adding SOFORT Banking sub-module.
-- Adding custom state for pending funds transfer payments.
+- [sofort]Adding SOFORT Banking sub-module.
+- [sofort,sepa]Adding custom state for pending funds transfer payments.
 - Correction of IPN URL displayed in module backend (common URL for all stores in multistore mode).
 
 1.4.0, 2015-06-09:
@@ -85,19 +98,19 @@
 - Bug fix: relative to max version specified in PrestaShop "ps_versions_compliancy" module property.
 - Bug fix: do not send shipping_amount and insurance_amount variables to avoid amount consistency bug for PayPal payment.
 - Bug fix: store ID missed when IPN URL called (in multistore mode).
-- Adding ANCV sub-module.
-- Adding SEPA sub-module.
+- [ancv]Adding ANCV sub-module.
+- [sepa]Adding SEPA sub-module.
 - Reorganization of module settings display.
 - Use of language dropdown (in PrestaShop v1.6.x) instead of flags for multilingual setting fields.
 - Adding PT and DE translations for IPN responses.
 
 1.3.2, 2015-04-17:
-- Bug fix: do not send cart content (except when it is mandatory) to avoid platform consistency checks.
+- Bug fix: do not send cart content (except when it is mandatory) to avoid gateway consistency checks.
 - Bug fix: dot not post category mappings to server when using the same category for all products (in module backend configuration).
 - Bug fix: relative to order amount rounding.
 - Consideration of locales (of languages) like pt_BR for Brazilian portuguese.
 - Checking php.ini limits (post_max_size et max_input_vars) when displaying module configuration in backend.
-- Bug fix: dot not post shipping options to server when merchant has not FacilyPay Oney contract (in module backend configuration).
+- [oney]Bug fix: dot not post shipping options to server when merchant has not FacilyPay Oney contract (in module backend configuration).
 
 1.3.1, 2015-03-19:
 - Bug fix: relative to checking PrestaShop (v 1.5.0.x) supported version at module installation.
@@ -125,7 +138,7 @@
 - Correction of a problem relative to order state when a product is out of stock.
 - Checking if SSL enabled before activating card data entry on the PrestaShop frontend option.
 - Ability to enable / disable logs.
-- Adding 3-DS authentication and certificate as order message.
+- Adding 3DS authentication and certificate as order message.
 
 1.2b, 2014-04-02:
 - Bug fix: load all contents (images, css, ...) in HTTPS (if SSL enabled) to avoid browsers warning message.
@@ -135,7 +148,7 @@
 1.1, 2013-08-19:
 - Managing single and mutiple payments in the same module.
 - Ability to propose the card type choice on the PrestaShop frontend.
-- Ability to propose the card data entry on the PrestaShop frontend (if option subscribed on the platform).
+- Ability to propose the card data entry on the PrestaShop frontend (if option subscribed on the gateway).
 - Ability to rename the payment method title in all languages available in PretsaShop.
 - Adding theme configuration to customize payment page.
 

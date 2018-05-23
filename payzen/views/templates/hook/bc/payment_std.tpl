@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,7 +9,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -21,7 +21,7 @@
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
   {if $payzen_std_card_data_mode == 1}
-    <a onclick="javascript: $('#payzen_standard').submit();" title="{l s='Click here to pay by bank card' mod='payzen'}" href="javascript: void(0);">
+    <a href="javascript: $('#payzen_standard').submit();" title="{l s='Click here to pay by credit card' mod='payzen'}">
   {else}
     <a class="unclickable" title="{l s='Enter payment information and click « Pay » button' mod='payzen'}">
   {/if}

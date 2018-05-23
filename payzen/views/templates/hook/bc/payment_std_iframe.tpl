@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,7 +9,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -20,18 +20,22 @@
 {/if}
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
-  <a onclick="javascript: payzenShowIframe();" title="{l s='Click here to pay by bank card' mod='payzen'}" href="javascript: void(0);">
-    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen"/>{$payzen_title|escape:'html':'UTF-8'}
+  <a href="javascript: void(0);" title="{l s='Click here to pay by credit card' mod='payzen'}" id="payzen_standard_link">
+    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
     <br />
 
-    <div id="payzen_iframe_overlay" style="display: none;"></div>
+    <div class="payzen-iframe" id="payzen_iframe_overlay" style="display: none;"></div>
 
-    <div id="payzen_iframe_warn" style="display: none;">
-      {l s='Please do not refresh the page until you complete payment.' mod='payzen'}
+    <div class="payzen-iframe" id="payzen_iframe_actions" style="display: none;">
+      <a>{l s='< Cancel and return to payment choice' mod='payzen'}</a>
     </div>
 
-    <iframe id="payzen_iframe" src="{$link->getModuleLink('payzen', 'iframe', ['content_only' => 1], true)|escape:'html':'UTF-8'}" style="display: none;">
+    <iframe class="payzen-iframe" id="payzen_iframe" src="{$link->getModuleLink('payzen', 'iframe', ['content_only' => 1], true)|escape:'html':'UTF-8'}" style="display: none;">
     </iframe>
+
+    <div class="payzen-iframe" id="payzen_iframe_warn" style="display: none;">
+      {l s='Please do not refresh the page until you complete payment.' mod='payzen'}
+    </div>
   </a>
 
   <script type="text/javascript">
@@ -44,14 +48,26 @@
       done = true;
 
       $('#payzen_iframe').parent().addClass('unclickable');
+      $('.payzen-iframe').show();
 
-      $('#payzen_iframe_overlay').show();
-      $('#payzen_iframe_warn').show();
-      $('#payzen_iframe').show();
-
-      var url = decodeURIComponent("{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}");
-      $('#payzen_iframe').attr('src', url);
+      var url = "{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}";
+      $('#payzen_iframe').attr('src', decodeURIComponent(url));
     }
+
+    function payzenHideIframe() {
+      done = false;
+
+      $('#payzen_iframe').parent().removeClass('unclickable');
+      $('.payzen-iframe').hide();
+
+      var url = "{$link->getModuleLink('payzen', 'iframe', ['content_only' => 1], true)|escape:'url':'UTF-8'}";
+      $('#payzen_iframe').attr('src', decodeURIComponent(url));
+    }
+
+    $(function() {
+      $('#payzen_standard_link').click(payzenShowIframe);
+      $('#payzen_iframe_actions a').click(payzenHideIframe);
+    });
   </script>
 </div>
 

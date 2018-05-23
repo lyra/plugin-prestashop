@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -54,12 +54,14 @@ class PayzenMultiPayment extends AbstractPayzenPayment
             return $options; // all options
         }
 
+        $amount = $cart->getOrderTotal();
+
         $enabled_options = array();
         foreach ($options as $key => $option) {
             $min = $option['min_amount'];
             $max = $option['max_amount'];
 
-            if ((empty($min) || $cart->getOrderTotal() >= $min) && (empty($max) || $cart->getOrderTotal() <= $max)) {
+            if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
                 $default = is_string($option['label']) ? $option['label'] : $option['count'].' x';
                 $option_label = is_array($option['label']) && isset($option['label'][$cart->id_lang]) ?
                     $option['label'][$cart->id_lang] : $default;
@@ -159,6 +161,6 @@ class PayzenMultiPayment extends AbstractPayzenPayment
 
     protected function getDefaultTitle()
     {
-        return $this->l('Payment by bank card in several times');
+        return $this->l('Payment by credit card in installments');
     }
 }

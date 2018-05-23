@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,7 +9,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -20,7 +20,7 @@
   <tr>
     <th>{l s='Customer group' mod='payzen'}</th>
     <th>{l s='Minimum amount' mod='payzen'}</th>
-    <th>{l s='Maximum amount' mod='payzen'}</th>
+    {if !isset($min_only) || !$min_only}<th>{l s='Maximum amount' mod='payzen'}</th>{/if}
   </tr>
 </thead>
 
@@ -34,6 +34,7 @@
           style="width: 200px;"
           type="text">
     </td>
+    {if !isset($min_only) || !$min_only}
     <td>
       <input id="{$input_name|escape:'html':'UTF-8'}_0_max_amount"
           name="{$input_name|escape:'html':'UTF-8'}[0][max_amount]"
@@ -41,6 +42,7 @@
           style="width: 200px;"
           type="text">
     </td>
+    {/if}
   </tr>
 
   {foreach from=$groups item=group}
@@ -55,6 +57,7 @@
             style="width: 200px;"
             type="text">
       </td>
+      {if !isset($min_only) || !$min_only}
       <td>
         <input id="{$input_name|escape:'html':'UTF-8'}_{$group_id|escape:'html':'UTF-8'}_max_amount"
             name="{$input_name|escape:'html':'UTF-8'}[{$group_id|escape:'html':'UTF-8'}][max_amount]"
@@ -62,6 +65,7 @@
             style="width: 200px;"
             type="text">
       </td>
+      {/if}
     </tr>
   {/foreach}
 </tbody>

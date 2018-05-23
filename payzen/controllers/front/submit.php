@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -10,7 +10,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -38,6 +38,10 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
     public function postProcess()
     {
         $this->iframe = (int)Tools::getValue('content_only', 0) == 1;
+
+        if ($this->iframe) {
+            unset($this->context->cookie->payzenCartId); // used in iframe mode
+        }
 
         $cart_id = Tools::getValue('vads_order_id');
         $this->currentCart = new Cart((int)$cart_id);
@@ -87,7 +91,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
         if (!$response->isAuthentified()) {
             $ip = Tools::getRemoteAddr();
             $this->logger->logError("{$ip} tries to access module/payzen/submit page without valid signature with parameters: ".print_r($_REQUEST, true));
-            // $this->logger->logError('Signature algorithm selected in module settings must be the same as one selected in PayZen Back Office.');
+            $this->logger->logError('Signature algorithm selected in module settings must be the same as one selected in PayZen Back Office.');
 
             Tools::redirectLink('index.php');
         }
@@ -126,10 +130,13 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
                 } else {
                     $this->context->cookie->id_cart = $cart_id;
 
-                    // option 2 choosen : get back to checkout process and show message
+                    // option 2 choosen : get back to checkout process
                     $this->logger->logInfo("Payment failed, redirect to order checkout page, cart ID : #$cart_id.");
 
-                    $this->context->cookie->payzenPayErrors = $this->module->l('Your payment was not accepted. Please, try to re-order.', 'submit');
+                    if (!$response->isCancelledPayment()) {
+                        // ... and show message if not cancelled
+                        $this->context->cookie->payzenPayErrors = $this->module->l('Your payment was not accepted. Please, try to re-order.', 'submit');
+                    }
 
                     $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
                     if (version_compare(_PS_VERSION_, '1.7', '<') && !Configuration::get('PS_ORDER_PROCESS_TYPE')) {
@@ -215,7 +222,9 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
                 $link .= '&check_url_warn=yes';
             }
 
-            $link .= '&prod_info=yes';
+            if (PayzenTools::$plugin_features['prodfaq']) {
+                $link .= '&prod_info=yes';
+            }
         }
 
         $this->payzenRedirect($link);

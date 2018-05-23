@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.9.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,7 +9,7 @@
  * https://opensource.org/licenses/afl-3.0.php
  *
  * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @category  payment
  * @package   payzen
@@ -30,7 +30,13 @@
 </form>
 
 <script type="text/javascript">
-  window.onload = function() {
-    document.getElementById('payzen_form').submit();
-  };
+      function payzenSubmitForm() {
+        document.getElementById('payzen_form').submit();
+      }
+
+      if (window.addEventListener) { // for most browsers
+        window.addEventListener('load', payzenSubmitForm, false);
+      } else if (window.attachEvent) { // for IE 8 and earlier versions
+        window.attachEvent('onload', payzenSubmitForm);
+      }
 </script>
