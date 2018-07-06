@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -127,7 +127,7 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
 
         $logger->logInfo("The current state for order corresponding to cart #$cart_id is ($old_state).");
 
-        // check if a total refund of order was made
+        /* check if a total refund of order was made */
         $total_refund = false;
 
         if ($response->get('operation_type') === 'CREDIT') {
@@ -143,7 +143,7 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
         $outofstock = Payzen::isOutOfStock($order);
         $new_state = (int)Payzen::nextOrderState($response, $total_refund, $outofstock);
 
-        // final states
+        /* final states */
         $consistent_states = array(
             'PS_OS_OUTOFSTOCK_PAID', // override paid state since PrestaShop 1.6.1
             'PAYZEN_OS_PAYMENT_OUTOFSTOCK', // paid state for PrestaShop < 1.6.1
@@ -153,7 +153,7 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
             'PS_OS_CANCELED'
         );
 
-        // if the payment is not the first in sequence, do not update order state
+        /* if the payment is not the first in sequence, do not update order state */
         $first_payment = ($response->get('sequence_number') === '1') || !$response->get('sequence_number');
 
         if (($old_state === $new_state) || !$first_payment) {

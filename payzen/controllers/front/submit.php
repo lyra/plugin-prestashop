@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -162,7 +162,13 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
             $outofstock = Payzen::isOutOfStock($order);
             $new_state = (int)Payzen::nextOrderState($response, false, $outofstock);
 
-            if ($old_state === $new_state) {
+            // for PrestaShop < 1.6.1, expect either original "Out of stock" state or ours to check order consistency
+            $bc_os_state_valid = $outofstock;
+            if (!Configuration::get('PS_OS_OUTOFSTOCK_PAID')) {
+                $bc_os_state_valid &= Payzen::isStateInArray($new_state, array('PS_OS_OUTOFSTOCK', 'PAYZEN_OS_PAYMENT_OUTOFSTOCK'));
+            }
+
+            if (($old_state === $new_state) || $bc_os_state_valid) {
                 // no changes, just display a confirmation message
                 $this->logger->logInfo("No changes for order associated with cart #$cart_id, order remains in state ($old_state).");
 

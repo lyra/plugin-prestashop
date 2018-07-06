@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -37,7 +37,7 @@
 
       {l s='Developed by' mod='payzen'} : <b><a href="http://www.lyra-network.com/" target="_blank">Lyra Network</a></b><br />
       {l s='Contact us' mod='payzen'} : <b><a href="mailto:support@payzen.eu">support@payzen.eu</a></b><br />
-      {l s='Module version' mod='payzen'} : <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}1.10.0</b><br />
+      {l s='Module version' mod='payzen'} : <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}1.10.1</b><br />
       {l s='Gateway version' mod='payzen'} : <b>V2</b><br />
 
       {if !empty($payzen_doc_files)}
@@ -112,7 +112,9 @@
           </select>
           <p>
             {l s='Algorithm used to compute the payment form signature. Selected algorithm must be the same as one configured in your store Back Office.' mod='payzen'}<br />
-            <b>{l s='The SHA-256 algorithm should not be activated if it is not yet available in your store Back Office, the feature will be available soon.' mod='payzen'}</b>
+            {if !$payzen_plugin_features['shatwo']}
+              <b>{l s='The SHA-256 algorithm should not be activated if it is not yet available in your store Back Office, the feature will be available soon.' mod='payzen'}</b>
+            {/if}
           </p>
         </div>
 

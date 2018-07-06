@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -52,7 +52,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.10.0';
+        $this->version = '1.10.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1247,6 +1247,10 @@ class Payzen extends PaymentModule
             }
 
             if ($update) {
+                if ($order->total_paid_real < 0) {
+                    $order->total_paid_real = 0;
+                }
+
                 $order->update();
             }
         }

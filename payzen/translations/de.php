@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -31,7 +31,7 @@ $_MODULE['<{payzen}prestashop>payzen_370d156c9a03fff05885780bf8b4265f'] = 'Feld 
 $_MODULE['<{payzen}prestashop>payzen_23d62832b4b36b198fa463af358fa632'] = 'Bei der Speicherung von Feld « %s » ist ein Fehler aufgetreten.';
 $_MODULE['<{payzen}prestashop>payzen_6913797be2be5ef2b88c5fe4a40cc67f'] = 'Multishipping ist aktiviert. FacilyPay Oney Zahlung kann nicht aktiviert werden.';
 $_MODULE['<{payzen}prestashop>payzen_4c7fd4e78164fd8c7c942f71d800010b'] = 'Bitte geben Sie die mit Banque Accord vereinbarten Mindest und Höchstbeträge im Reiter FacilyPay Oney Zahlung ein.';
-$_MODULE['<{payzen}prestashop>back_office_00ddecab33f6d568fd060cb584bde0d3'] = 'EINMALZAHLUNG - Kundengruppe Menge Einschränkung';
+$_MODULE['<{payzen}prestashop>back_office_00ddecab33f6d568fd060cb584bde0d3'] = 'Einmalzahlung - Kundengruppe Menge Einschränkung';
 $_MODULE['<{payzen}prestashop>back_office_d57aca7ebe91cb421fd25666cf11ebe0'] = 'Ratenzahlung - Kundengruppe Menge Einschränkung';
 $_MODULE['<{payzen}prestashop>back_office_46e0a9984f6dc97ee9cdd752c3ca09e3'] = 'Ratenzahlung - Zahlungsarten';
 $_MODULE['<{payzen}prestashop>back_office_56136368d92fb1daadd803626e5d21ea'] = 'FacilyPay Oney Zahlung - Kundengruppe Menge Einschränkung';
