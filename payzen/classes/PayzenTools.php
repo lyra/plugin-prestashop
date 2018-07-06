@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -69,6 +69,7 @@ class PayzenTools
         'acquis' => true,
         'prodfaq' => true,
         'restrictmulti' => false,
+        'shatwo' => true,
 
         'multi' => true,
         'choozeo' => false,
@@ -163,7 +164,7 @@ class PayzenTools
                 array('key' => 'PAYZEN_KEY_PROD', 'name' => 'key_prod', 'default' => '2222222222222222',
                     'label' => 'Certificate in production mode'),
                 array('key' => 'PAYZEN_MODE', 'name' => 'ctx_mode', 'default' => 'TEST', 'label' => 'Mode'),
-                array('key' => 'PAYZEN_SIGN_ALGO', 'name' => 'sign_algo', 'default' => 'SHA-1',
+                array('key' => 'PAYZEN_SIGN_ALGO', 'name' => 'sign_algo', 'default' => 'SHA-256',
                     'label' => 'Signature algorithm'),
                 array('key' => 'PAYZEN_PLATFORM_URL', 'name' => 'platform_url',
                     'default' => 'https://secure.payzen.eu/vads-payment/', 'label' => 'Payment page URL'),

@@ -1,3 +1,9 @@
+1.10.1, 2018-07-06:
+- Bug fix: Fixed negative amount for order "total_paid_real" field on out of stock orders (PrestaShop 1.5 only).
+- Bug fix: Deleted payment error message shown for buyer on out of stock orders (PrestaShop < 1.6.1 only).
+- [shatwo]Enable SHA-256 signature algorithm by default.
+- Ignore spaces at the beginning and the end of certificates on return signature processing.
+
 1.10.0, 2018-05-23:
 - Bug fix: relative to JavaScript action of payment button on order validation page (with one page checkout only).
 - Bug fix: fatal error when creating order from PrestaShop backend with Colissimo carrier enabled.

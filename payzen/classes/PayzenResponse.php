@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -106,7 +106,7 @@ if (! class_exists('PayzenResponse', false)) {
         public function __construct($params, $ctx_mode, $key_test, $key_prod, $algo = PayzenApi::ALGO_SHA1)
         {
             $this->rawResponse = PayzenApi::uncharm($params);
-            $this->certificate = $ctx_mode == 'PRODUCTION' ? $key_prod : $key_test;
+            $this->certificate = trim(($ctx_mode == 'PRODUCTION') ? $key_prod : $key_test);
 
             if (in_array($algo, PayzenApi::$SUPPORTED_ALGOS)) {
                 $this->algo = $algo;
@@ -449,6 +449,7 @@ if (! class_exists('PayzenResponse', false)) {
             if (! empty($extra_message)) {
                 $message .= ' ' . $extra_message;
             }
+
             $message = str_replace("\n", ' ', $message);
 
             // set original CMS encoding to convert if necessary response to send to platform

@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -64,7 +64,7 @@ class PayzenHelperForm
 
         // get documentation links
         $doc_files = array();
-        $filenames = glob(_PS_MODULE_DIR_.'payzen/installation_doc/PayZen_PrestaShop_1.5-1.7_v1.10.0*.pdf');
+        $filenames = glob(_PS_MODULE_DIR_.'payzen/installation_doc/PayZen_PrestaShop_1.5-1.7_v1.10.1*.pdf');
 
         $doc_languages = array(
             'fr' => 'Français',

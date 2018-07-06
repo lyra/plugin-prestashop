@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.0 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -215,7 +215,7 @@ abstract class AbstractPayzenPayment
         /* @var $request PayzenRequest */
         $request = new PayzenRequest();
 
-        $contrib = 'PrestaShop1.5-1.7_1.10.0/'._PS_VERSION_.'/'.PHP_VERSION;
+        $contrib = 'PrestaShop1.5-1.7_1.10.1/'._PS_VERSION_.'/'.PHP_VERSION;
         if (defined('_PS_HOST_MODE_')) {
             $contrib = str_replace('PrestaShop', 'PrestaShop_Cloud', $contrib);
         }
