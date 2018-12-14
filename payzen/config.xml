@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
 	<name>payzen</name>
-    <displayName>PayZen</displayName>
-    <version>1.4f</version>
-    <description>Accepts payments by credit cards (CB, Visa, MasterCard, Amex...) with PayZen</description>
-    <tab>payments_gateways</tab>
-    <confirmUninstall>Are you sure you want to delete your details ?</confirmUninstall>
-    <is_configurable>1</is_configurable>
-    <need_instance>1</need_instance>
+	<displayName>PayZen</displayName>
+	<version>1.4.7</version>
+	<description>Accept payments by credit cards with PayZen.</description>
+	<tab>payments_gateways</tab>
+	<confirmUninstall>Are you sure you want to delete your gateway details ?</confirmUninstall>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
 </module>

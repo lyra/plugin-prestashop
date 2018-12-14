@@ -1,6 +1,6 @@
 <p class="payment_module">
-	<a href="{$payzen_link_action}" title="{l s='Pay with PayZen' mod='payzen'}">
-		<img src="{$base_dir}modules/payzen/BannerLogo.gif" alt="{l s='Click here to pay with PayZen' mod='payzen'}" />
-		{l s='Pay with PayZen' mod='payzen'}
-	</a>
+    <a href="{$payzen_link_action}" title="{l s='Click here to pay by credit card' mod='payzen'}">
+        <img width="120" src="{$base_dir}modules/payzen/img/BannerLogo.png" alt="PayZen" />
+        {l s='Pay by credit card' mod='payzen'}
+    </a>
 </p>
