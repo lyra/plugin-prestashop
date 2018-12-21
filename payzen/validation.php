@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,11 +9,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  */
 
 /**
@@ -114,9 +114,11 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
                 $msg = Payzen::isOney($response) ? 'FacilyPay Oney payment' : 'Save on failure option is selected';
                 $logger->logInfo("$msg : save failed order for cart #$cart_id. New order state is $new_state.");
                 $order = $payzen->saveOrder($cart, $new_state, $response);
-            }
 
-            die($response->getOutputForPlatform('payment_ko'));
+                die($response->getOutputForPlatform('payment_ko'));
+            } else {
+                die($response->getOutputForPlatform('payment_ko_bis'));
+            }
         }
     } else {
         /* order already registered */
@@ -177,9 +179,9 @@ if (($cart_id = (int)Tools::getValue('vads_order_id')) && Tools::getValue('vads_
         } elseif (!$old_state || Payzen::isStateInArray($old_state, Payzen::getManagedStates())) {
             if (($old_state === Configuration::get('PS_OS_ERROR')) && $response->isAcceptedPayment() && Payzen::hasAmountError($order)) {
                 /* amount paid not equals initial amount. */
-                $logger->logWarning(
-                    "Error: amount paid {$order->total_paid_real} is not equal to initial amount {$order->total_paid}. Order is in a failed state, cart #$cart_id."
-                );
+                $msg = "Error: amount paid {$order->total_paid_real} is not equal to initial amount {$order->total_paid}.";
+                $msg .= " Order is in a failed state, cart #$cart_id.";
+                $logger->logWarning($msg);
                 die($response->getOutputForPlatform('ko', 'Total paid is different from order amount.'));
             }
 

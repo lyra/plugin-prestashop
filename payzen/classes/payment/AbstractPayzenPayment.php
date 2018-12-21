@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,11 +9,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -30,6 +30,7 @@ abstract class AbstractPayzenPayment
     protected $name;
 
     protected $currencies = array();
+    protected $countries = array();
 
     public function isAvailable($cart)
     {
@@ -42,6 +43,10 @@ abstract class AbstractPayzenPayment
         }
 
         if (!$this->checkCurrency($cart)) {
+            return false;
+        }
+
+        if (!$this->checkCountry($cart)) {
             return false;
         }
 
@@ -89,8 +94,7 @@ abstract class AbstractPayzenPayment
 
         $amount = $cart->getOrderTotal();
 
-        if (($min_amount && $amount < $min_amount)
-            || ($max_amount && $amount > $max_amount)) {
+        if (($min_amount && $amount < $min_amount) || ($max_amount && $amount > $max_amount)) {
             return false;
         }
 
@@ -106,6 +110,22 @@ abstract class AbstractPayzenPayment
         // check if sub-module is available for some currencies
         $cart_currency = new Currency((int)$cart->id_currency);
         if (in_array($cart_currency->iso_code, $this->currencies)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function checkCountry($cart)
+    {
+        if (!is_array($this->countries) || empty($this->countries)) {
+            return true;
+        }
+
+        // check if sub-module is available for some countries
+        $billing_address = new Address((int)$cart->id_address_invoice);
+        $billing_country = new Country((int)$billing_address->id_country);
+        if (in_array($billing_country->iso_code, $this->countries)) {
             return true;
         }
 
@@ -215,7 +235,7 @@ abstract class AbstractPayzenPayment
         /* @var $request PayzenRequest */
         $request = new PayzenRequest();
 
-        $contrib = 'PrestaShop1.5-1.7_1.10.1/'._PS_VERSION_.'/'.PHP_VERSION;
+        $contrib = 'PrestaShop1.5-1.7_1.10.2/'._PS_VERSION_.'/'.PHP_VERSION;
         if (defined('_PS_HOST_MODE_')) {
             $contrib = str_replace('PrestaShop', 'PrestaShop_Cloud', $contrib);
         }
@@ -348,6 +368,9 @@ abstract class AbstractPayzenPayment
         }
 
         $request->set('tax_amount', $tax_amount_in_cents);
+
+        // VAT amount for colombian payment means
+        $request->set('totalamount_vat', $tax_amount_in_cents);
 
         if (Configuration::get('PAYZEN_SEND_SHIP_DATA') == 'True' || $this->proposeOney($data)) {
             // set information about delivery mode

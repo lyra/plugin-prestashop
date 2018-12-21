@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,11 +9,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -28,6 +28,7 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
     protected $name = 'choozeo';
 
     protected $currencies = array('EUR');
+    protected $countries = array('FR', 'GP', 'MQ', 'GF', 'RE', 'YT');
 
     public function isAvailable($cart)
     {
@@ -42,23 +43,6 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
         }
 
         return true;
-    }
-
-    public function validate($cart, $data = array())
-    {
-        $errors = parent::validate($cart, $data);
-        if (!empty($errors)) {
-            return $errors;
-        }
-
-        $billing_address = new Address((int)$cart->id_address_invoice);
-        $billing_country = new Country((int)$billing_address->id_country);
-
-        if ($billing_country->iso_code != 'FR') {
-            $errors[] = $this->l('Country not supported by Choozeo payment.');
-        }
-
-        return $errors;
     }
 
     public static function getAvailableOptions($cart = null)
@@ -110,6 +94,9 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
 
         // Choozeo supports only automatic validation
         $request->set('validation_mode', '0');
+
+        // send FR even address is in DOM-TOM unless form is rejected
+        $request->set('cust_country', 'FR');
 
         return $request;
     }

@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,11 +9,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  */
 
 if (! defined('_PS_VERSION_')) {
@@ -150,7 +150,8 @@ if (! class_exists('PayzenResponse', false)) {
                 'AUTHORISED',
                 'AUTHORISED_TO_VALIDATE',
                 'CAPTURED',
-                'CAPTURE_FAILED' /* capture will be redone */
+                'CAPTURE_FAILED', /* capture will be redone */
+                'ACCEPTED'
             );
 
             return in_array($this->transStatus, $confirmedStatuses) || $this->isPendingPayment();
@@ -167,7 +168,8 @@ if (! class_exists('PayzenResponse', false)) {
                 'INITIAL',
                 'WAITING_AUTHORISATION',
                 'WAITING_AUTHORISATION_TO_VALIDATE',
-                'UNDER_VERIFICATION'
+                'UNDER_VERIFICATION',
+                'WAITING_FOR_PAYMENT'
             );
 
             return in_array($this->transStatus, $pendingStatuses);
@@ -477,11 +479,11 @@ if (! class_exists('PayzenResponse', false)) {
          * @param boolean $appendCode
          * @return string
          */
-        public static function translate($result, $result_type = self::TYPE_RESULT, $lang = 'fr', $appendCode = false)
+        public static function translate($result, $result_type = self::TYPE_RESULT, $lang = 'en', $appendCode = false)
         {
             // if language is not supported, use the domain default language
             if (!key_exists($lang, self::$RESPONSE_TRANS)) {
-                $lang = 'fr';
+                $lang = 'en';
             }
 
             $translations = self::$RESPONSE_TRANS[$lang];

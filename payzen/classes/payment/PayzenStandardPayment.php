@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,11 +9,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -145,6 +145,9 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
         if (isset($data['iframe_mode']) && $data['iframe_mode']) {
             $request->set('action_mode', 'IFRAME');
+
+            // hide logos below payment fields
+            $request->set('theme_config', Configuration::get('theme_config') . '3DS_LOGOS=false;');
 
             // enable automatic redirection
             $request->set('redirect_enabled', '1');
