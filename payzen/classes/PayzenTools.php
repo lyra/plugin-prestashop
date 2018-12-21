@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,11 +9,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -390,16 +390,16 @@ class PayzenTools
     {
         // check order_id param
         if (!preg_match(self::ORDER_ID_REGEX, $cart->id)) {
-            $msg = 'Order ID «%s» does not match FacilyPay Oney specifications.';
-            $msg .= ' The regular expression for this field is «%s». Module is not displayed.';
+            $msg = 'Order ID « % s» does not match FacilyPay Oney specifications.';
+            $msg .= ' The regular expression for this field is « %s ». Module is not displayed.';
             self::getLogger()->logWarning(sprintf($msg, $cart->id, self::ORDER_ID_REGEX));
             return false;
         }
 
         // check customer ID param
         if (!preg_match(self::CUST_ID_REGEX, $cart->id_customer)) {
-            $msg = 'Customer ID «%s» does not match FacilyPay Oney specifications.';
-            $msg .= ' The regular expression for this field is «%s». Module is not displayed.';
+            $msg = 'Customer ID « %s » does not match FacilyPay Oney specifications.';
+            $msg .= ' The regular expression for this field is « %s ». Module is not displayed.';
             self::getLogger()->logWarning(sprintf($msg, $cart->id_customer, self::CUST_ID_REGEX));
             return false;
         }
@@ -409,8 +409,8 @@ class PayzenTools
             if (!preg_match(self::PRODUCT_REF_REGEX, $product['id_product'])) {
                 // product id doesn't match FacilyPay Oney rules
 
-                $msg = 'Product reference «%s» does not match FacilyPay Oney specifications.';
-                $msg .= ' The regular expression for this field is «%s». Module is not displayed.';
+                $msg = 'Product reference « %s » does not match FacilyPay Oney specifications.';
+                $msg .= ' The regular expression for this field is « %s ». Module is not displayed.';
                 self::getLogger()->logWarning(sprintf($msg, $product['id_product'], self::PRODUCT_REF_REGEX));
                 return false;
             }
@@ -438,7 +438,7 @@ class PayzenTools
     {
         $multi_cards = array(
             'AMEX', 'CB', 'DINERS', 'DISCOVER', 'E-CARTEBLEUE', 'JCB', 'MASTERCARD',
-            'PRV_BDP', 'PRV_BDT', 'PRV_OPT', 'PRV_SOC', 'VISA', 'VISA_ELECTRON'
+            'PRV_BDP', 'PRV_BDT', 'PRV_OPT', 'PRV_SOC', 'VISA', 'VISA_ELECTRON', 'VPAY'
         );
 
         $cards = array();
@@ -528,9 +528,12 @@ class PayzenTools
         if (!self::$logger) {
             self::$logger = new PayzenFileLogger(Configuration::get('PAYZEN_ENABLE_LOGS') != 'False');
 
-            $logs_dir = _PS_ROOT_DIR_.'/app/logs/';
+            $logs_dir = _PS_ROOT_DIR_.'/var/logs/';
             if (!file_exists($logs_dir)) {
-                $logs_dir = _PS_ROOT_DIR_.'/log/';
+                $logs_dir = _PS_ROOT_DIR_.'/app/logs/';
+                if(!file_exists($logs_dir)){
+                    $logs_dir = _PS_ROOT_DIR_.'/log/';
+                }
             }
 
             self::$logger->setFilename($logs_dir.date('Y_m').'_payzen.log');

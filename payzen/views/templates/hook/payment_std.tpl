@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -8,11 +8,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  *}
 
 <!-- this meta tag is mandatory to avoid encoding problems caused by \PrestaShop\PrestaShop\Core\Payment\PaymentOptionFormDecorator -->
@@ -43,9 +43,9 @@
             <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/{$key|lower|escape:'html':'UTF-8'}.png"
                alt="{$label|escape:'html':'UTF-8'}"
                title="{$label|escape:'html':'UTF-8'}"
-               style="vertical-align: middle; margin-right: 10px; height: 25px;">
+               style="vertical-align: middle; margin-right: 10px; max-height: 30px; max-width: 90px;">
           {else}
-            <span style="vertical-align: middle; margin-right: 10px; height: 25px;">{$label|escape:'html':'UTF-8'}</span>
+            <span style="vertical-align: middle; margin-right: 10px; height: 30px;">{$label|escape:'html':'UTF-8'}</span>
           {/if}
         </label>
 

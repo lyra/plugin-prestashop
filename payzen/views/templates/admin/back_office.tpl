@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -8,11 +8,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  *}
 
 <script type="text/javascript">
@@ -37,7 +37,7 @@
 
       {l s='Developed by' mod='payzen'} : <b><a href="http://www.lyra-network.com/" target="_blank">Lyra Network</a></b><br />
       {l s='Contact us' mod='payzen'} : <b><a href="mailto:support@payzen.eu">support@payzen.eu</a></b><br />
-      {l s='Module version' mod='payzen'} : <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}1.10.1</b><br />
+      {l s='Module version' mod='payzen'} : <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}1.10.2</b><br />
       {l s='Gateway version' mod='payzen'} : <b>V2</b><br />
 
       {if !empty($payzen_doc_files)}
@@ -108,12 +108,12 @@
         <div class="margin-form">
           <select id="PAYZEN_SIGN_ALGO" name="PAYZEN_SIGN_ALGO">
             <option value="SHA-1"{if $PAYZEN_SIGN_ALGO === 'SHA-1'} selected="selected"{/if}>SHA-1</option>
-            <option value="SHA-256"{if $PAYZEN_SIGN_ALGO === 'SHA-256'} selected="selected"{/if}>SHA-256</option>
+            <option value="SHA-256"{if $PAYZEN_SIGN_ALGO === 'SHA-256'} selected="selected"{/if}>HMAC-SHA-256</option>
           </select>
           <p>
             {l s='Algorithm used to compute the payment form signature. Selected algorithm must be the same as one configured in your store Back Office.' mod='payzen'}<br />
             {if !$payzen_plugin_features['shatwo']}
-              <b>{l s='The SHA-256 algorithm should not be activated if it is not yet available in your store Back Office, the feature will be available soon.' mod='payzen'}</b>
+              <b>{l s='The HMAC-SHA-256 algorithm should not be activated if it is not yet available in your store Back Office, the feature will be available soon.' mod='payzen'}</b>
             {/if}
           </p>
         </div>
@@ -373,7 +373,7 @@
                 <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SEND_SHIP_DATA === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
               {/foreach}
             </select>
-            <p>{l s='Select «No» to not send advanced shipping data for all payments (carrier, delivery type and delay).' mod='payzen'}</p>
+            <p>{l s='Select « Yes » to send advanced shipping data for all payments (carrier name, delivery type and delivery rapidity).' mod='payzen'}</p>
           </div>
 
           <label>{l s='Shipping options' mod='payzen'}</label>
@@ -565,7 +565,7 @@
               <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_PROPOSE_ONEY === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
-          <p>{l s='Select «Yes» if you want to propose FacilyPay Oney in one-time payment. Attention, you must ensure that you have a FacilyPay Oney contract.' mod='payzen'}</p>
+          <p>{l s='Select « Yes » if you want to propose FacilyPay Oney in one-time payment. Attention, you must ensure that you have a FacilyPay Oney contract.' mod='payzen'}</p>
         </div>
         {/if}
       </fieldset>
@@ -596,7 +596,7 @@
       {if $payzen_plugin_features['restrictmulti']}
       <p style="background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 20px; padding: 10px;">
         {l s='ATTENTION: The payment in installments feature activation is subject to the prior agreement of Société Générale.' mod='payzen'}<br />
-        {l s='If you enable this feature while you have not the associated option, an error 07 - PAYMENT_CONFIG will occur and the buyer will not be able to pay.' mod='payzen'}
+        {l s='If you enable this feature while you have not the associated option, an error 10000 – INSTALLMENTS_NOT_ALLOWED or 07 - PAYMENT_CONFIG will occur and the buyer will not be able to pay.' mod='payzen'}
       </p>
       {/if}
 
@@ -740,7 +740,7 @@
           </tbody>
           </table>
           <p>
-            {l s='Click on «Add» button to configure one or more payment options.' mod='payzen'}<br />
+            {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
             <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend.' mod='payzen'}<br />
             <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the payment option.' mod='payzen'}<br />
             <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />
@@ -750,7 +750,7 @@
             <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of payments.' mod='payzen'}<br />
             <b>{l s='Period' mod='payzen'} : </b>{l s='Delay (in days) between payments.' mod='payzen'}<br />
             <b>{l s='1st payment' mod='payzen'} : </b>{l s='Amount of first payment, in percentage of total amount. If empty, all payments will have the same amount.' mod='payzen'}<br />
-            <b>{l s='Do no forget to clik on «Save» button to save your modifications.' mod='payzen'}</b>
+            <b>{l s='Do not forget to clik on « Save » button to save your modifications.' mod='payzen'}</b>
           </p>
         </div>
       </fieldset>
@@ -999,14 +999,14 @@
             </tbody>
             </table>
             <p>
-              {l s='Click on «Add» button to configure one or more payment options.' mod='payzen'}<br />
+              {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
               <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend.' mod='payzen'}<br />
               <b>{l s='Code' mod='payzen'} : </b>{l s='The option code as defined in your FacilyPay Oney contract.' mod='payzen'}<br />
               <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of payments.' mod='payzen'}<br />
               <b>{l s='Rate' mod='payzen'} : </b>{l s='The interest rate in percentage.' mod='payzen'}<br />
-              <b>{l s='Do no forget to clik on «Save» button to save your modifications.' mod='payzen'}</b>
+              <b>{l s='Do not forget to clik on « Save » button to save your modifications.' mod='payzen'}</b>
             </p>
           </div>
         </section>
@@ -1141,7 +1141,7 @@
               <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Rate' mod='payzen'} : </b>{l s='The interest rate in percentage.' mod='payzen'}<br />
               <b>{l s='Cap' mod='payzen'} : </b>{l s='Maximum fees amount of payment option.' mod='payzen'}<br />
-              <b>{l s='Do no forget to clik on «Save» button to save your modifications.' mod='payzen'}</b>
+              <b>{l s='Do not forget to clik on « Save » button to save your modifications.' mod='payzen'}</b>
             </p>
           </div>
         </section>

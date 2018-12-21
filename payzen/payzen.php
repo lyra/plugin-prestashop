@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -9,11 +9,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -52,7 +52,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.10.1';
+        $this->version = '1.10.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -460,7 +460,7 @@ class Payzen extends PaymentModule
 
                         if (!preg_match(self::DELIVERY_COMPANY_REGEX, $carrier)) {
                             unset($value[$id]); // error, not save this option
-                            $this->_errors[] = sprintf($this->l('Invalid value «%1$s» for field «%2$s».'), $carrier, $label);
+                            $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $carrier, $label);
                         }
                     }
                 }
@@ -485,7 +485,7 @@ class Payzen extends PaymentModule
                 }
             } elseif (in_array($key, PayzenTools::$amount_fields)) {
                 if (!empty($value) && (!is_numeric($value) || $value < 0)) {
-                    $this->_errors[] = sprintf($this->l('Invalid value «%1$s» for field «%2$s».'), $value, $label);
+                    $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $value, $label);
                     continue;
                 }
             } elseif ($key === 'PAYZEN_STD_CARD_DATA_MODE' && $value == '3' && !Configuration::get('PS_SSL_ENABLED')) {
@@ -582,9 +582,9 @@ class Payzen extends PaymentModule
                     if (!$request->set($name, $v)) {
                         $error = true;
                         if (empty($v)) {
-                            $this->_errors[] = sprintf($this->l('The field «%s» is mandatory.'), $label);
+                            $this->_errors[] = sprintf($this->l('The field « %s » is mandatory.'), $label);
                         } else {
-                            $this->_errors[] = sprintf($this->l('Invalid value «%1$s» for field «%2$s».'), $v, $label);
+                            $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $v, $label);
                         }
                     }
                 }
@@ -596,7 +596,7 @@ class Payzen extends PaymentModule
 
             // valid field : try to save into DB
             if (!Configuration::updateValue($key, $value)) {
-                $this->_errors[] = sprintf($this->l('Problem occurred while saving field «%s».'), $label);
+                $this->_errors[] = sprintf($this->l('Problem occurred while saving field « %s ».'), $label);
             } else {
                 // temporary variable set to update PrestaShop cache
                 Configuration::set($key, $value);
@@ -1231,7 +1231,7 @@ class Payzen extends PaymentModule
 
         // delete payments created by default and cancelled payments
         if (is_array($payments) && !empty($payments)) {
-            $number = $response->get('sequence_number') ?: '1';
+            $number = $response->get('sequence_number') ? $response->get('sequence_number') : '1';
             $trans_id = $number.'-'.$response->get('trans_id');
             $cancelled = $response->getTransStatus() === 'CANCELLED';
 
@@ -1385,7 +1385,7 @@ class Payzen extends PaymentModule
 
             $timestamp = strtotime($response->get('presentation_date').' UTC');
 
-            $number = $response->get('sequence_number') ?: '1';
+            $number = $response->get('sequence_number') ? $response->get('sequence_number') : '1';
             $trans_id = $number.'-'.$response->get('trans_id');
 
             $data = array(
@@ -1469,9 +1469,7 @@ class Payzen extends PaymentModule
         if ($pcc->update()) {
             return $pcc->id;
         } else {
-            $this->logger->logWarning(
-                "Problem : payment mean information for cart #{$order->id_cart} cannot be saved."
-            );
+            $this->logger->logWarning("Problem : payment mean information for cart #{$order->id_cart} cannot be saved.");
             return false;
         }
     }

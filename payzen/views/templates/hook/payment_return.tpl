@@ -1,5 +1,5 @@
 {*
- * PayZen V2-Payment Module version 1.10.1 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
  *
  * NOTICE OF LICENSE
  *
@@ -8,11 +8,11 @@
  * It is also available through the world-wide-web at this URL:
  * https://opensource.org/licenses/afl-3.0.php
  *
+ * @category  Payment
+ * @package   Payzen
  * @author    Lyra Network (http://www.lyra-network.com/)
  * @copyright 2014-2018 Lyra Network and contributors
  * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- * @category  payment
- * @package   payzen
  *}
 
 {assign var='warn_style' value='background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 10px; padding: 10px;'}
@@ -25,8 +25,8 @@
       {l s='The automatic validation has not worked. Have you correctly set up the notification URL in your bank Back Office ?' mod='payzen'}
       <br />
       {l s='For understanding the problem, please read the documentation of the module : ' mod='payzen'}<br />
-      &nbsp;&nbsp;&nbsp;- {l s='Chapter «To read carefully before going further»' mod='payzen'}<br />
-      &nbsp;&nbsp;&nbsp;- {l s='Chapter «Server URL settings»' mod='payzen'}
+      &nbsp;&nbsp;&nbsp;- {l s='Chapter « To read carefully before going further »' mod='payzen'}<br />
+      &nbsp;&nbsp;&nbsp;- {l s='Chapter « Notification URL settings »' mod='payzen'}
     {/if}
 
     <br />
@@ -41,8 +41,7 @@
   <p style="{$warn_style|escape:'html':'UTF-8'}">
     <span style="font-weight: bold; text-decoration: underline;">{l s='GOING INTO PRODUCTION' mod='payzen'}</span>
     <br />
-    {l s='You want to know how to put your shop into production mode, please go to this URL : ' mod='payzen'}
-    <a href="https://secure.payzen.eu/html/faq/prod" target="_blank">https://secure.payzen.eu/html/faq/prod</a>
+    {l s='You want to know how to put your shop into production mode, please read chapters « Proceeding to test phase » and « Shifting the shop to production mode » in the documentation of the module.' mod='payzen'}
   </p>
 
   <br/><br/>
