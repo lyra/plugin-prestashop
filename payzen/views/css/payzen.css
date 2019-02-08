@@ -29,30 +29,53 @@
     border: 0 none;
 }
 
-.payzen_choozeo_card {
-    margin-right: 5px;
+.payzen_card {
+    display: inline !important;
 }
 
-.payzen_choozeo_card input { /* hide radio */
+.payzen_card img, .payzen_card span {
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.payzen_card img {
+    max-width: 90px;
+    max-height: 30px;
+}
+
+.payzen_card span {
+    height: 30px;
+}
+
+.payzen_card_click {
+    margin-right: 20px;
+}
+
+.payzen_card_click input { /* hide radio */
     display: none !important;
 }
 
-.payzen_choozeo_card img {
-    cursor:pointer;
-    border:2px solid transparent;
+.payzen_card_click img {
+    cursor: pointer;
+    border: 2px solid transparent;
     opacity: 0.6;
+    max-height: 40px;
+    max-width: 100px;
 }
 
-.payzen_choozeo_card input:checked + img {
+.payzen_card_click input:checked + img {
     border: 2px solid black;
     opacity: 1;
 }
 
-.payzen_choozeo_card img:HOVER, .payzen_choozeo_card img.hover {
+.payzen_card_click img:HOVER, .payzen_card_click img.hover {
     opacity: 1;
 }
 
-/* .payment-option label img {
+.payment-option label img[src*="payzen"] {
+    max-width: 90px;
+    margin-right: 12px;
+    max-height: 30px;
     float: left;
-    width: 86px;
-} */
+    margin-top: -5px;
+}

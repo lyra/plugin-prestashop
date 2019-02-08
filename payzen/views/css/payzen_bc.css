@@ -21,7 +21,7 @@ div.payment_module.payzen a img {
 }
 
 div.payment_module.payzen a img.logo {
-    width: 86px; 
+    width: 86px;
     display: inline-block;
     vertical-align: middle;
     margin-right: 10px;
@@ -31,13 +31,6 @@ div.payment_module.payzen a form {
     padding-left: 40px;
     font-size: 13px;
     text-transform: none !important;
-}
-
-div.payment_module.payzen a img.card, div.payment_module.payzen a span.card {
-    vertical-align: middle;
-    margin-right: 10px;
-    max-height: 30px;
-    max-width: 90px;
 }
 
 div.payment_module.payzen.multi ul {
