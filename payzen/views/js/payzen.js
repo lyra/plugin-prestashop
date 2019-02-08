@@ -1,18 +1,10 @@
 /**
- * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * Copyright © Lyra Network.
+ * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Academic Free License (AFL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * https://opensource.org/licenses/afl-3.0.php
- *
- * @category  Payment
- * @package   Payzen
- * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2018 Lyra Network and contributors
- * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @author    Lyra Network (https://www.lyra-network.com/)
+ * @copyright Lyra Network
+ * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
 /**
@@ -37,7 +29,7 @@ function payzenAddMultiOption(first) {
 function payzenDeleteMultiOption(key) {
     $('#payzen_multi_option_' + key).remove();
 
-    if ($('#payzen_multi_options_table tbody tr').length == 1) {
+    if ($('#payzen_multi_options_table tbody tr').length === 1) {
         $('#payzen_multi_options_btn').show();
         $('#payzen_multi_options_table').hide();
     }
@@ -61,7 +53,7 @@ function payzenAddOneyOption(first) {
 function payzenDeleteOneyOption(key) {
     $('#payzen_oney_option_' + key).remove();
 
-    if ($('#payzen_oney_options_table tbody tr').length == 1) {
+    if ($('#payzen_oney_options_table tbody tr').length === 1) {
         $('#payzen_oney_options_btn').show();
         $('#payzen_oney_options_table').hide();
     }
@@ -89,7 +81,7 @@ function payzenCategoryTableVisibility() {
 function payzenDeliveryTypeChanged(key) {
     var type = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_type').val();
 
-    if (type == 'RECLAIM_IN_SHOP') {
+    if (type === 'RECLAIM_IN_SHOP') {
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_address').show();
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_zip').show();
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_city').show();
@@ -104,28 +96,28 @@ function payzenDeliveryTypeChanged(key) {
     }
 
     var speed = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_speed').val();
-    if ((type == 'RECLAIM_IN_SHOP') && (speed == 'PRIORITY')) {
-    	$('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').show();
+    if ((type === 'RECLAIM_IN_SHOP') && (speed === 'PRIORITY')) {
+        $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').show();
     } else {
-    	$('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').hide();
+        $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').hide();
     }
 }
 
 function payzenDeliverySpeedChanged(key) {
-	var speed = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_speed').val();
+    var speed = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_speed').val();
     var type = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_type').val();
 
-    if ((type == 'RECLAIM_IN_SHOP') && (speed == 'PRIORITY')) {
-    	$('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').show();
+    if ((type === 'RECLAIM_IN_SHOP') && (speed === 'PRIORITY')) {
+        $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').show();
     } else {
-    	$('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').hide();
+        $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').hide();
     }
 }
 
 function payzenRedirectChanged() {
     var redirect = $('select#PAYZEN_REDIRECT_ENABLED option:selected').val();
 
-    if (redirect == 'True') {
+    if (redirect === 'True') {
         $('#payzen_redirect_settings').show();
         $('#payzen_redirect_settings select, #payzen_redirect_settings input').removeAttr('disabled');
     } else {
@@ -137,7 +129,7 @@ function payzenRedirectChanged() {
 function payzenOneyEnableOptionsChanged() {
     var enable = $('select#PAYZEN_ONEY_ENABLE_OPTIONS option:selected').val();
 
-    if (enable == 'True') {
+    if (enable === 'True') {
         $('#payzen_oney_options_settings').show();
         $('#payzen_oney_options_settings select, #payzen_oney_options_settings input').removeAttr('disabled');
     } else {
@@ -149,7 +141,7 @@ function payzenOneyEnableOptionsChanged() {
 function payzenFullcbEnableOptionsChanged() {
     var enable = $('select#PAYZEN_FULLCB_ENABLE_OPTS option:selected').val();
 
-    if (enable == 'True') {
+    if (enable === 'True') {
         $('#payzen_fullcb_options_settings').show();
         $('#payzen_fullcb_options_settings select, #payzen_fullcb_options_settings input').removeAttr('disabled');
     } else {
@@ -169,5 +161,41 @@ function payzenHideOtherLanguage(id, name) {
 
     if (id_old_language != id) {
         changeEmployeeLanguage();
+    }
+}
+
+function payzenCardEntryChanged() {
+    var isKrypton = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val() === '5';
+
+    if(isKrypton) {
+        $('#PAYZEN_STD_REST_SETTINGS').show();
+    } else {
+        $('#PAYZEN_STD_REST_SETTINGS').hide();
+    }
+}
+
+function payzenAddOtherPaymentMeansOption(first) {
+    if (first) {
+        $('#payzen_other_payment_means_options_btn').hide();
+        $('#payzen_other_payment_means_options_table').show();
+        $('#PAYZEN_OTHER_PAYMENT_MEANS').remove();
+    }
+
+    var timestamp = new Date().getTime();
+
+    var rowTpl = $('#payzen_other_payment_means_row_option').html();
+    rowTpl = rowTpl.replace(/PAYZEN_OTHER_PAYMENT_SCRIPT_MEANS_KEY/g, '' + timestamp);
+
+    $(rowTpl).insertBefore('#payzen_other_payment_means_option_add');
+}
+
+
+function payzenDeleteOtherPaymentMeansOption(key) {
+    $('#payzen_other_payment_means_option_' + key).remove();
+
+    if ($('#payzen_other_payment_means_options_table tbody tr').length === 1) {
+        $('#payzen_other_payment_means_options_btn').show();
+        $('#payzen_other_payment_means_options_table').hide();
+        $('#payzen_other_payment_means_options_table').append( "<input type=\"hidden\" id=\"PAYZEN_OTHER_PAYMENT_MEANS\" name=\"PAYZEN_OTHER_PAYMENT_MEANS\" value=\"\">" );
     }
 }

@@ -1,23 +1,15 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * Copyright © Lyra Network.
+ * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Academic Free License (AFL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * https://opensource.org/licenses/afl-3.0.php
- *
- * @category  Payment
- * @package   Payzen
- * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2018 Lyra Network and contributors
- * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @author    Lyra Network (https://www.lyra-network.com/)
+ * @copyright Lyra Network
+ * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
 /**
- * This controller prepares form and redirects to PayZen payment gateway.
+ * This controller prepares form and redirects to payment gateway.
  */
 class PayzenRedirectModuleFrontController extends ModuleFrontController
 {
@@ -34,7 +26,9 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         'sepa',
         'sofort',
         'paypal',
-        'choozeo'
+        'choozeo',
+        'other',
+        'grouped_other'
     );
 
     public function __construct()
@@ -105,7 +99,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
             $this->payzenRedirect('index.php?controller='.$page);
         }
 
-        $type = Tools::getValue('payzen_payment_type', null); // the selected PayZen payment sub-module
+        $type = Tools::getValue('payzen_payment_type', null); // the selected payment submodule
         if (!$type && $this->iframe) {
             // only standard payment can be done inside iframe
             $type = 'standard';
@@ -189,6 +183,21 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
             case 'choozeo':
                 $payment = new PayzenChoozeoPayment();
+                $data['card_type'] = Tools::getValue('payzen_card_type');
+                break;
+
+            case 'other':
+                $code = Tools::getValue('payzen_payment_code');
+                $label = Tools::getValue('payzen_payment_label');
+
+                $payment = new PayzenOtherPayment();
+                $payment->init($code, $label);
+
+                $data['card_type'] = $code;
+                break;
+
+            case 'grouped_other':
+                $payment = new PayzenGroupedOtherPayment();
 
                 $data['card_type'] = Tools::getValue('payzen_card_type');
                 break;
@@ -214,7 +223,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
             unset($this->context->cookie->id_cart); // to avoid double call to this page
         }
 
-        // prepare data for PayZen payment form
+        // prepare data for payment gateway form
         $request = $payment->prepareRequest($cart, $data);
         $fields = $request->getRequestFieldsArray(false, false /* data escape will be done in redirect template */);
 

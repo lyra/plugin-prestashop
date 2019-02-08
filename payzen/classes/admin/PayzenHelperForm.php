@@ -1,19 +1,11 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * Copyright © Lyra Network.
+ * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Academic Free License (AFL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * https://opensource.org/licenses/afl-3.0.php
- *
- * @category  Payment
- * @package   Payzen
- * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2018 Lyra Network and contributors
- * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @author    Lyra Network (https://www.lyra-network.com/)
+ * @copyright Lyra Network
+ * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -21,7 +13,7 @@ if (!defined('_PS_VERSION_')) {
 }
 
 /**
- * Class that renders PayZen payment module administration interface.
+ * Class that renders payment module administration interface.
  */
 class PayzenHelperForm
 {
@@ -64,7 +56,7 @@ class PayzenHelperForm
 
         // get documentation links
         $doc_files = array();
-        $filenames = glob(_PS_MODULE_DIR_.'payzen/installation_doc/PayZen_PrestaShop_1.5-1.7_v1.10.2*.pdf');
+        $filenames = glob(_PS_MODULE_DIR_.'payzen/installation_doc/'.PayzenTools::getDocPattern());
 
         $doc_languages = array(
             'fr' => 'Français',
@@ -80,7 +72,16 @@ class PayzenHelperForm
             $doc_files[$base_filename.'.pdf'] = $doc_languages[$lang];
         }
 
+        $placeholders = self::getArrayConfig('PAYZEN_STD_REST_PLACEHOLDER');
+        if (empty($placeholders)) {
+            $placeholders = array('pan' => '', 'expiry' => '', 'cvv' => '');
+        }
+
         $tpl_vars = array(
+            'payzen_support_email' => PayzenTools::getDefault('SUPPORT_EMAIL'),
+            'payzen_plugin_version' => PayzenTools::getDefault('PLUGIN_VERSION'),
+            'payzen_gateway_version' => PayzenTools::getDefault('GATEWAY_VERSION'),
+
             'payzen_plugin_features' => PayzenTools::$plugin_features,
             'payzen_request_uri' => $_SERVER['REQUEST_URI'],
 
@@ -135,7 +136,8 @@ class PayzenHelperForm
                 '1' => $payzen->l('Bank data acquisition on payment gateway', 'payzenhelperform'),
                 '2' => $payzen->l('Card type selection on merchant site', 'payzenhelperform'),
                 '3' => $payzen->l('Bank data acquisition on merchant site', 'payzenhelperform'),
-                '4' => $payzen->l('Payment page integrated to checkout process (iframe mode)', 'payzenhelperform')
+                '4' => $payzen->l('Payment page integrated to checkout process (iframe mode)', 'payzenhelperform'),
+                '5' => $payzen->l('Embedded payment fields (REST API)', 'payzenhelperform')
             ),
             'payzen_card_selection_mode_options' => array(
                 '1' => $payzen->l('On payment gateway', 'payzenhelperform'),
@@ -157,6 +159,16 @@ class PayzenHelperForm
                 'max_amount' => '',
                 'count' => '',
                 'rate' => ''
+            ),
+            'payzen_default_other_payment_means_option' => array(
+                'title' => '',
+                'code' => '',
+                'min_amount' => '',
+                'max_amount' => ''
+            ),
+            'payzen_std_rest_theme_options' => array(
+                'classic' =>  'Classic',
+                'material' => 'Material'
             ),
 
             'prestashop_categories' => Category::getCategories((int)$context->language->id, true, false),
@@ -219,6 +231,16 @@ class PayzenHelperForm
                                             explode(';', Configuration::get('PAYZEN_STD_PAYMENT_CARDS')),
             'PAYZEN_STD_PROPOSE_ONEY' => Configuration::get('PAYZEN_STD_PROPOSE_ONEY'),
             'PAYZEN_STD_CARD_DATA_MODE' => Configuration::get('PAYZEN_STD_CARD_DATA_MODE'),
+            'PAYZEN_STD_PUBKEY_TEST' => Configuration::get('PAYZEN_STD_PUBKEY_TEST'),
+            'PAYZEN_STD_PRIVKEY_TEST' => Configuration::get('PAYZEN_STD_PRIVKEY_TEST'),
+            'PAYZEN_STD_PUBKEY_PROD' => Configuration::get('PAYZEN_STD_PUBKEY_PROD'),
+            'PAYZEN_STD_PRIVKEY_PROD' => Configuration::get('PAYZEN_STD_PRIVKEY_PROD'),
+            'PAYZEN_STD_RETKEY_TEST' => Configuration::get('PAYZEN_STD_RETKEY_TEST'),
+            'PAYZEN_STD_RETKEY_PROD' => Configuration::get('PAYZEN_STD_RETKEY_PROD'),
+            'PAYZEN_STD_REST_NOTIFY_URL' => self::getIpnUrl(),
+            'PAYZEN_STD_REST_THEME' => Configuration::get('PAYZEN_STD_REST_THEME'),
+            'PAYZEN_STD_REST_PLACEHOLDER' => $placeholders,
+            'PAYZEN_STD_REST_ATTEMPTS' => Configuration::get('PAYZEN_STD_REST_ATTEMPTS'),
 
             'PAYZEN_MULTI_TITLE' => self::getLangConfig('PAYZEN_MULTI_TITLE'),
             'PAYZEN_MULTI_ENABLED' => Configuration::get('PAYZEN_MULTI_ENABLED'),
@@ -271,11 +293,21 @@ class PayzenHelperForm
             'PAYZEN_CHOOZEO_ENABLED' => Configuration::get('PAYZEN_CHOOZEO_ENABLED'),
             'PAYZEN_CHOOZEO_AMOUNTS' => self::getArrayConfig('PAYZEN_CHOOZEO_AMOUNTS'),
             'PAYZEN_CHOOZEO_DELAY' => Configuration::get('PAYZEN_CHOOZEO_DELAY'),
-            'PAYZEN_CHOOZEO_OPTIONS' => self::getArrayConfig('PAYZEN_CHOOZEO_OPTIONS')
+            'PAYZEN_CHOOZEO_OPTIONS' => self::getArrayConfig('PAYZEN_CHOOZEO_OPTIONS'),
+
+            'PAYZEN_OTHER_GROUPED_VIEW' => Configuration::get('PAYZEN_OTHER_GROUPED_VIEW'),
+            'PAYZEN_OTHER_ENABLED' => Configuration::get('PAYZEN_OTHER_ENABLED'),
+            'PAYZEN_OTHER_TITLE' => self::getLangConfig('PAYZEN_OTHER_TITLE'),
+            'PAYZEN_OTHER_AMOUNTS' => self::getArrayConfig('PAYZEN_OTHER_AMOUNTS'),
+            'PAYZEN_OTHER_PAYMENT_MEANS' => self::getArrayConfig('PAYZEN_OTHER_PAYMENT_MEANS')
         );
 
         if (!PayzenTools::$plugin_features['acquis']) {
             unset($tpl_vars['payzen_card_data_mode_options']['3']);
+        }
+
+        if (!PayzenTools::$plugin_features['embedded']) {
+            unset($tpl_vars['payzen_card_data_mode_options']['5']);
         }
 
         return $tpl_vars;
@@ -290,7 +322,7 @@ class PayzenHelperForm
         $ssl = Configuration::get('PS_SSL_ENABLED', null, $id_shop_group, $shop->id);
 
         $ipn = ($ssl ? 'https://'.$shop->domain_ssl : 'http://'.$shop->domain)
-               .$shop->getBaseURI().'modules/payzen/validation.php';
+            .$shop->getBaseURI().'modules/payzen/validation.php';
 
         return $ipn;
     }

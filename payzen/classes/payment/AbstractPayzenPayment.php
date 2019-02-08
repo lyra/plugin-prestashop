@@ -1,19 +1,11 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.10.2 for PrestaShop 1.5-1.7. Support contact : support@payzen.eu.
+ * Copyright © Lyra Network.
+ * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Academic Free License (AFL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * https://opensource.org/licenses/afl-3.0.php
- *
- * @category  Payment
- * @package   Payzen
- * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2018 Lyra Network and contributors
- * @license   https://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ * @author    Lyra Network (https://www.lyra-network.com/)
+ * @copyright Lyra Network
+ * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -53,12 +45,12 @@ abstract class AbstractPayzenPayment
         return true;
     }
 
-    private function checkActive()
+    protected function checkActive()
     {
         return Configuration::get($this->prefix . 'ENABLED') == 'True';
     }
 
-    private function checkAmountRestriction($cart)
+    protected function checkAmountRestriction($cart)
     {
         $config_options = @unserialize(Configuration::get($this->prefix . 'AMOUNTS'));
         if (!is_array($config_options) || empty($config_options)) {
@@ -101,13 +93,13 @@ abstract class AbstractPayzenPayment
         return true;
     }
 
-    private function checkCurrency($cart)
+    protected function checkCurrency($cart)
     {
         if (!is_array($this->currencies) || empty($this->currencies)) {
             return true;
         }
 
-        // check if sub-module is available for some currencies
+        // check if submodule is available for some currencies
         $cart_currency = new Currency((int)$cart->id_currency);
         if (in_array($cart_currency->iso_code, $this->currencies)) {
             return true;
@@ -116,13 +108,13 @@ abstract class AbstractPayzenPayment
         return false;
     }
 
-    private function checkCountry($cart)
+    protected function checkCountry($cart)
     {
         if (!is_array($this->countries) || empty($this->countries)) {
             return true;
         }
 
-        // check if sub-module is available for some countries
+        // check if submodule is available for some countries
         $billing_address = new Address((int)$cart->id_address_invoice);
         $billing_country = new Country((int)$billing_address->id_country);
         if (in_array($billing_country->iso_code, $this->countries)) {
@@ -166,8 +158,8 @@ abstract class AbstractPayzenPayment
         $class_name = '\PrestaShop\PrestaShop\Core\Payment\PaymentOption';
         $option = new $class_name();
         $option->setCallToActionText($this->getTitle((int)$cart->id_lang))
-                ->setModuleName('payzen');
-//                 ->setLogo(_MODULE_DIR_.'payzen/views/img/'.$this->getLogo());
+                ->setModuleName('payzen')
+                ->setLogo(_MODULE_DIR_.'payzen/views/img/'.$this->getLogo());
 
         if (!$this->hasForm()) {
             $option->setAction(Context::getContext()->link->getModuleLink('payzen', 'redirect', array(), true));
@@ -229,13 +221,13 @@ abstract class AbstractPayzenPayment
 
         $delivery_country = new Country((int)$delivery_address->id_country);
 
-        PayzenTools::getLogger()->logInfo("Form data generation for cart #{$cart->id} with {$this->name} sub-module.");
+        PayzenTools::getLogger()->logInfo("Form data generation for cart #{$cart->id} with {$this->name} submodule.");
 
         require_once _PS_MODULE_DIR_.'payzen/classes/PayzenRequest.php';
         /* @var $request PayzenRequest */
         $request = new PayzenRequest();
 
-        $contrib = 'PrestaShop1.5-1.7_1.10.2/'._PS_VERSION_.'/'.PHP_VERSION;
+        $contrib = PayzenTools::getDefault('CMS_IDENTIFIER').'_'.PayzenTools::getDefault('PLUGIN_VERSION').'/'._PS_VERSION_.'/'.PHP_VERSION;
         if (defined('_PS_HOST_MODE_')) {
             $contrib = str_replace('PrestaShop', 'PrestaShop_Cloud', $contrib);
         }
@@ -249,7 +241,7 @@ abstract class AbstractPayzenPayment
                     $id_lang = (int)$cart->id_lang;
                 }
 
-                // set PayZen payment params only
+                // set payment gateway params only
                 $request->set($param['name'], Configuration::get($param['key'], $id_lang));
             }
         }
@@ -377,12 +369,12 @@ abstract class AbstractPayzenPayment
             $this->setAdditionalData($cart, $delivery_address, $request, $this->proposeOney($data));
         }
 
-        // override capture delay if defined in sub-module
+        // override capture delay if defined in submodule
         if (is_numeric(Configuration::get($this->prefix.'DELAY'))) {
             $request->set('capture_delay', Configuration::get($this->prefix.'DELAY'));
         }
 
-        //override validation mode if defined in sub-module
+        //override validation mode if defined in submodule
         if (Configuration::get($this->prefix.'VALIDATION') != '-1') {
             $request->set('validation_mode', Configuration::get($this->prefix.'VALIDATION'));
         }

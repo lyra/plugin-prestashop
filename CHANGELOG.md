@@ -1,3 +1,11 @@
+1.11.0, 2019-01-21:
+- [embedded] Added payment with embedded fields option using REST API.
+- Possibility to propose other payment means by redirection.
+- [conecs] Added CONECS payment means logos.
+- Improve payment buttons interface.
+- Display payment submodules logos in checkout page on PrestaShop 1.7.
+- Optimize payment cancellation in iframe mode.
+
 1.10.2, 2018-12-24:
 - Fix new signature algorithm name (HMAC-SHA-256).
 - Compatibility with PrestaShop 1.7.4.x versions (fix logs directory).
@@ -19,14 +27,14 @@
 - Bug fix: do not update order state from "Accepted payment" to "Payment error" when replaying IPN URL for orders with many attempts.
 - Enable signature algorithm selection (SHA-1 or HMAC-SHA-256).
 - Improve JS code redirecting to payment gateway to avoid possible conflicts with other modules.
-- Re-order configuration options in sub-modules backend.
+- Re-order configuration options in submodules backend.
 - Display all links to multilingual documentation files in module backend.
 - Possibility to cancel payment in iframe mode.
 - Possibility to configure 3D Secure by customer group.
 - [technical] Manage enabled/disabled features by plugin variant.
 
 1.9.0, 2017-10-16:
-- Bug fix: send selected cards in payment in installments sub-module.
+- Bug fix: send selected cards in payment in installments submodule.
 - [oney] Bug fix: correct simulated FacilyPay Oney funding fees calculation.
 - [oney] Bug fix: save failed and cancelled orders to avoid sending same order ID for FacilyPay Oney payments.
 - Bug fix: error relative to missed checkout header and footer templates (PrestaShop 1.7 only).
@@ -40,8 +48,8 @@
 - [oney] Consider DPD France Relais delivery method by sending selected relay point address to FacilyPay Oney.
 - [oney] Consider SoColissimo delivery method by sending selected relay point address to FacilyPay Oney.
 - Display card brand user choice if any in backend order details.
-- [fullcb] Added FullCB sub-module.
-- Disbale payment sub-modules for unsupported currencies.
+- [fullcb] Added Full CB submodule.
+- Disbale payment submodules for unsupported currencies.
 - Add new "To validate payment" order state.
 - Manage extended IPN calls (transaction validation, refund, modification and cancellation).
 - Add "Delay" field and update "Rapidity" field in shipping options configuration.
@@ -56,7 +64,7 @@
 - Bug fix: default values lost for disabled fields after saving configuration.
 - Bug fix: minor graphic bug in one page checkout mode (PrestaShop < 1.7).
 - Bug fix: fix the potential error "Cannot redeclare class FileLoggerCore" when file logger is used by other installed modules.
-- Update supported cards for payment in installments sub-module.
+- Update supported cards for payment in installments submodule.
 - Use PHP 5.2 syntax to remain compatible with PrestaShop installations.
 - Improve CSS and templates management.
 - [oney] Possibility to configure FacilyPay Oney options inside merchant website.
@@ -81,39 +89,39 @@
 - Remove control over certificate format modified on the gateway.
 - Compatibility with PrestaShop 1.7.x versions (imlementing paymentOptions hook).
 - Perform data validation (customer address and card data) if necessary after payment mean selection.
-- [oney] Give user the choice to enable / disable FacilyPay Oney payment in standard sub-module.
+- [oney] Give user the choice to enable / disable FacilyPay Oney payment in standard submodule.
 - Make payment in installments option labels translatable.
-- Possibility to choose payment types to allow in payment in installments sub-module.
+- Possibility to choose payment types to allow in payment in installments submodule.
 - Possibility to enable payment card selection on merchant website.
 
 1.7.1, 2016-06-02:
 - Improve of german and english translations.
-- Adding german translations of default order states and sub-modules default titles.
+- Adding german translations of default order states and submodules default titles.
 
 1.7.0, 2015-12-09:
-- Updating PayPal sub-module logo.
-- Displaying of appropriate title (according to choosen sub-module) in the redirection page.
-- Ability to define amount restrictions for client groups in all sub-modules.
+- Updating PayPal submodule logo.
+- Displaying of appropriate title (according to choosen submodule) in the redirection page.
+- Ability to define amount restrictions for client groups in all submodules.
 
 1.6.0, 2015-10-09:
 - Bug fix: mark module order messages as read and not assigned to avoid after-sales service alerts (since v 1.6.1 of PrestaShop).
-- Ability to override "Capture delay" and "Validation mode" options for sub-modules.
-- Adding PayPal sub-module.
+- Ability to override "Capture delay" and "Validation mode" options for submodules.
+- Adding PayPal submodule.
 - Taking into account of pending verification status for PayPal payments.
 - Creation of an order state for "Pending authorisation" payments.
 
 1.5.0, 2015-07-16:
-- [sofort] Adding SOFORT Banking sub-module.
+- [sofort] Adding SOFORT Banking submodule.
 - [sofort,sepa] Adding custom state for pending funds transfer payments.
 - Correction of IPN URL displayed in module backend (common URL for all stores in multistore mode).
 
 1.4.0, 2015-06-09:
-- Bug fix: relative to sub-modules availability in frontend.
+- Bug fix: relative to submodules availability in frontend.
 - Bug fix: relative to max version specified in PrestaShop "ps_versions_compliancy" module property.
 - Bug fix: do not send shipping_amount and insurance_amount variables to avoid amount consistency bug for PayPal payment.
 - Bug fix: store ID missed when IPN URL called (in multistore mode).
-- [ancv] Adding ANCV sub-module.
-- [sepa] Adding SEPA sub-module.
+- [ancv] Adding ANCV submodule.
+- [sepa] Adding SEPA submodule.
 - Reorganization of module settings display.
 - Use of language dropdown (in PrestaShop v1.6.x) instead of flags for multilingual setting fields.
 - Adding PT and DE translations for IPN responses.
