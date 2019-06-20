@@ -211,7 +211,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
         // amount paid not equals initial amount. Error !
         if (Payzen::hasAmountError($order)) {
-            $link .= '&error=yes';
+            $link .= '&amount_error=yes';
         }
 
         if (Configuration::get('PAYZEN_MODE') == 'TEST') {

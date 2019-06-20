@@ -36,7 +36,7 @@ if (! class_exists('PayzenCurrency', false)) {
             $coef = pow(10, $this->decimals);
 
             $amount = $float * $coef;
-            return (int) (string) $amount; // cast amount to string (to avoid rounding) than return it as int
+            return (int) (string) $amount; // Cast amount to string (to avoid rounding) than return it as int.
         }
 
         public function convertAmountToFloat($integer)

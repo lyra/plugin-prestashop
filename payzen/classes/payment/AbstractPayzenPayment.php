@@ -80,6 +80,7 @@ abstract class AbstractPayzenPayment
         if (!$min_amount) {
             $min_amount = $all_min_amount;
         }
+
         if (!$max_amount) {
             $max_amount = $all_max_amount;
         }
@@ -338,7 +339,8 @@ abstract class AbstractPayzenPayment
                     $price_in_cents,
                     $qty,
                     $product['id_product'],
-                    $category
+                    $category,
+                    number_format($product['rate'], 4, '.', '')
                 );
 
                 $subtotal += $price_in_cents * $qty;

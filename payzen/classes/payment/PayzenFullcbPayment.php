@@ -102,13 +102,17 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
 
         $enabled_options = array();
         foreach ($options as $key => $option) {
+            if (isset($option['enabled']) && ($option['enabled'] !== 'True')) {
+                continue;
+            }
+
             $min = $option['min_amount'];
             $max = $option['max_amount'];
 
             if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
                 $default = is_string($option['label']) ? $option['label'] : $option['count'].' x';
                 $option_label = is_array($option['label']) && isset($option['label'][$cart->id_lang]) ?
-                    $option['label'][$cart->id_lang] : $default;
+                $option['label'][$cart->id_lang] : $default;
 
                 $option['localized_label'] = $option_label;
 

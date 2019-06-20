@@ -20,7 +20,7 @@
 {/block}
 
 <script type="text/javascript">
-  $(document).ready(function() {
+  $(document).ready(function($) {
     $('#payzen_standard').submit(function(e) {
       e.preventDefault();
 

@@ -29,7 +29,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.11.0';
+    private static $PLUGIN_VERSION = '1.11.1';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -264,7 +264,7 @@ class PayzenTools
             array('key' => 'PAYZEN_STD_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_STD_PAYMENT_CARDS', 'default' => '', 'label' => 'Card Types'),
             array('key' => 'PAYZEN_STD_PROPOSE_ONEY', 'default' => 'False', 'label' => 'Propose FacilyPay Oney'),
-            array('key' => 'PAYZEN_STD_AMOUNTS', 'default' => array(), 'label' => 'One-time payment - Customer group amount restriction'),
+            array('key' => 'PAYZEN_STD_AMOUNTS', 'default' => array(), 'label' => 'Standard payment - Customer group amount restriction'),
             array('key' => 'PAYZEN_STD_CARD_DATA_MODE', 'default' => '1', 'label' => 'Card data entry mode'),
             array('key' => 'PAYZEN_STD_PRIVKEY_TEST', 'default' => '', 'label' => 'Test password'),
             array('key' => 'PAYZEN_STD_PRIVKEY_PROD', 'default' => '', 'label' => 'Production password'),
@@ -329,6 +329,7 @@ class PayzenTools
             array('key' => 'PAYZEN_FULLCB_OPTIONS',
                 'default' => array(
                     'FULLCB3X' => array(
+                        'enabled' => 'True',
                         'label' => self::convertIsoArrayToIdArray(
                             array('en' => 'Payment in 3 times', 'fr' => 'Paiement en 3 fois', 'de' => 'Zahlung in 3 mal', 'es' => 'Pago en 3 veces')
                         ),
@@ -339,6 +340,7 @@ class PayzenTools
                         'count' => '3'
                     ),
                     'FULLCB4X' => array(
+                        'enabled' => 'True',
                         'label' => self::convertIsoArrayToIdArray(
                             array('en' => 'Payment in 4 times', 'fr' => 'Paiement en 4 fois', 'de' => 'Zahlung in 4 mal', 'es' => 'Pago en 4 veces')
                         ),
@@ -403,10 +405,10 @@ class PayzenTools
 
             array('key' => 'PAYZEN_CHOOZEO_TITLE',
                 'default' => array(
-                    'en' => 'Payment with Choozeo',
-                    'fr' => 'Paiement Choozeo',
-                    'de' => 'Zahlung via Choozeo',
-                    'es' => 'Pago con Choozeo'
+                    'en' => 'Payment with Choozeo without fees',
+                    'fr' => 'Paiement avec Choozeo sans frais',
+                    'de' => 'Zahlung mit Choozeo ohne zusätzliche',
+                    'es' => 'Pago con Choozeo sin gastos'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_CHOOZEO_ENABLED', 'default' => 'False', 'label' => 'Activation'),
@@ -416,9 +418,20 @@ class PayzenTools
                     array('min_amount' => '135', 'max_amount' => '2000')
                 ),
                 'label' => 'Choozeo payment - Customer group amount restriction'),
-            array('key' => 'PAYZEN_CHOOZEO_OPTIONS', 'default' => array(), 'label' => 'Choozeo payment - Payment options'),
+            array('key' => 'PAYZEN_CHOOZEO_OPTIONS', 'default' => array(
+                'EPNF_3X' => array(
+                    'enabled' => 'True',
+                    'min_amount' => '',
+                    'max_amount' => ''
+                ),
+                'EPNF_4X' => array(
+                    'enabled' => 'True',
+                    'min_amount' => '',
+                    'max_amount' => ''
+                )
+            ), 'label' => 'Choozeo payment - Payment options'),
 
-            array('key' => 'PAYZEN_OTHER_GROUPED_VIEW', 'default' => 'False', 'label' => 'Group payment means'),
+            array('key' => 'PAYZEN_OTHER_GROUPED_VIEW', 'default' => 'False', 'label' => 'Regroup payment means'),
             array('key' => 'PAYZEN_OTHER_ENABLED', 'default' => 'True', 'label' => 'Activation'),
             array('key' => 'PAYZEN_OTHER_TITLE',
                 'default' => array(
@@ -429,7 +442,7 @@ class PayzenTools
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_OTHER_AMOUNTS', 'default' => array(), 'label' => 'Other payment means - Customer group amount restriction'),
-            array('key' => 'PAYZEN_OTHER_PAYMENT_MEANS', 'default' => array(), 'label' => 'Other payment means - Payment means'),
+            array('key' => 'PAYZEN_OTHER_PAYMENT_MEANS', 'default' => array(), 'label' => 'Other payment means - Payment means')
         );
 
         return $params;

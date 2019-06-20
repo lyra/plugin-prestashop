@@ -41,13 +41,17 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
     {
         // Choozeo payment options
         $options = @unserialize(Configuration::get('PAYZEN_CHOOZEO_OPTIONS'));
-
         $amount = $cart->getOrderTotal();
 
         $enabled_options = array();
         foreach ($options as $key => $option) {
+            if (isset($option['enabled']) && ($option['enabled'] !== 'True')) {
+                continue;
+            }
+
             $min = $option['min_amount'];
             $max = $option['max_amount'];
+
 
             if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
                 $enabled_options[$key] = Tools::strtolower(Tools::substr($key, -2)).' CB';
@@ -95,6 +99,6 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
 
     protected function getDefaultTitle()
     {
-        return $this->l('Payment with Choozeo');
+        return $this->l('Payment with Choozeo without fees');
     }
 }
