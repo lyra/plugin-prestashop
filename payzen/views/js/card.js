@@ -16,12 +16,12 @@ function payzenCheckFields() {
     });
 
     var cardNumber = $('#payzen_card_number').val();
-    if(cardNumber.length <= 0 || !(/^\d{13,19}$/.test(cardNumber))){
+    if (cardNumber.length <= 0 || !(/^\d{13,19}$/.test(cardNumber))) {
         $('#payzen_card_number').addClass('invalid');
     }
 
     var cvv = $('#payzen_cvv').val();
-    if(cvv.length <= 0 || !(/^\d{3,4}$/.test(cvv))) {
+    if (cvv.length <= 0 || !(/^\d{3,4}$/.test(cvv))) {
         $('#payzen_cvv').addClass('invalid');
     }
 
@@ -30,12 +30,12 @@ function payzenCheckFields() {
     var currentYear  = currentTime.getFullYear();
 
     var expiryYear = $('select[name="payzen_expiry_year"] option:selected').val();
-    if(expiryYear.length <= 0 || !(/^\d{4,4}$/.test(expiryYear)) || expiryYear < currentYear) {
+    if (expiryYear.length <= 0 || !(/^\d{4,4}$/.test(expiryYear)) || expiryYear < currentYear) {
         $('#payzen_expiry_year').addClass('invalid');
     }
 
     var expiryMonth = $('select[name="payzen_expiry_month"] option:selected').val();
-    if(expiryMonth.length <= 0 || !(/^\d{1,2}$/.test(expiryMonth)) || (expiryYear == currentYear && expiryMonth < currentMonth)) {
+    if (expiryMonth.length <= 0 || !(/^\d{1,2}$/.test(expiryMonth)) || (expiryYear == currentYear && expiryMonth < currentMonth)) {
         $('#payzen_expiry_month').addClass('invalid');
     }
 

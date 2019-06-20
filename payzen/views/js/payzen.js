@@ -167,7 +167,7 @@ function payzenHideOtherLanguage(id, name) {
 function payzenCardEntryChanged() {
     var isKrypton = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val() === '5';
 
-    if(isKrypton) {
+    if (isKrypton) {
         $('#PAYZEN_STD_REST_SETTINGS').show();
     } else {
         $('#PAYZEN_STD_REST_SETTINGS').hide();
@@ -196,6 +196,6 @@ function payzenDeleteOtherPaymentMeansOption(key) {
     if ($('#payzen_other_payment_means_options_table tbody tr').length === 1) {
         $('#payzen_other_payment_means_options_btn').show();
         $('#payzen_other_payment_means_options_table').hide();
-        $('#payzen_other_payment_means_options_table').append( "<input type=\"hidden\" id=\"PAYZEN_OTHER_PAYMENT_MEANS\" name=\"PAYZEN_OTHER_PAYMENT_MEANS\" value=\"\">" );
+        $('#payzen_other_payment_means_options_table').append("<input type=\"hidden\" id=\"PAYZEN_OTHER_PAYMENT_MEANS\" name=\"PAYZEN_OTHER_PAYMENT_MEANS\" value=\"\">");
     }
 }

@@ -35,7 +35,9 @@ require_once _PS_MODULE_DIR_.'payzen/classes/payment/PayzenGroupedOtherPayment.p
 class Payzen extends PaymentModule
 {
     // regular expressions
-    const DELIVERY_COMPANY_REGEX = '#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /\'-]{1,127}$#ui';
+    const DELIVERY_COMPANY_ADDRESS_REGEX = '#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /\'-]{1,72}$#ui';
+    const DELIVERY_COMPANY_LABEL_REGEX = '#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /\'-]{1,55}$#ui';
+
 
     private $logger;
 
@@ -46,7 +48,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.11.0';
+        $this->version = '1.11.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = '###MODULE_KEY###';
@@ -386,6 +388,10 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
+                        if (($key === 'PAYZEN_CHOOZEO_OPTIONS') && !isset($option['enabled'])) {
+                            $value[$id]['enabled'] = 'False';
+                        }
+
                         if (isset($option['min_amount']) && $option['min_amount'] && (!is_numeric($option['min_amount']) || $option['min_amount'] < 0)) {
                             $value[$id]['min_amount'] = ''; // error, reset incorrect value
                             $error = true;
@@ -455,12 +461,22 @@ class Payzen extends PaymentModule
                     $value = array();
                 } else {
                     foreach ($value as $id => $option) {
-                        $carrier = $option['label'].($option['address'] ? ' '.$option['address'] : '').
-                            ($option['zip'] ? ' '.$option['zip'] : '').($option['city'] ? ' '.$option['city'] : '');
-
-                        if (!preg_match(self::DELIVERY_COMPANY_REGEX, $carrier)) {
+                        if (!preg_match(self::DELIVERY_COMPANY_LABEL_REGEX, $option['label'])) {
                             unset($value[$id]); // error, not save this option
-                            $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $carrier, $label);
+
+                            $this->_errors[] = sprintf($this->l('The field « %1$s » is invalid: please check column « %2$s » of the option « %3$s » in section « %4$s ».'), $label, $this->l('Name'), $id, $this->l('ADDITIONAL OPTIONS'))
+                                . ' ' . sprintf($this->l('Use %1$d alphanumeric characters, accentuated characters and these special characters: space, slash, hyphen, apostrophe.'), 55);
+                        }
+
+                        if ($option['type'] == 'RECLAIM_IN_SHOP') {
+                            $address = ($option['address'] ? ' '.$option['address'] : '').($option['zip'] ? ' '.$option['zip'] : '')
+                                .($option['city'] ? ' '.$option['city'] : '');
+                            if (!preg_match(self::DELIVERY_COMPANY_ADDRESS_REGEX, $address)) {
+                                unset($value[$id]); // error, not save this option
+
+                                $this->_errors[] = sprintf($this->l('The field « %1$s » is invalid: please check column « %2$s » of the option « %3$s » in section « %4$s ».'), $label, $this->l('Address'), $id, $this->l('ADDITIONAL OPTIONS'))
+                                    . ' ' . sprintf($this->l('Use %1$d alphanumeric characters, accentuated characters and these special characters: space, slash, hyphen, apostrophe.'), 65);
+                            }
                         }
                     }
                 }
@@ -497,8 +513,8 @@ class Payzen extends PaymentModule
 
                 if ($oney_enabled) {
                     $value = 'False';
-                    $this->_errors[] = $this->l('FacilyPay Oney payment mean cannot be enabled in one-time payment and in FacilyPay Oney sub-module.');
-                    $this->_errors[] = $this->l('You must disable the FacilyPay Oney sub-module to enable it in one-time payment.');
+                    $this->_errors[] = $this->l('FacilyPay Oney payment mean cannot be enabled in standard payment and in FacilyPay Oney sub-module.');
+                    $this->_errors[] = $this->l('You must disable the FacilyPay Oney sub-module to enable it in standard payment.');
                 } else {
                     $error = $this->validateOney(true);
 
@@ -544,6 +560,10 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
+                        if (!isset($option['enabled'])) {
+                            $value[$id]['enabled'] = 'False';
+                        }
+
                         if ($option['min_amount'] && !is_numeric($option['min_amount']) || $option['min_amount'] < 0) {
                             $value[$id]['min_amount'] = ''; // error, reset incorrect value
                             $error = true;
@@ -1210,17 +1230,19 @@ class Payzen extends PaymentModule
         }
 
         $error = (Tools::getValue('error') == 'yes');
+        $amount_error = (Tools::getValue('amount_error') == 'yes');
 
         $array = array(
             'check_url_warn' => (Tools::getValue('check_url_warn') == 'yes'),
             'maintenance_mode' => !Configuration::get('PS_SHOP_ENABLE'),
             'prod_info' => (Tools::getValue('prod_info') == 'yes'),
-            'error_msg' => $error
+            'error_msg' => $error,
+            'amount_error_msg' => $amount_error
         );
 
         if (!$error) {
             $array['total_to_pay'] = Tools::displayPrice(
-                $order->getOrdersTotalPaid(),
+                number_format($order->total_paid_real, 2),
                 new Currency($order->id_currency),
                 false
             );
@@ -1368,16 +1390,45 @@ class Payzen extends PaymentModule
         // IPN call source
         $msg_src = "\n".$this->l('IPN source : ').$response->get('url_check_src');
 
-        $msg = new Message();
-        $msg->message = $response->getCompleteMessage().$msg_brand_choice.$msg_3ds.$msg_src;
-        $msg->id_order = (int)$order->id;
-        $msg->private = 1;
-        $msg->add();
+        // Transaction UUID
+        $msg_trans_uuid = "\n".$this->l('Transaction UUID : ').$response->get('trans_uuid');
+
+        $message = $response->getCompleteMessage().$msg_brand_choice.$msg_3ds.$msg_src.$msg_trans_uuid;
+
+        if (version_compare(_PS_VERSION_, '1.7.1.2', '>=')) {
+            $msg = new CustomerMessage();
+            $msg->message = $message;
+            $msg->id_customer_thread = $this->createCustomerThread((int)$order->id);
+            $msg->id_order = (int)$order->id;
+            $msg->private = 1;
+            $msg->save();
+        } else {
+            $msg = new Message();
+            $msg->message = $message;
+            $msg->id_order = (int)$order->id;
+            $msg->private = 1;
+            $msg->add();
+        }
 
         // mark message as read to archive it
         Message::markAsReaded($msg->id, 0);
     }
 
+    private function createCustomerThread($id_order)
+    {
+        $customerThread = new CustomerThread();
+        $customerThread->id_shop = $this->context->shop->id;
+        $customerThread->id_lang = $this->context->language->id;
+        $customerThread->id_contact = 0;
+        $customerThread->id_order = $id_order;
+        $customerThread->id_customer = $this->context->customer->id;
+        $customerThread->status = 'open';
+        $customerThread->email = $this->context->customer->email;
+        $customerThread->token = Tools::passwdGen(12);
+        $customerThread->add();
+
+        return (int)$customerThread->id;
+    }
 
     /**
      * Save payment information.
@@ -1781,7 +1832,15 @@ class Payzen extends PaymentModule
 
     public static function hasAmountError($order)
     {
-        return number_format($order->total_paid, 2) != number_format($order->total_paid_real, 2);
+        $orders = Order:: getByReference($order->reference);
+        $total_paid = 0;
+
+        // Browse sister orders (orders with the same reference)
+        foreach ($orders as $sister_order) {
+            $total_paid += $sister_order->total_paid;
+        }
+
+        return number_format($total_paid, 2) != number_format($order->total_paid_real, 2);
     }
 
     public static function isStateInArray($state_id, $state_names)

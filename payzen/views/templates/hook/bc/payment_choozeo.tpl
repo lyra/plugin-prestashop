@@ -25,9 +25,10 @@
 
           {assign var=first value=true}
           {foreach from=$payzen_choozeo_options key="key" item="option"}
-            <label class="payzen_card_click">
+            <label class="payzen_card_click" for="payzen_card_type_{$key|escape:'html':'UTF-8'}">
               <input type="radio"
                      name="payzen_card_type"
+                     id="payzen_card_type_{$key|escape:'html':'UTF-8'}"
                      value="{$key|escape:'html':'UTF-8'}"
                      {if $first == true} checked="checked"{/if}
                      onclick="javascript: $('#payzen_choozeo').submit();" />
@@ -41,6 +42,16 @@
         </form>
       </a>
   </div>
+
+  <![if IE]>
+    <script type="text/javascript">
+    // <![CDATA[
+      $('div.payment_module.payzen_choozeo a img').on('click', function(e) {
+        $(this).parent().click();
+      });
+    // ]]>
+    </script>
+  <![endif]>
 
   {if {$payzen_choozeo_options|@count} == 1}
     <script type="text/javascript">

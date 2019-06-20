@@ -42,9 +42,9 @@
     $('#payzen_standard').submit(function(e) {
       e.preventDefault();
 
-      $('.payzen .processing').css('display', 'block');
-
       if (!$('#payzen_standard').data('submitted')) {
+        $('.payzen .processing').css('display', 'block');
+        $('#payment-confirmation button').attr('disabled', 'disabled');
         $('#payzen_standard').data('submitted', true);
         $('#payzen_hidden_button').click();
       }
@@ -57,11 +57,6 @@
 
       $('#payment-confirmation button').removeAttr('disabled');
       $('#payzen_standard').data('submitted', false);
-    });
-
-    KR.onSubmit(function(e) {
-      $('#payment-confirmation button').attr('disabled', 'disabled');
-      return true;
     });
   });
 </script>

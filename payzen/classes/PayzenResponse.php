@@ -104,7 +104,7 @@ if (! class_exists('PayzenResponse', false)) {
                 $this->algo = $algo;
             }
 
-            // payment results
+            // Payment results.
             $this->result = self::findInArray('vads_result', $this->rawResponse, null);
             $this->extraResult = self::findInArray('vads_extra_result', $this->rawResponse, null);
             $this->authResult = self::findInArray('vads_auth_result', $this->rawResponse, null);
@@ -178,7 +178,7 @@ if (! class_exists('PayzenResponse', false)) {
         }
 
         /**
-         * Check if the payment is to validate manually in the PayZen Back Office.
+         * Check if the payment is to validate manually in the gateway Back Office.
          * @return bool
          */
         public function isToValidatePayment()
@@ -193,13 +193,13 @@ if (! class_exists('PayzenResponse', false)) {
          */
         public function isSuspectedFraud()
         {
-            // at least one control failed ...
+            // At least one control failed...
             $riskControl = $this->getRiskControl();
             if (in_array('WARNING', $riskControl) || in_array('ERROR', $riskControl)) {
                 return true;
             }
 
-            // or there was an alert from risk assessment module
+            // Or there was an alert from risk assessment module.
             $riskAssessment = $this->getRiskAssessment();
             if (in_array('INFORM', $riskAssessment)) {
                 return true;
@@ -219,7 +219,7 @@ if (! class_exists('PayzenResponse', false)) {
                 return array();
             }
 
-            // get a URL-like string
+            // Get a URL-like string.
             $riskControl = str_replace(';', '&', $riskControl);
 
             $result = array();
@@ -249,7 +249,7 @@ if (! class_exists('PayzenResponse', false)) {
          */
         public function get($name)
         {
-            // manage shortcut notations by adding 'vads_'
+            // Manage shortcut notations by adding 'vads_'.
             $name = (Tools::substr($name, 0, 5) != 'vads_') ? 'vads_' . $name : $name;
 
             return @$this->rawResponse[$name];
@@ -266,7 +266,7 @@ if (! class_exists('PayzenResponse', false)) {
         }
 
         /**
-         * Return the expected signature received from platform.
+         * Return the expected signature received from gateway.
          * @return string
          */
         public function getSignature()
@@ -403,13 +403,13 @@ if (! class_exists('PayzenResponse', false)) {
          * Return a formatted string to output as a response to the notification URL call.
          *
          * @param string $case shortcut code for current situations. Most useful : payment_ok, payment_ko, auth_fail
-         * @param string $extra_message some extra information to output to the payment platform
-         * @param string $original_encoding some extra information to output to the payment platform
+         * @param string $extra_message some extra information to output to the payment gateway
+         * @param string $original_encoding some extra information to output to the payment gateway
          * @return string
          */
         public function getOutputForGateway($case = '', $extra_message = '', $original_encoding = 'UTF-8')
         {
-            // predefined response messages according to case
+            // Predefined response messages according to case.
             $cases = array(
                 'payment_ok' => array(true, 'Accepted payment, order has been updated.'),
                 'payment_ko' => array(true, 'Payment failure, order has been cancelled.'),
@@ -435,7 +435,7 @@ if (! class_exists('PayzenResponse', false)) {
 
             $message = str_replace("\n", ' ', $message);
 
-            // set original CMS encoding to convert if necessary response to send to platform
+            // Set original CMS encoding to convert if necessary response to send to gateway.
             $encoding = in_array(Tools::strtoupper($original_encoding), PayzenApi::$SUPPORTED_ENCODINGS) ?
                 Tools::strtoupper($original_encoding) : 'UTF-8';
             if ($encoding !== 'UTF-8') {
@@ -462,7 +462,7 @@ if (! class_exists('PayzenResponse', false)) {
          */
         public static function translate($result, $type = self::TYPE_RESULT, $lang = 'en', $appendCode = false)
         {
-            // if language is not supported, use the domain default language
+            // If language is not supported, use the domain default language.
             if (!key_exists($lang, self::$RESPONSE_TRANS)) {
                 $lang = 'en';
             }

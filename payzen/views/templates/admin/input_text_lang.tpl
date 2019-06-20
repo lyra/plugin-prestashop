@@ -33,7 +33,7 @@
      style="{if $v5}float: left;{/if}{if $language.id_lang != $current_lang.id_lang} display: none;{elseif !$v5} display: inline;{/if}">
     <input type="text"
         name="{$input_name|escape:'html':'UTF-8'}[{$language.id_lang|escape:'html':'UTF-8'}]"
-        value="{$value|escape:'html':'UTF-8'}"
+        value="{$value}"
         {if isset($style)}style="{$style|escape:'html':'UTF-8'}"{/if} >
   </div>
 {/foreach}

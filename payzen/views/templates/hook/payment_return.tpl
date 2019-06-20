@@ -46,6 +46,14 @@
     {l s='Please contact our' mod='payzen'}&nbsp;<a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='customer support' mod='payzen'}</a>.
   </p>
 {else}
+  {if $amount_error_msg == true}
+    <p style="{$warn_style|escape:'html':'UTF-8'}">
+      {l s='Your order has been registered with an amount error.' mod='payzen'}
+
+      {l s='Please contact our' mod='payzen'}&nbsp;<a href="{$link->getPageLink('contact', true)|escape:'html':'UTF-8'}">{l s='customer support' mod='payzen'}</a>.
+    </p>
+  {/if}
+
   <p>
     {l s='Your order on' mod='payzen'}&nbsp;<span class="bold">{$shop_name|escape:'html':'UTF-8'}</span> {l s='is complete.' mod='payzen'}
     <br /><br />

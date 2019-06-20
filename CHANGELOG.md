@@ -1,3 +1,15 @@
+1.11.1, 2019-06-21:
+- Bug fix compatibility of iframe mode with new 1.7.5.x PrestaShop versions.
+- Bug fix: filter HTML special characters in REST API placeholders settings.
+- Bug fix: Do not display an amount error for multi-carrier orders.
+- Improve some configuration fields validation messages.
+- Improve amount errors management.
+- Added transaction UUID on order details.
+- [fullcb] Added possibility to enable/disable Full CB payment options.
+- Send products tax rate to payment gateway.
+- Fix some plugin translations.
+- Display the payment result as a private message on order details (on PrestaShop > 1.7.1.1).
+
 1.11.0, 2019-01-21:
 - [embedded] Added payment with embedded fields option using REST API.
 - Possibility to propose other payment means by redirection.

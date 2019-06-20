@@ -474,7 +474,7 @@
     </div>
 
     <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
-      <a href="#">{l s='ONE-TIME PAYMENT' mod='payzen'}</a>
+      <a href="#">{l s='STANDARD PAYMENT' mod='payzen'}</a>
     </h4>
     <div>
       <fieldset>
@@ -557,7 +557,7 @@
               <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_PROPOSE_ONEY === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
-          <p>{l s='Select « Yes » if you want to propose FacilyPay Oney in one-time payment. Attention, you must ensure that you have a FacilyPay Oney contract.' mod='payzen'}</p>
+          <p>{l s='Select « Yes » if you want to propose FacilyPay Oney in standard payment. Attention, you must ensure that you have a FacilyPay Oney contract.' mod='payzen'}</p>
         </div>
         {/if}
       </fieldset>
@@ -941,6 +941,7 @@
          <table class="table" cellpadding="10" cellspacing="0">
             <thead>
               <tr>
+                <th>{l s='Activation' mod='payzen'}</th>
                 <th>{l s='Label' mod='payzen'}</th>
                 <th>{l s='Min amount' mod='payzen'}</th>
                 <th>{l s='Max amount' mod='payzen'}</th>
@@ -949,6 +950,13 @@
 
             <tbody>
               <tr>
+                <td>
+                  <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_3X][enabled]"
+                      style="width: 100%;"
+                      type="checkbox"
+                      value="True"
+                      {if !isset($PAYZEN_CHOOZEO_OPTIONS.EPNF_3X.enabled) || ($PAYZEN_CHOOZEO_OPTIONS.EPNF_3X.enabled ==='True')}checked{/if}>
+                </td>
                 <td>Choozeo 3X CB</td>
                 <td>
                   <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_3X][min_amount]"
@@ -965,6 +973,13 @@
               </tr>
 
               <tr>
+                <td>
+                  <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_4X][enabled]"
+                      style="width: 100%;"
+                      type="checkbox"
+                      value="True"
+                      {if !isset($PAYZEN_CHOOZEO_OPTIONS.EPNF_4X.enabled) || ($PAYZEN_CHOOZEO_OPTIONS.EPNF_4X.enabled ==='True')}checked{/if}>
+                </td>
                 <td>Choozeo 4X CB</td>
                 <td>
                   <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_4X][min_amount]"
@@ -1202,6 +1217,7 @@
             <table class="table" cellpadding="10" cellspacing="0">
               <thead>
                 <tr>
+                  <th style="font-size: 10px;">{l s='Activation' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
@@ -1213,6 +1229,13 @@
               <tbody>
                 {foreach from=$PAYZEN_FULLCB_OPTIONS key="key" item="option"}
                 <tr>
+                  <td>
+                    <input name="PAYZEN_FULLCB_OPTIONS[{$key|escape:'html':'UTF-8'}][enabled]"
+                      style="width: 100%;"
+                      type="checkbox"
+                      value="True"
+                      {if !isset($option.enabled) || ($option.enabled === 'True')}checked{/if}>
+                  </td>
                   <td>
                     {include file="./input_text_lang.tpl"
                       languages=$prestashop_languages
@@ -1254,6 +1277,7 @@
             </table>
             <p>
               {l s='Configure FullCB payment options.' mod='payzen'}<br />
+              <b>{l s='Activation' mod='payzen'} : </b>{l s='Enable / disable the payment option.' mod='payzen'}<br />
               <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Rate' mod='payzen'} : </b>{l s='The interest rate in percentage.' mod='payzen'}<br />
@@ -1582,7 +1606,7 @@
       <fieldset>
         <legend>{l s='PAYMENT OPTIONS' mod='payzen'}</legend>
 
-        <label for="PAYZEN_OTHER_GROUPED_VIEW">{l s='Group payment means ' mod='payzen'}</label>
+        <label for="PAYZEN_OTHER_GROUPED_VIEW">{l s='Regroup payment means ' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_OTHER_GROUPED_VIEW" name="PAYZEN_OTHER_GROUPED_VIEW" onchange="javascript: payzenGroupedViewChanged();">
             {foreach from=$payzen_enable_disable_options key="key" item="option"}
