@@ -31,32 +31,16 @@
 </section>
 
 <script type="text/javascript">
-  $(function() {
-    {if ($payzen_rest_theme === 'material')}
-        KR.onFormReady(function(e) {
-          // worarround bug relative to wrappers size with material theme
-          $('.payzen .kr-iframe-wrapper').css('display', '');
-        });
-    {/if}
+  var payzenSubmit = function(e) {
+    e.preventDefault();
 
-    $('#payzen_standard').submit(function(e) {
-      e.preventDefault();
+    if (!$('#payzen_standard').data('submitted')) {
+      $('.payzen .processing').css('display', 'block');
+      $('#payment-confirmation button').attr('disabled', 'disabled');
+      $('#payzen_standard').data('submitted', true);
+      $('#payzen_hidden_button').click();
+    }
 
-      if (!$('#payzen_standard').data('submitted')) {
-        $('.payzen .processing').css('display', 'block');
-        $('#payment-confirmation button').attr('disabled', 'disabled');
-        $('#payzen_standard').data('submitted', true);
-        $('#payzen_hidden_button').click();
-      }
-
-      return false;
-    });
-
-    KR.onError(function(e) {
-      $('.payzen .processing').css('display', 'none');
-
-      $('#payment-confirmation button').removeAttr('disabled');
-      $('#payzen_standard').data('submitted', false);
-    });
-  });
+    return false;
+  };
 </script>

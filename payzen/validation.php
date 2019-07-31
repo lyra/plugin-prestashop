@@ -101,6 +101,11 @@ if (!Validate::isLoadedObject($cart)) {
 }
 
 /* rebuild context */
+$controller = new FrontController();
+$controller->init();
+
+Context::getContext()->controller = $controller;
+
 if (isset($cart->id_shop)) {
     $_GET['id_shop'] = $cart->id_shop;
     Context::getContext()->shop = Shop::initialize();

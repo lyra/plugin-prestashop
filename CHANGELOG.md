@@ -1,3 +1,9 @@
+1.11.2, 2019-07-31:
+- Bug fix: JavaScript loaded but not executed in iframe mode (on some PrestaShop 1.7 themes).
+- Bug fix: Minimum and maximum amounts are not considered if equal to zero in customer group amount restriction.
+- Compatibility with PrestaShop 1.7.6 (fix fatal error on IPN call).
+- Possibility to disable payment result display on order details using a flag within payzen.php file (on PrestaShop > 1.7.1.1).
+
 1.11.1, 2019-06-21:
 - Bug fix compatibility of iframe mode with new 1.7.5.x PrestaShop versions.
 - Bug fix: filter HTML special characters in REST API placeholders settings.

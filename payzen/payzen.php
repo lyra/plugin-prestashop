@@ -38,6 +38,7 @@ class Payzen extends PaymentModule
     const DELIVERY_COMPANY_ADDRESS_REGEX = '#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /\'-]{1,72}$#ui';
     const DELIVERY_COMPANY_LABEL_REGEX = '#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /\'-]{1,55}$#ui';
 
+    const PAYMENT_DETAILS_PS17 = true; // Display more payment details using a closed SAV thread on PS >= 1.7.1.2.
 
     private $logger;
 
@@ -48,10 +49,10 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.11.1';
+        $this->version = '1.11.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
-        $this->module_key = '###MODULE_KEY###';
+        $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
         $this->is_eu_compatible = 1;
         $this->need_instance = 0;
 
@@ -1084,7 +1085,7 @@ class Payzen extends PaymentModule
                 if ($standard->getEntryMode() == '4' || $standard->getEntryMode() == '5') {
                     // iframe or rest mode
                     $option->setAdditionalInformation($form);
-                    $option->setForm('<form id="payzen_standard" onsubmit="javascript: return false;"></form>');
+                    $option->setForm('<form id="payzen_standard" onsubmit="javascript: payzenSubmit(event);"></form>');
                 } else {
                     $option->setForm($form);
                 }
@@ -1395,20 +1396,24 @@ class Payzen extends PaymentModule
 
         $message = $response->getCompleteMessage().$msg_brand_choice.$msg_3ds.$msg_src.$msg_trans_uuid;
 
-        if (version_compare(_PS_VERSION_, '1.7.1.2', '>=')) {
+        if (self::PAYMENT_DETAILS_PS17 && version_compare(_PS_VERSION_, '1.7.1.2', '>=')) {
             $msg = new CustomerMessage();
             $msg->message = $message;
             $msg->id_customer_thread = $this->createCustomerThread((int)$order->id);
             $msg->id_order = (int)$order->id;
             $msg->private = 1;
             $msg->save();
-        } else {
-            $msg = new Message();
-            $msg->message = $message;
-            $msg->id_order = (int)$order->id;
-            $msg->private = 1;
-            $msg->add();
+
+            // mark message as read to archive it
+            Message::markAsReaded($msg->id, 0);
         }
+
+        // create order message anyway
+        $msg = new Message();
+        $msg->message = $message;
+        $msg->id_order = (int)$order->id;
+        $msg->private = 1;
+        $msg->add();
 
         // mark message as read to archive it
         Message::markAsReaded($msg->id, 0);
@@ -1422,7 +1427,7 @@ class Payzen extends PaymentModule
         $customerThread->id_contact = 0;
         $customerThread->id_order = $id_order;
         $customerThread->id_customer = $this->context->customer->id;
-        $customerThread->status = 'open';
+        $customerThread->status = 'closed';
         $customerThread->email = $this->context->customer->email;
         $customerThread->token = Tools::passwdGen(12);
         $customerThread->add();
