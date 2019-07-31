@@ -41,6 +41,14 @@ var PAYZEN_RECOVERABLE_ERRORS = [
 
 var payzenInitRestEvents = function() {
     KR.onError(function(e) {
+        if ($('#payzen_standard').length && $('#payzen_standard').data('submitted')) {
+            // PrestaShop 1.7 template.
+            $('.payzen .processing').css('display', 'none');
+
+            $('#payment-confirmation button').removeAttr('disabled');
+            $('#payzen_standard').data('submitted', false);
+        }
+
         // not recoverable error, reload page after a while
         if (PAYZEN_RECOVERABLE_ERRORS.indexOf(e.errorCode) === -1) {
             setTimeout(function() {

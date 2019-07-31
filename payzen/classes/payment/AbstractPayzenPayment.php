@@ -77,17 +77,17 @@ abstract class AbstractPayzenPayment
             }
         }
 
-        if (!$min_amount) {
+        if (!is_numeric($min_amount)) {
             $min_amount = $all_min_amount;
         }
 
-        if (!$max_amount) {
+        if (!is_numeric($max_amount)) {
             $max_amount = $all_max_amount;
         }
 
         $amount = $cart->getOrderTotal();
 
-        if (($min_amount && $amount < $min_amount) || ($max_amount && $amount > $max_amount)) {
+        if ((is_numeric($min_amount) && $amount < $min_amount) || (is_numeric($max_amount) && $amount > $max_amount)) {
             return false;
         }
 

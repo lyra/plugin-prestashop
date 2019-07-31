@@ -15,13 +15,8 @@
   </iframe>
 </section>
 
-{block name='javascript_bottom'}
-  {include file="_partials/javascript.tpl" javascript=$javascript.bottom}
-{/block}
-
 <script type="text/javascript">
-  $(document).ready(function($) {
-    $('#payzen_standard').submit(function(e) {
+  var payzenSubmit = function(e) {
       e.preventDefault();
 
       if (!$('#payzen_standard').data('submitted')) {
@@ -34,8 +29,9 @@
       }
 
       return false;
-    });
+    }
 
+  setTimeout(function() {
     $('input[type="radio"][name="payment-option"]').change(function() {
       if (!$('#payzen_standard').data('submitted')) {
           return;
@@ -48,5 +44,6 @@
       var url = decodeURIComponent("{$link->getModuleLink('payzen', 'iframe', ['content_only' => 1], true)|escape:'url':'UTF-8'}");
       $('#payzen_iframe').attr('src', url);
     });
-  });
+  }, 0);
+
 </script>
