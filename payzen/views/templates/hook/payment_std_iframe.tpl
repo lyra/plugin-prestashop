@@ -24,7 +24,7 @@
         $('#payment-confirmation button').attr('disabled', 'disabled');
         $('.payzen-iframe').show();
 
-        var url = decodeURIComponent("{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}");
+        var url = decodeURIComponent("{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}") + '&' + Date.now();
         $('#payzen_iframe').attr('src', url);
       }
 
@@ -41,7 +41,7 @@
       $('#payment-confirmation button').removeAttr('disabled');
       $('.payzen-iframe').hide();
 
-      var url = decodeURIComponent("{$link->getModuleLink('payzen', 'iframe', ['content_only' => 1], true)|escape:'url':'UTF-8'}");
+      var url = decodeURIComponent("{$link->getModuleLink('payzen', 'iframe', ['content_only' => 1], true)|escape:'url':'UTF-8'}") + '&' + Date.now();
       $('#payzen_iframe').attr('src', url);
     });
   }, 0);
