@@ -29,7 +29,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.11.2';
+    private static $PLUGIN_VERSION = '1.11.3';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -634,7 +634,7 @@ class PayzenTools
     {
         $url = $relative_url;
 
-        if (strpos($url, 'index.php?controller=') !== false && strpos($url, 'index.php/') === 0) {
+        if (strpos($url, 'index.php?controller=') !== false && strpos($url, 'index.php') === 0) {
             $url = Tools::substr($url, Tools::strlen('index.php?controller='));
             if (Configuration::get('PS_REWRITING_SETTINGS')) {
                 $url = Tools::strReplaceFirst('&', '?', $url);
@@ -696,8 +696,18 @@ class PayzenTools
 
         if ($transactionDetails = self::getProperty($transaction, 'transactionDetails')) {
             $response['vads_sequence_number'] = self::getProperty($transactionDetails, 'sequenceNumber');
-            $response['vads_effective_amount'] = self::getProperty($transactionDetails, 'effectiveAmount');
-            $response['vads_effective_currency'] = PayzenApi::getCurrencyNumCode(self::getProperty($transactionDetails, 'effectiveCurrency'));
+
+            // Workarround to adapt to REST API behavior.
+            $effectiveAmount = self::getProperty($transactionDetails, 'effectiveAmount');
+            $effectiveCurrency = PayzenApi::getCurrencyNumCode(self::getProperty($transactionDetails, 'effectiveCurrency'));
+
+            if ($effectiveAmount && $effectiveCurrency) {
+                $response['vads_effective_amount'] = $response['vads_amount'];
+                $response['vads_effective_currency'] = $response['vads_currency'];
+                $response['vads_amount'] = $effectiveAmount;
+                $response['vads_currency'] = $effectiveCurrency;
+            }
+
             $response['vads_warranty_result'] = self::getProperty($transactionDetails, 'liabilityShift');
 
             if ($cardDetails = self::getProperty($transactionDetails, 'cardDetails')) {

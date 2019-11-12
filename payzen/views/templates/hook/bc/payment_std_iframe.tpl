@@ -33,7 +33,7 @@
       $('.payzen-iframe').show();
 
       var url = "{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}";
-      $('#payzen_iframe').attr('src', decodeURIComponent(url));
+      $('#payzen_iframe').attr('src', decodeURIComponent(url) + '&' + Date.now());
     }
 
     function payzenHideIframe() {
@@ -47,7 +47,7 @@
       $('.payzen-iframe').hide();
 
       var url = "{$link->getModuleLink('payzen', 'iframe', ['content_only' => 1], true)|escape:'url':'UTF-8'}";
-      $('#payzen_iframe').attr('src', decodeURIComponent(url));
+      $('#payzen_iframe').attr('src', decodeURIComponent(url) + '&' + Date.now());
     }
 
     $(function() {
