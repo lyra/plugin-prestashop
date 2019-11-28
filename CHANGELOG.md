@@ -1,3 +1,6 @@
+1.11.4, 2019-11-28:
+- Bug fix: duplicate entry error on table ps\_message\_readed at the end of the payment.
+
 1.11.3, 2019-11-12:
 - Bug fix: currency and effective currency fields are inverted in REST API response.
 - Bug fix: redirection form loaded from cache in some cases in iframe mode.

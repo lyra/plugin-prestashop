@@ -49,7 +49,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.11.3';
+        $this->version = '1.11.4';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1402,13 +1402,11 @@ class Payzen extends PaymentModule
             $msg->id_customer_thread = $this->createCustomerThread((int)$order->id);
             $msg->id_order = (int)$order->id;
             $msg->private = 1;
+            $msg->read = 1;
             $msg->save();
-
-            // mark message as read to archive it
-            Message::markAsReaded($msg->id, 0);
         }
 
-        // create order message anyway
+        // create order message anyway to prevent changes on PrestaShop coming versions
         $msg = new Message();
         $msg->message = $message;
         $msg->id_order = (int)$order->id;
