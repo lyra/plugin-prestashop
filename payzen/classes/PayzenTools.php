@@ -29,7 +29,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.11.4';
+    private static $PLUGIN_VERSION = '1.12.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -46,16 +46,19 @@ class PayzenTools
     public static $multi_lang_fields = array(
         'PAYZEN_REDIRECT_SUCCESS_M', 'PAYZEN_REDIRECT_ERROR_M',
         'PAYZEN_STD_TITLE', 'PAYZEN_MULTI_TITLE', 'PAYZEN_ONEY_TITLE', 'PAYZEN_ANCV_TITLE',
-        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_CHOOZEO_TITLE',
+        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_CHOOZEO_TITLE', 'PAYZEN_THEME_CONFIG',
         'PAYZEN_FULLCB_TITLE', 'PAYZEN_OTHER_TITLE'
     );
+
     public static $amount_fields = array();
+
     public static $group_amount_fields = array(
         'PAYZEN_STD_AMOUNTS', 'PAYZEN_MULTI_AMOUNTS', 'PAYZEN_ANCV_AMOUNTS',
         'PAYZEN_ONEY_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS', 'PAYZEN_SOFORT_AMOUNTS',
         'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_CHOOZEO_AMOUNTS', 'PAYZEN_CHOOZEO_OPTIONS',
         'PAYZEN_FULLCB_AMOUNTS', 'PAYZEN_3DS_MIN_AMOUNT', 'PAYZEN_OTHER_AMOUNTS'
     );
+
     public static $address_regex = array(
         'oney' => array(
             'name' => "#^[A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,63}$#ui",
@@ -74,9 +77,9 @@ class PayzenTools
             'phone' => '#^(0|33)[0-9]{9}$#'
         )
     );
+
     public static $plugin_features = array(
         'qualif' => false,
-        'acquis' => true,
         'prodfaq' => true,
         'restrictmulti' => false,
         'shatwo' => true,
@@ -91,6 +94,19 @@ class PayzenTools
         'paypal' => true,
         'fullcb' => true,
         'conecs' => true
+    );
+
+    public static $submodules = array(
+        'STD' => 'Standard',
+        'MULTI' => 'Multi',
+        'CHOOZEO' => 'Choozeo',
+        'ONEY' => 'Oney',
+        'FULLCB' => 'Fullcb',
+        'ANCV' => 'Ancv',
+        'SEPA'=> 'Sepa',
+        'PAYPAL' => 'Paypal',
+        'SOFORT' => 'Sofort',
+        'OTHER' => 'Other'
     );
 
     public static function getDefault($name)
@@ -123,7 +139,7 @@ class PayzenTools
         $invalid_msg = $payzen->l('The field %1$s of your %2$s is invalid.', 'payzentools');
         $empty_msg = $payzen->l('The field %1$s of your %2$s is mandatory.', 'payzentools');
 
-        $address_type = $type == 'billing' ? $payzen->l('billing address', 'payzentools') :
+        $address_type = $type === 'billing' ? $payzen->l('billing address', 'payzentools') :
             $payzen->l('delivery address', 'payzentools');
 
         $errors = array();
@@ -202,6 +218,13 @@ class PayzenTools
             array('key' => 'PAYZEN_PLATFORM_URL', 'name' => 'platform_url',
                 'default' => self::getDefault('GATEWAY_URL'), 'label' => 'Payment page URL'),
 
+            array('key' => 'PAYZEN_PRIVKEY_TEST', 'default' => '', 'label' => 'Test password'),
+            array('key' => 'PAYZEN_PRIVKEY_PROD', 'default' => '', 'label' => 'Production password'),
+            array('key' => 'PAYZEN_PUBKEY_TEST', 'default' => '', 'label' => 'Public test key'),
+            array('key' => 'PAYZEN_PUBKEY_PROD', 'default' => '', 'label' => 'Public production key'),
+            array('key' => 'PAYZEN_RETKEY_TEST', 'default' => '', 'label' => 'SHA256 test key'),
+            array('key' => 'PAYZEN_RETKEY_PROD', 'default' => '', 'label' => 'SHA256 production key'),
+
             array('key' => 'PAYZEN_DEFAULT_LANGUAGE', 'default' => self::getDefault('LANGUAGE'), 'label' => 'Default language'),
             array('key' => 'PAYZEN_AVAILABLE_LANGUAGES', 'name' => 'available_languages', 'default' => '',
                 'label' => 'Available languages'),
@@ -209,7 +232,13 @@ class PayzenTools
             array('key' => 'PAYZEN_VALIDATION_MODE', 'name' => 'validation_mode', 'default' => '',
                 'label' => 'Payment validation'),
 
-            array('key' => 'PAYZEN_THEME_CONFIG', 'name' => 'theme_config', 'default' => '',
+            array('key' => 'PAYZEN_THEME_CONFIG', 'name' => 'theme_config',
+                'default' => array(
+                    'en' => 'RESPONSIVE_MODEL=',
+                    'fr' => 'RESPONSIVE_MODEL=',
+                    'de' => 'RESPONSIVE_MODEL=',
+                    'es' => 'RESPONSIVE_MODEL='
+                ),
                 'label' => 'Theme configuration'),
             array('key' => 'PAYZEN_SHOP_NAME', 'name' => 'shop_name', 'default' => '', 'label' => 'Shop name'),
             array('key' => 'PAYZEN_SHOP_URL', 'name' => 'shop_url', 'default' => '', 'label' => 'Shop URL'),
@@ -244,6 +273,7 @@ class PayzenTools
                 'label' => 'Payment failed management'),
             array('key' => 'PAYZEN_CART_MANAGEMENT', 'default' => self::EMPTY_CART, 'label' => 'Cart management'),
 
+            array('key' => 'PAYZEN_SEND_CART_DETAIL', 'default' => 'True', 'label' => 'Send shopping cart details'),
             array('key' => 'PAYZEN_COMMON_CATEGORY', 'default' => 'FOOD_AND_GROCERY',
                 'label' => 'Category mapping'),
             array('key' => 'PAYZEN_CATEGORY_MAPPING', 'default' => array(), 'label' => 'Category mapping'),
@@ -266,15 +296,12 @@ class PayzenTools
             array('key' => 'PAYZEN_STD_PROPOSE_ONEY', 'default' => 'False', 'label' => 'Propose FacilyPay Oney'),
             array('key' => 'PAYZEN_STD_AMOUNTS', 'default' => array(), 'label' => 'Standard payment - Customer group amount restriction'),
             array('key' => 'PAYZEN_STD_CARD_DATA_MODE', 'default' => '1', 'label' => 'Card data entry mode'),
-            array('key' => 'PAYZEN_STD_PRIVKEY_TEST', 'default' => '', 'label' => 'Test password'),
-            array('key' => 'PAYZEN_STD_PRIVKEY_PROD', 'default' => '', 'label' => 'Production password'),
-            array('key' => 'PAYZEN_STD_PUBKEY_TEST', 'default' => '', 'label' => 'Public test key'),
-            array('key' => 'PAYZEN_STD_PUBKEY_PROD', 'default' => '', 'label' => 'Public production key'),
-            array('key' => 'PAYZEN_STD_RETKEY_TEST', 'default' => '', 'label' => 'SHA256 test key'),
-            array('key' => 'PAYZEN_STD_RETKEY_PROD', 'default' => '', 'label' => 'SHA256 production key'),
+            array('key' => 'PAYZEN_STD_REST_DISPLAY_MODE', 'default' => 'embedded', 'label' => 'Display mode'),
             array('key' => 'PAYZEN_STD_REST_THEME', 'default' => 'material', 'label' => 'Custom theme'),
-            array('key' => 'PAYZEN_STD_REST_PLACEHOLDER', 'default' => array(), 'label' => 'Custom field placeholders'),
+            array('key' => 'PAYZEN_STD_REST_PLACEHLDR', 'default' => array(), 'label' => 'Custom field placeholders'),
             array('key' => 'PAYZEN_STD_REST_ATTEMPTS', 'default' => '', 'label' => 'Payment attempts number'),
+            array('key' => 'PAYZEN_STD_1_CLICK_PAYMENT', 'default' => 'False', 'label' => 'Payment by token'),
+            array('key' => 'PAYZEN_STD_CANCEL_IFRAME', 'default' => 'False', 'label' => 'Cancel payment in iframe mode'),
 
             array('key' => 'PAYZEN_MULTI_TITLE',
                 'default' => array(
@@ -378,6 +405,7 @@ class PayzenTools
             array('key' => 'PAYZEN_SEPA_DELAY', 'default' => '', 'label' => 'Capture delay'),
             array('key' => 'PAYZEN_SEPA_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_SEPA_AMOUNTS', 'default' => array(), 'label' => 'SEPA payment - Customer group amount restriction'),
+            array('key' => 'PAYZEN_SEPA_MANDATE_MODE', 'default' => 'PAYMENT', 'label' => 'SEPA direct debit mode'),
 
             array('key' => 'PAYZEN_SOFORT_TITLE',
                 'default' => array(
@@ -445,6 +473,11 @@ class PayzenTools
             array('key' => 'PAYZEN_OTHER_PAYMENT_MEANS', 'default' => array(), 'label' => 'Other payment means - Payment means')
         );
 
+        foreach (array_keys(self::$submodules) as $key) {
+            array_push($params, array('key' => 'PAYZEN_'.$key.'_COUNTRY', 'default' => '1', 'label' => 'Restrict to some countries'));
+            array_push($params, array('key' => 'PAYZEN_'.$key.'_COUNTRY_LST', 'default' => '', 'label' => 'Authorized countries'));
+        }
+
         return $params;
     }
 
@@ -467,7 +500,7 @@ class PayzenTools
 
     public static function checkOneyRequirements($cart)
     {
-        // check order_id param
+        // Check order_id param
         if (!preg_match(self::ORDER_ID_REGEX, $cart->id)) {
             $msg = 'Order ID « % s» does not match FacilyPay Oney specifications.';
             $msg .= ' The regular expression for this field is « %s ». Module is not displayed.';
@@ -475,7 +508,7 @@ class PayzenTools
             return false;
         }
 
-        // check customer ID param
+        // Check customer ID param
         if (!preg_match(self::CUST_ID_REGEX, $cart->id_customer)) {
             $msg = 'Customer ID « %s » does not match FacilyPay Oney specifications.';
             $msg .= ' The regular expression for this field is « %s ». Module is not displayed.';
@@ -483,10 +516,10 @@ class PayzenTools
             return false;
         }
 
-        // check products
+        // Check products
         foreach ($cart->getProducts(true) as $product) {
             if (!preg_match(self::PRODUCT_REF_REGEX, $product['id_product'])) {
-                // product id doesn't match FacilyPay Oney rules
+                // Product id doesn't match FacilyPay Oney rules
 
                 $msg = 'Product reference « %s » does not match FacilyPay Oney specifications.';
                 $msg .= ' The regular expression for this field is « %s ». Module is not displayed.';
@@ -549,7 +582,7 @@ class PayzenTools
             return null;
         }
 
-        // get address saved by SoColissimo
+        // Get address saved by SoColissimo
         $row = Db::getInstance()->getRow(
             'SELECT * FROM '._DB_PREFIX_.'socolissimo_delivery_info WHERE id_cart = \''.
             (int)$cart->id.'\' AND id_customer = \''.(int)$cart->id_customer.'\''
@@ -592,11 +625,11 @@ class PayzenTools
                 $so_address->other .= isset($row['pradress4']) ? ' '.$row['pradress4'] : '';
             }
 
-            // return the SoColissimo updated address
+            // Return the SoColissimo updated address
             return $so_address;
         }
 
-        // use initial customer address
+        // Use initial customer address
         return null;
     }
 
@@ -605,7 +638,7 @@ class PayzenTools
     public static function getLogger()
     {
         if (!self::$logger) {
-            self::$logger = new PayzenFileLogger(Configuration::get('PAYZEN_ENABLE_LOGS') != 'False');
+            self::$logger = new PayzenFileLogger(Configuration::get('PAYZEN_ENABLE_LOGS') !== 'False');
 
             $logs_dir = _PS_ROOT_DIR_.'/var/logs/';
             if (!file_exists($logs_dir)) {
@@ -643,8 +676,8 @@ class PayzenTools
 
         $explode = explode('?', $url);
 
-        // don't use ssl if url is home page
-        // used when logout for example
+        // Don't use ssl if url is home page
+        // Used when logout for example
         $use_ssl = !empty($url);
         $url = Context::getContext()->link->getPageLink($explode[0], $use_ssl);
         if (isset($explode[1])) {
@@ -654,19 +687,23 @@ class PayzenTools
         return $url;
     }
 
-    public static function convertRestResult($answer)
+    public static function convertRestResult($answer, $isTransaction = false)
     {
         if (!is_array($answer) || empty($answer)) {
             return array();
         }
 
-        $transactions = self::getProperty($answer, 'transactions');
+        if ($isTransaction) {
+            $transaction = $answer;
+        } else {
+            $transactions = self::getProperty($answer, 'transactions');
 
-        if (!is_array($transactions) || empty($transactions)) {
-            return array();
+            if (!is_array($transactions) || empty($transactions)) {
+                return array();
+            }
+
+            $transaction = $transactions[0];
         }
-
-        $transaction = $transactions[0];
 
         $response = array();
 
@@ -677,7 +714,7 @@ class PayzenTools
         $response['vads_trans_uuid'] = self::getProperty($transaction, 'uuid');
         $response['vads_operation_type'] = self::getProperty($transaction, 'operationType');
         $response['vads_effective_creation_date'] = self::getProperty($transaction, 'creationDate');
-        $response['vads_payment_config'] = 'SINGLE'; // only single payments are possible via REST API at this time
+        $response['vads_payment_config'] = 'SINGLE'; // Only single payments are possible via REST API at this time
 
         if (($customer = self::getProperty($answer, 'customer')) && ($billingDetails = self::getProperty($customer, 'billingDetails'))) {
             $response['vads_language'] = self::getProperty($billingDetails, 'language');
@@ -685,6 +722,11 @@ class PayzenTools
 
         $response['vads_amount'] = self::getProperty($transaction, 'amount');
         $response['vads_currency'] = PayzenApi::getCurrencyNumCode(self::getProperty($transaction, 'currency'));
+
+        if (self::getProperty($transaction, 'paymentMethodToken')) {
+            $response['vads_identifier'] = self::getProperty($transaction, 'paymentMethodToken');
+            $response['vads_identifier_status'] = 'CREATED';
+        }
 
         if ($orderDetails = self::getProperty($answer, 'orderDetails')) {
             $response['vads_order_id'] = self::getProperty($orderDetails, 'orderId');
@@ -711,7 +753,7 @@ class PayzenTools
             $response['vads_warranty_result'] = self::getProperty($transactionDetails, 'liabilityShift');
 
             if ($cardDetails = self::getProperty($transactionDetails, 'cardDetails')) {
-                $response['vads_trans_id'] = self::getProperty($cardDetails, 'legacyTransId'); // deprecated
+                $response['vads_trans_id'] = self::getProperty($cardDetails, 'legacyTransId'); // Deprecated
                 $response['vads_presentation_date'] = self::getProperty($cardDetails, 'expectedCaptureDate');
 
                 $response['vads_card_brand'] = self::getProperty($cardDetails, 'effectiveBrand');
@@ -748,6 +790,24 @@ class PayzenTools
         return $response;
     }
 
+    // Check REST WS response.
+    public static function checkRestResult($response, $expectedStatuses = array())
+    {
+        $answer = $response['answer'];
+
+        if ($response['status'] != 'SUCCESS') {
+            $errorMessage = $answer['errorCode'];
+
+            if (isset($answer['detailedErrorMessage']) && !empty($answer['detailedErrorMessage'])) {
+                $errorMessage .= ' : '.$answer['detailedErrorMessage'];
+            }
+
+            throw new Exception("({$errorMessage}).");
+        } elseif (!empty($expectedStatuses) && !in_array($answer['detailedStatus'], $expectedStatuses)) {
+            throw new Exception("Unexpected transaction status returned ({$answer['detailedStatus']}).");
+        }
+    }
+
     private static function getProperty($array, $key)
     {
         if (isset($array[$key])) {
@@ -771,18 +831,18 @@ class PayzenTools
     {
         $supported_sign_algos = array('sha256_hmac');
 
-        // check if the hash algorithm is supported
+        // Check if the hash algorithm is supported
         if (!in_array($data['kr-hash-algorithm'], $supported_sign_algos)) {
             self::getLogger()->logError('Hash algorithm is not supported: '.Tools::getValue('kr-hash-algorithm'));
             return false;
         }
 
-        // on some servers, / can be escaped
+        // On some servers, / can be escaped
         $kr_answer = str_replace('\/', '/', $data['kr-answer']);
 
         $hash = hash_hmac('sha256', $kr_answer, $key);
 
-        // return true if calculated hash and sent hash are the same
+        // Return true if calculated hash and sent hash are the same
         return ($hash == $data['kr-hash']);
     }
 }

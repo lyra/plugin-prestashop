@@ -33,13 +33,13 @@ class PayzenRestModuleFrontController extends ModuleFrontController
             Tools::redirectLink('index.php');
         }
 
-        $test_mode = Configuration::get('PAYZEN_MODE') == 'TEST';
-        $sha_key = $test_mode ? Configuration::get('PAYZEN_STD_RETKEY_TEST') : Configuration::get('PAYZEN_STD_RETKEY_PROD');
+        $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
+        $sha_key = $test_mode ? Configuration::get('PAYZEN_RETKEY_TEST') : Configuration::get('PAYZEN_RETKEY_PROD');
 
-        // use direct post content to avoid stipslashes from json data
+        // Use direct post content to avoid stipslashes from json data
         $data = $_POST;
 
-        // check the authenticity of the request
+        // Check the authenticity of the request
         if (!PayzenTools::checkHash($data, $sha_key)) {
             $ip = Tools::getRemoteAddr();
             $this->logger->logError("{$ip} tries to access module/payzen/rest page without valid signature with parameters: ".print_r($data, true));
@@ -53,7 +53,7 @@ class PayzenRestModuleFrontController extends ModuleFrontController
             Tools::redirectLink('index.php');
         }
 
-        // wrap payment result to use traditional order creation tunnel
+        // Wrap payment result to use traditional order creation tunnel
         $data = PayzenTools::convertRestResult($answer);
 
         require_once _PS_MODULE_DIR_.'payzen/classes/PayzenResponse.php';
@@ -64,38 +64,38 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         $cart_id = (int)$response->get('order_id');
         $cart = new Cart($cart_id);
 
-        // get order ID by cart ID
+        // Get order ID by cart ID
         $order_id = Order::getOrderByCartId($cart_id);
 
         if ($order_id == false) {
-            // order has not been processed yet
+            // Order has not been processed yet
 
             $new_state = (int)Payzen::nextOrderState($response);
 
             if ($response->isAcceptedPayment()) {
-                $this->logger->logWarning("Payment for cart #$cart_id has been processed by client return ! This means the IPN URL did not work.");
+                $this->logger->logWarning("Payment for cart #$cart_id has been processed by client return! This means the IPN URL did not work.");
                 $this->logger->logInfo("Payment accepted for cart #$cart_id. New order state is $new_state.");
 
                 $order = $this->module->saveOrder($cart, $new_state, $response);
 
-                // redirect to success page
+                // Redirect to success page
                 $this->redirectSuccess($order, true);
             } else {
-                // payment KO
+                // Payment KO
 
-                $save_on_failure = (Configuration::get('PAYZEN_FAILURE_MANAGEMENT') == PayzenTools::ON_FAILURE_SAVE);
+                $save_on_failure = (Configuration::get('PAYZEN_FAILURE_MANAGEMENT') === PayzenTools::ON_FAILURE_SAVE);
                 if ($save_on_failure) {
-                    // save on failure option is selected: save order and go to history page
-                    $this->logger->logWarning("Payment for order #$cart_id has been processed by client return ! This means the IPN URL did not work.");
+                    // Save on failure option is selected: save order and go to history page
+                    $this->logger->logWarning("Payment for order #$cart_id has been processed by client return! This means the IPN URL did not work.");
                     $this->logger->logInfo("Save on failure option is selected: save failed order for cart #$cart_id. New order state is $new_state.");
 
                     $order = $this->module->saveOrder($cart, $new_state, $response);
 
-                    $this->logger->logInfo("Redirect to history page, cart ID : #$cart_id.");
+                    $this->logger->logInfo("Redirect to history page, cart ID: #$cart_id.");
                     Tools::redirect('index.php?controller=history');
                 } else {
-                    // option 2 choosen : get back to checkout process
-                    $this->logger->logInfo("Payment failed, redirect to order checkout page, cart ID : #$cart_id.");
+                    // Option 2 choosen: get back to checkout process
+                    $this->logger->logInfo("Payment failed, redirect to order checkout page, cart ID: #$cart_id.");
 
                     if (!$response->isCancelledPayment()) {
                         // ... and show message if not cancelled
@@ -115,15 +115,15 @@ class PayzenRestModuleFrontController extends ModuleFrontController
                 }
             }
         } else {
-            // order already registered
+            // Order already registered
             $order = new Order((int)$order_id);
 
             if ($response->isAcceptedPayment()) {
-                // just display a confirmation message
+                // Just display a confirmation message
                 $this->logger->logInfo("Payment success confirmed for cart #$cart_id.");
                 $this->redirectSuccess($order);
             } else {
-                // just redirect to order history page
+                // Just redirect to order history page
                 $this->logger->logInfo("Payment failure confirmed for cart #$cart_id.");
                 Tools::redirect('index.php?controller=history');
             }
@@ -132,18 +132,18 @@ class PayzenRestModuleFrontController extends ModuleFrontController
 
     private function redirectSuccess($order, $check = false)
     {
-        // display a confirmation message
+        // Display a confirmation message
         $link = 'index.php?controller=order-confirmation&id_cart='.$order->id_cart.'&id_module='.$this->module->id.
             '&id_order='.$order->id.'&key='.$order->secure_key;
 
-        // amount paid not equals initial amount. Error !
+        // Amount paid not equals initial amount. Error !
         if (Payzen::hasAmountError($order)) {
             $link .= '&error=yes';
         }
 
-        if (Configuration::get('PAYZEN_MODE') == 'TEST') {
+        if (Configuration::get('PAYZEN_MODE') === 'TEST') {
             if ($check) {
-                // TEST mode (user is the webmaster) : IPN did not work, so we display a warning
+                // TEST mode (user is the webmaster): IPN did not work, so we display a warning
                 $link .= '&check_url_warn=yes';
             }
 

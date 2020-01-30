@@ -18,6 +18,7 @@ class PayzenPaypalPayment extends AbstractPayzenPayment
     protected $tpl_name = 'payment_paypal.tpl';
     protected $logo = 'paypal.png';
     protected $name = 'paypal';
+    protected $needs_cart_data = true;
 
     /**
      * {@inheritDoc}
@@ -27,8 +28,8 @@ class PayzenPaypalPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // override with PayPal cards
-        $test_mode = $request->get('ctx_mode') == 'TEST';
+        // Override with PayPal cards
+        $test_mode = $request->get('ctx_mode') === 'TEST';
         $request->set('payment_cards', $test_mode ? 'PAYPAL_SB' : 'PAYPAL');
 
         return $request;

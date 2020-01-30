@@ -1,3 +1,18 @@
+1.12.0, 2020-01-30:
+- Bug fix: 3DS result is not correctly saved in backend order details when using embedded payment fields.
+- Bug fix: Fix theme config setting for iframe mode.
+- [embedded] Added possibility to display REST API fields in pop-in mode.
+- Possibility to make refunds for payments.
+- Possibility to cancel payment in iframe mode.
+- [alias] Added payment by token.
+- [sepa] Save SEPA aliases separately from CB payment aliases.
+- [sepa] Added possibility to configure SEPA submodule payment.
+- [technical] Do not use vads\_order\_info2 gateway parameter.
+- [oney] Added warning when delivery methods are updated.
+- Removed feature data acquisition on merchant website.
+- Possibility to not send shopping cart content when not mandatory.
+- Restrict payment submodules to specific countries.
+
 1.11.4, 2019-11-28:
 - Bug fix: duplicate entry error on table ps\_message\_readed at the end of the payment.
 

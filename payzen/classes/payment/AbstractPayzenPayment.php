@@ -23,6 +23,8 @@ abstract class AbstractPayzenPayment
 
     protected $currencies = array();
     protected $countries = array();
+    protected $needs_cart_data = false;
+    protected $force_local_cart_data = false;
 
     public function isAvailable($cart)
     {
@@ -47,12 +49,12 @@ abstract class AbstractPayzenPayment
 
     protected function checkActive()
     {
-        return Configuration::get($this->prefix . 'ENABLED') == 'True';
+        return Configuration::get($this->prefix.'ENABLED') === 'True';
     }
 
     protected function checkAmountRestriction($cart)
     {
-        $config_options = @unserialize(Configuration::get($this->prefix . 'AMOUNTS'));
+        $config_options = @unserialize(Configuration::get($this->prefix.'AMOUNTS'));
         if (!is_array($config_options) || empty($config_options)) {
             return true;
         }
@@ -100,7 +102,7 @@ abstract class AbstractPayzenPayment
             return true;
         }
 
-        // check if submodule is available for some currencies
+        // Check if submodule is available for some currencies
         $cart_currency = new Currency((int)$cart->id_currency);
         if (in_array($cart_currency->iso_code, $this->currencies)) {
             return true;
@@ -111,14 +113,25 @@ abstract class AbstractPayzenPayment
 
     protected function checkCountry($cart)
     {
-        if (!is_array($this->countries) || empty($this->countries)) {
-            return true;
-        }
-
-        // check if submodule is available for some countries
         $billing_address = new Address((int)$cart->id_address_invoice);
         $billing_country = new Country((int)$billing_address->id_country);
-        if (in_array($billing_country->iso_code, $this->countries)) {
+
+        // Submodule country restriction
+        $submoduleAvailableCountries = true;
+        if (is_array($this->countries) && !empty($this->countries)) {
+            $submoduleAvailableCountries = in_array($billing_country->iso_code, $this->countries);
+        }
+
+        // Backend restriction on countries
+        $backendAllowAllCountries = Configuration::get($this->prefix.'COUNTRY') === '1' ? true : false;
+        $backendAllowSpecificCountries = !Configuration::get($this->prefix.'COUNTRY_LST') ?
+            array() : explode(';', Configuration::get($this->prefix.'COUNTRY_LST'));
+
+        if ($backendAllowAllCountries) {
+            if ($submoduleAvailableCountries) {
+                return true;
+            }
+        } elseif (in_array($billing_country->iso_code, $backendAllowSpecificCountries) && $submoduleAvailableCountries) {
             return true;
         }
 
@@ -200,7 +213,7 @@ abstract class AbstractPayzenPayment
      */
     public function prepareRequest($cart, $data = array())
     {
-        // update shop info in cart to avoid errors when shopping cart is shared
+        // Update shop info in cart to avoid errors when shopping cart is shared
         $shop = Context::getContext()->shop;
         if ($shop->getGroup()->share_order && ($cart->id_shop != $shop->id)) {
             $cart->id_shop = $shop->id;
@@ -213,7 +226,7 @@ abstract class AbstractPayzenPayment
         $billing_country = new Country((int)$billing_address->id_country);
 
         /* @var $delivery_address Address */
-        $colissimo_address = PayzenTools::getColissimoDeliveryAddress($cart); // get SoColissimo delivery address
+        $colissimo_address = PayzenTools::getColissimoDeliveryAddress($cart); // Get SoColissimo delivery address
         if ($colissimo_address instanceof Address) {
             $delivery_address = $colissimo_address;
         } else {
@@ -242,12 +255,16 @@ abstract class AbstractPayzenPayment
                     $id_lang = (int)$cart->id_lang;
                 }
 
-                // set payment gateway params only
-                $request->set($param['name'], Configuration::get($param['key'], $id_lang));
+                $value = Configuration::get($param['key'], $id_lang);
+
+                if (($param['name'] !== 'theme_config') || ($value !== 'RESPONSIVE_MODEL=')) {
+                    // Set payment gateway params only
+                    $request->set($param['name'], $value);
+                }
             }
         }
 
-        // detect default language
+        // Detect default language
         /* @var $language Language */
         $language = Language::getLanguage((int)$cart->id_lang);
         $language_iso_code = $language['language_code'] ?
@@ -257,11 +274,11 @@ abstract class AbstractPayzenPayment
             $language_iso_code = Configuration::get('PAYZEN_DEFAULT_LANGUAGE');
         }
 
-        // detect store currency
+        // Detect store currency
         $cart_currency = new Currency((int)$cart->id_currency);
         $currency = PayzenApi::findCurrencyByAlphaCode($cart_currency->iso_code);
 
-        // amount rounded to currency decimals
+        // Amount rounded to currency decimals
         $amount = Tools::ps_round($cart->getOrderTotal(), $currency->getDecimals());
 
         $request->set('amount', $currency->convertAmountToInteger($amount));
@@ -272,7 +289,7 @@ abstract class AbstractPayzenPayment
         /* @var $cust Customer */
         $cust = new Customer((int)$cart->id_customer);
 
-        // customer data
+        // Customer data
         $request->set('cust_email', $cust->email);
         $request->set('cust_id', $cust->id);
 
@@ -309,8 +326,8 @@ abstract class AbstractPayzenPayment
             }
         }
 
-        // prepare cart data to send to gateway
-        if (Configuration::get('PAYZEN_COMMON_CATEGORY') != 'CUSTOM_MAPPING') {
+        // Prepare cart data to send to gateway
+        if (Configuration::get('PAYZEN_COMMON_CATEGORY') !== 'CUSTOM_MAPPING') {
             $category = Configuration::get('PAYZEN_COMMON_CATEGORY');
         } else {
             $oney_categories = @unserialize(Configuration::get('PAYZEN_CATEGORY_MAPPING'));
@@ -323,7 +340,7 @@ abstract class AbstractPayzenPayment
 
             foreach ($products as $product) {
                 if (!isset($category)) {
-                    // build query to get product default category
+                    // Build query to get product default category
                     $sql = 'SELECT `id_category_default` FROM `'._DB_PREFIX_.'product` WHERE `id_product` = '
                         .(int)$product['id_product'];
                     $db_category = Db::getInstance()->getValue($sql);
@@ -334,29 +351,31 @@ abstract class AbstractPayzenPayment
                 $price_in_cents = $currency->convertAmountToInteger($product['price']);
                 $qty = (int)$product['cart_quantity'];
 
-                $request->addProduct(
-                    Tools::substr(preg_replace($product_label_regex_not_allowed, ' ', $product['name']), 0, 255),
-                    $price_in_cents,
-                    $qty,
-                    $product['id_product'],
-                    $category,
-                    number_format($product['rate'], 4, '.', '')
-                );
+                if ((!$this->force_local_cart_data && (Configuration::get('PAYZEN_SEND_CART_DETAIL') === 'True')) || $this->needs_cart_data) {
+                    $request->addProduct(
+                        Tools::substr(preg_replace($product_label_regex_not_allowed, ' ', $product['name']), 0, 255),
+                        $price_in_cents,
+                        $qty,
+                        $product['id_product'],
+                        $category,
+                        number_format($product['rate'], 4, '.', '')
+                    );
+                }
 
                 $subtotal += $price_in_cents * $qty;
             }
         }
 
-        // set misc optional params as possible
+        // Set misc optional params as possible
         $request->set(
             'shipping_amount',
             $currency->convertAmountToInteger($cart->getOrderTotal(false, Cart::ONLY_SHIPPING))
         );
 
-        // recalculate tax_amount to avoid rounding problems
+        // Recalculate tax_amount to avoid rounding problems
         $tax_amount_in_cents = $request->get('amount') - $subtotal - $request->get('shipping_amount');
         if ($tax_amount_in_cents < 0) {
-            // when order is discounted
+            // When order is discounted
             $tax_amount = $cart->getOrderTotal(true) - $cart->getOrderTotal(false);
             $tax_amount_in_cents = ($tax_amount <= 0) ? 0 : $currency->convertAmountToInteger($tax_amount);
         }
@@ -366,30 +385,30 @@ abstract class AbstractPayzenPayment
         // VAT amount for colombian payment means
         $request->set('totalamount_vat', $tax_amount_in_cents);
 
-        if (Configuration::get('PAYZEN_SEND_SHIP_DATA') == 'True' || $this->proposeOney($data)) {
-            // set information about delivery mode
+        if (Configuration::get('PAYZEN_SEND_SHIP_DATA') === 'True' || $this->proposeOney($data)) {
+            // Set information about delivery mode
             $this->setAdditionalData($cart, $delivery_address, $request, $this->proposeOney($data));
         }
 
-        // override capture delay if defined in submodule
+        // Override capture delay if defined in submodule
         if (is_numeric(Configuration::get($this->prefix.'DELAY'))) {
             $request->set('capture_delay', Configuration::get($this->prefix.'DELAY'));
         }
 
         //override validation mode if defined in submodule
-        if (Configuration::get($this->prefix.'VALIDATION') != '-1') {
+        if (Configuration::get($this->prefix.'VALIDATION') !== '-1') {
             $request->set('validation_mode', Configuration::get($this->prefix.'VALIDATION'));
         }
 
-        $request->set('order_info', $this->getTitle((int)$cart->id_lang));
+        $request->set('order_info', 'module_id='.$this->name);
 
-        // activate 3DS ?
+        // Activate 3DS ?
         $threeds_mpi = null;
         $threeds_min_amount_options = @unserialize(Configuration::get('PAYZEN_3DS_MIN_AMOUNT'));
         if (is_array($threeds_min_amount_options) && !empty($threeds_min_amount_options)) {
             $customer_group = (int)Customer::getDefaultGroupId($cart->id_customer);
 
-            $all_min_amount = $threeds_min_amount_options[0]['min_amount']; // value configured for all groups
+            $all_min_amount = $threeds_min_amount_options[0]['min_amount']; // Value configured for all groups
 
             $min_amount = null;
             foreach ($threeds_min_amount_options as $key => $value) {
@@ -414,7 +433,7 @@ abstract class AbstractPayzenPayment
 
         $request->set('threeds_mpi', $threeds_mpi);
 
-        // return URL
+        // Return URL
         $request->set('url_return', Context::getContext()->link->getModuleLink('payzen', 'submit', array(), true));
 
         return $request;
@@ -425,7 +444,7 @@ abstract class AbstractPayzenPayment
         // Oney delivery options defined in admin panel
         $shipping_options = @unserialize(Configuration::get('PAYZEN_ONEY_SHIP_OPTIONS'));
 
-        // retrieve carrier ID from cart
+        // Retrieve carrier ID from cart
         if (isset($cart->id_carrier) && $cart->id_carrier > 0) {
             $carrier_id = $cart->id_carrier;
         } else {
@@ -444,10 +463,10 @@ abstract class AbstractPayzenPayment
         $not_allowed_chars = "#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /'-]#ui";
         $address_not_allowed_chars = "#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '.,-]#ui";
 
-        // set shipping params
+        // Set shipping params
 
         if ($cart->isVirtualCart() || !isset($carrier_id) || !is_array($shipping_options) || empty($shipping_options)) {
-            // no shipping options or virtual cart
+            // No shipping options or virtual cart
             $payzen_request->set('ship_to_type', 'ETICKET');
             $payzen_request->set('ship_to_speed', 'EXPRESS');
 
@@ -456,7 +475,7 @@ abstract class AbstractPayzenPayment
                 preg_replace($not_allowed_chars, ' ', Configuration::get('PS_SHOP_NAME'))
             );
         } elseif (self::isSupportedRelayPoint($carrier_id)) {
-            // specific supported relay point carrier
+            // Specific supported relay point carrier
             $payzen_request->set('ship_to_type', 'RELAY_POINT');
             $payzen_request->set('ship_to_speed', 'STANDARD');
 
@@ -474,7 +493,7 @@ abstract class AbstractPayzenPayment
                         break;
                     }
 
-                    // relay point name + address
+                    // Relay point name + address
                     $address = $row['name'].' '.$row['address'];
                     $city = $row['city'];
                     $zipcode = $row['zipcode'];
@@ -488,7 +507,7 @@ abstract class AbstractPayzenPayment
                         break;
                     }
 
-                    // relay point name + address
+                    // Relay point name + address
                     $address = $row['MR_Selected_LgAdr1'].' '.$row['MR_Selected_LgAdr3'];
                     $city = $row['MR_Selected_Ville'];
                     $zipcode = $row['MR_Selected_CP'];
@@ -503,7 +522,7 @@ abstract class AbstractPayzenPayment
                         break;
                     }
 
-                    // relay point name + address
+                    // Relay point name + address
                     $address = $row['company'].' '.$row['address1'].' '.$row['address2'];
                     $city = $row['city'];
                     $zipcode = $row['postcode'];
@@ -514,21 +533,21 @@ abstract class AbstractPayzenPayment
                     break;
 
                 case (self::isColissimoRelay($carrier_id) && $delivery_address->company /* relay point */):
-                    // relay point name + address
+                    // Relay point name + address
                     $address = $delivery_address->company.' '.$delivery_address->address1.' '.$delivery_address->address2;
 
-                    // already set address
+                    // Already set address
                     $city = $payzen_request->get('ship_to_city');
                     $zipcode = $payzen_request->get('ship_to_zip');
                     $country = $payzen_request->get('ship_to_country');
                     break;
 
-                // can implement more specific relay point carriers logic here.
+                // Can implement more specific relay point carriers logic here.
             }
 
-            // override shipping address
+            // Override shipping address
             $payzen_request->set('ship_to_street', preg_replace($address_not_allowed_chars, ' ', $address));
-            $payzen_request->set('ship_to_street2', null); // not sent to FacilyPay Oney
+            $payzen_request->set('ship_to_street2', null); // Not sent to FacilyPay Oney
             $payzen_request->set('ship_to_zip', $zipcode);
             $payzen_request->set('ship_to_city', preg_replace($not_allowed_chars, ' ', $city));
             $payzen_request->set('ship_to_state', null);
@@ -537,18 +556,28 @@ abstract class AbstractPayzenPayment
             $delivery_company = preg_replace($not_allowed_chars, ' ', $address.' '.$zipcode.' '.$city);
             $payzen_request->set('ship_to_delivery_company_name', $delivery_company);
         } else {
-            // other cases
-            $delivery_type = $shipping_options[$carrier_id]['type'];
+            // Other cases
+            $delivery_type = isset($shipping_options[$carrier_id])? $shipping_options[$carrier_id]['type'] : 'PACKAGE_DELIVERY_COMPANY';
+            $delivery_speed = isset($shipping_options[$carrier_id])? $shipping_options[$carrier_id]['speed'] : 'STANDARD';
             $payzen_request->set('ship_to_type', $delivery_type);
-            $payzen_request->set('ship_to_speed', $shipping_options[$carrier_id]['speed']);
+            $payzen_request->set('ship_to_speed', $delivery_speed);
 
-            $company_name = $shipping_options[$carrier_id]['label'];
+            if (isset($shipping_options[$carrier_id])) {
+                $company_name = $shipping_options[$carrier_id]['label'];
+            } else {
+                $delivery_option_list = $cart->getDeliveryOptionList();
+
+                $delivery_option = $cart->getDeliveryOption();
+                $carrier_key = $delivery_option[(int)$cart->id_address_delivery];
+                $carrier_list = $delivery_option_list[(int)$cart->id_address_delivery][$carrier_key]['carrier_list'];
+                $company_name = $carrier_list[$carrier_id]['instance']->name;
+            }
 
             if ($delivery_type === 'RECLAIM_IN_SHOP') {
                 $shop_name = preg_replace($not_allowed_chars, ' ', Configuration::get('PS_SHOP_NAME'));
 
                 $payzen_request->set('ship_to_street', $shop_name.' '.$shipping_options[$carrier_id]['address']);
-                $payzen_request->set('ship_to_street2', null); // not sent to FacilyPay Oney
+                $payzen_request->set('ship_to_street2', null); // Not sent to FacilyPay Oney
                 $payzen_request->set('ship_to_zip', $shipping_options[$carrier_id]['zip']);
                 $payzen_request->set('ship_to_city', $shipping_options[$carrier_id]['city']);
                 $payzen_request->set('ship_to_country', 'FR');
@@ -565,24 +594,24 @@ abstract class AbstractPayzenPayment
         }
 
         if ($use_oney) {
-            // modify address to send it to Oney
+            // Modify address to send it to Oney
 
-            if ($payzen_request->get('ship_to_street')) { // if there is a delivery address
-                $payzen_request->set('ship_to_status', 'PRIVATE'); // by default PrestaShop doesn't manage customer type
+            if ($payzen_request->get('ship_to_street')) { // If there is a delivery address
+                $payzen_request->set('ship_to_status', 'PRIVATE'); // By default PrestaShop doesn't manage customer type
 
                 $address = $payzen_request->get('ship_to_street').' '.$payzen_request->get('ship_to_street2');
 
                 $payzen_request->set('ship_to_street', preg_replace($address_not_allowed_chars, ' ', $address));
-                $payzen_request->set('ship_to_street2', null); // not sent to FacilyPay Oney
+                $payzen_request->set('ship_to_street2', null); // Not sent to FacilyPay Oney
 
-                // send FR even address is in DOM-TOM unless form is rejected
+                // Send FR even address is in DOM-TOM unless form is rejected
                 $payzen_request->set('ship_to_country', 'FR');
             }
 
-            // by default PrestaShop doesn't manage customer type
+            // By default PrestaShop doesn't manage customer type
             $payzen_request->set('cust_status', 'PRIVATE');
 
-            // send FR even address is in DOM-TOM unless form is rejected
+            // Send FR even address is in DOM-TOM unless form is rejected
             $payzen_request->set('cust_country', 'FR');
         }
     }

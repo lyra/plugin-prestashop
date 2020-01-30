@@ -18,6 +18,8 @@ class PayzenOtherPayment extends AbstractPayzenPayment
     protected $tpl_name = 'payment_other.tpl';
     protected $logo;
     protected $name = 'other';
+    protected $needs_cart_data = false;
+    protected $force_local_cart_data = true;
 
     protected $payment_code;
     protected $payment_title;
@@ -78,9 +80,37 @@ class PayzenOtherPayment extends AbstractPayzenPayment
      */
     public function prepareRequest($cart, $data = array())
     {
+        // Recover payment parameters
+        $available_payments = $this->getAvailablePaymentMeans($cart);
+        $validation_mode = '-1';
+        $capture_delay = '';
+
+        foreach ($available_payments as $option) {
+            if ($option['code'] === $data['card_type']) {
+                $validation_mode = $option['validation'];
+                $capture_delay = $option['capture'];
+
+                // Send cart data to payment gateway?
+                $this->needs_cart_data = isset($option['cart']) && ($option['cart'] === 'True');
+
+                break;
+            }
+        }
+
         $request = parent::prepareRequest($cart, $data);
 
+        // Set payment card
         $request->set('payment_cards', $data['card_type']);
+
+        // Set validation mode
+        if ($validation_mode !== '-1') {
+            $request->set('validation_mode', $validation_mode);
+        }
+
+        // Set Capture delay
+        if (is_numeric($capture_delay)) {
+            $request->set('capture_delay', $capture_delay);
+        }
 
         return $request;
     }
@@ -112,17 +142,21 @@ class PayzenOtherPayment extends AbstractPayzenPayment
         }
 
         if (!$cart) {
-            return $other_payment_means; // all options
+            return $other_payment_means; // All options
         }
 
         $amount = $cart->getOrderTotal();
         $enabled_options = array();
+        $billing_address = new Address((int)$cart->id_address_invoice);
+        $billing_country = new Country((int)$billing_address->id_country);
 
         foreach ($other_payment_means as $key => $option) {
             $min = $option['min_amount'];
             $max = $option['max_amount'];
+            $countries = isset($option['countries']) ? $option['countries'] : array(); // Authorized countries for this option.
 
-            if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
+            if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)
+                && (empty($countries) || in_array($billing_country->iso_code, $countries))) {
                 $enabled_options[$key] = $option;
             }
         }

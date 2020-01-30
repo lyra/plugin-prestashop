@@ -7,18 +7,20 @@
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  *}
 
-<!-- this meta tag is mandatory to avoid encoding problems caused by \PrestaShop\PrestaShop\Core\Payment\PaymentOptionFormDecorator -->
+<!-- This meta tag is mandatory to avoid encoding problems caused by \PrestaShop\PrestaShop\Core\Payment\PaymentOptionFormDecorator -->
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-
 <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}"
       method="post"
       id="payzen_standard"
-      style="margin-left: 2.875rem; margin-top: 1.25rem; margin-bottom: 1rem;"
-      {if $payzen_std_card_data_mode == 3}onsubmit="javascript: return payzenCheckFields();"{/if}>
+      style="margin-left: 2.875rem; margin-top: 1.25rem; margin-bottom: 1rem;{if $payzen_saved_identifier} display: none;{/if}">
 
   <input type="hidden" name="payzen_payment_type" value="standard" />
 
-  {if ($payzen_std_card_data_mode == 2) OR ($payzen_std_card_data_mode == 3)}
+  {if $payzen_saved_identifier}
+    <input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" />
+  {/if}
+
+  {if ($payzen_std_card_data_mode == 2)}
     {assign var=first value=true}
     {foreach from=$payzen_avail_cards key="key" item="label"}
       <div style="display: inline-block;">
@@ -45,32 +47,18 @@
     {/foreach}
     <div style="margin-bottom: 12px;"></div>
 
-    {if $payzen_std_card_data_mode == 3}
-      <label for="payzen_card_number">{l s='Card number' mod='payzen'}</label>
-      <input type="text" name="payzen_card_number" value="" autocomplete="off" maxlength="19" id="payzen_card_number" style="width: 220px;" class="data" >
-      <div style="margin-bottom: 12px;"></div>
-
-      <label for="payzen_expiry_month">{l s='Expiration date' mod='payzen'}</label>
-      <select name="payzen_expiry_month" id="payzen_expiry_month" style="width: 90px; margin-right: 10px;" class="data">
-        <option value="">{l s='Month' mod='payzen'}</option>
-        {section name=expiry start=1 loop=13 step=1}
-          <option value="{$smarty.section.expiry.index|intval}">{$smarty.section.expiry.index|str_pad:2:"0":$smarty.const.STR_PAD_LEFT}</option>
-        {/section}
-        </select>
-
-      <select name="payzen_expiry_year" id="payzen_expiry_year" style="width: 90px;" class="data">
-        <option value="">{l s='Year' mod='payzen'}</option>
-
-        {assign var=year value=$smarty.now|date_format:"%Y"}
-        {section name=expiry start=$year loop=$year+9 step=1}
-          <option value="{$smarty.section.expiry.index|intval}">{$smarty.section.expiry.index|intval}</option>
-        {/section}
-      </select>
-
-      <label for="payzen_cvv">{l s='CVV' mod='payzen'}</label>
-      <input type="text" name="payzen_cvv" value="" autocomplete="off" maxlength="4" id="payzen_cvv" style="width: 65px;" class="data" >
-      <div style="margin-bottom: 12px;"></div>
-      <br />
+    {if $payzen_saved_identifier}
+      <ul>
+        {if $payzen_std_card_data_mode == 2}
+          <li>{l s='You will enter payment data after order confirmation.' mod='payzen'}</li>
+        {/if}
+        <li style="margin: 8px 0px 8px;">
+          <span>{l s='OR' mod='payzen'}</span>
+        </li>
+        <li>
+          <a href="javascript: void(0);" onclick="payzenOneclickPaymentSelect(1)">{l s='Click here to pay with your registered means of payment.' mod='payzen'}</a>
+        </li>
+      </ul>
     {/if}
   {/if}
 </form>
