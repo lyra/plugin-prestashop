@@ -25,7 +25,6 @@ function payzenAddMultiOption(first) {
     $(rowTpl).insertBefore('#payzen_multi_option_add');
 }
 
-
 function payzenDeleteMultiOption(key) {
     $('#payzen_multi_option_' + key).remove();
 
@@ -49,7 +48,6 @@ function payzenAddOneyOption(first) {
     $(rowTpl).insertBefore('#payzen_oney_option_add');
 }
 
-
 function payzenDeleteOneyOption(key) {
     $('#payzen_oney_option_' + key).remove();
 
@@ -69,7 +67,7 @@ function payzenAdditionalOptionsToggle(legend) {
 function payzenCategoryTableVisibility() {
     var category = $('select#PAYZEN_COMMON_CATEGORY option:selected').val();
 
-    if (category == 'CUSTOM_MAPPING') {
+    if (category === 'CUSTOM_MAPPING') {
         $('.payzen_category_mapping').show();
         $('.payzen_category_mapping select').removeAttr('disabled');
     } else {
@@ -159,18 +157,26 @@ function payzenHideOtherLanguage(id, name) {
     var id_old_language = id_language;
     id_language = id;
 
-    if (id_old_language != id) {
+    if (id_old_language !== id) {
         changeEmployeeLanguage();
     }
 }
 
 function payzenCardEntryChanged() {
-    var isKrypton = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val() === '5';
+    var cardDataMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
 
-    if (isKrypton) {
-        $('#PAYZEN_STD_REST_SETTINGS').show();
-    } else {
-        $('#PAYZEN_STD_REST_SETTINGS').hide();
+    switch (cardDataMode) {
+        case '4':
+            $('#PAYZEN_REST_SETTINGS').hide();
+            $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
+            break;
+        case '5':
+            $('#PAYZEN_REST_SETTINGS').show();
+            $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+            break;
+        default:
+            $('#PAYZEN_REST_SETTINGS').hide();
+            $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
     }
 }
 
@@ -189,7 +195,6 @@ function payzenAddOtherPaymentMeansOption(first) {
     $(rowTpl).insertBefore('#payzen_other_payment_means_option_add');
 }
 
-
 function payzenDeleteOtherPaymentMeansOption(key) {
     $('#payzen_other_payment_means_option_' + key).remove();
 
@@ -198,4 +203,54 @@ function payzenDeleteOtherPaymentMeansOption(key) {
         $('#payzen_other_payment_means_options_table').hide();
         $('#payzen_other_payment_means_options_table').append("<input type=\"hidden\" id=\"PAYZEN_OTHER_PAYMENT_MEANS\" name=\"PAYZEN_OTHER_PAYMENT_MEANS\" value=\"\">");
     }
+}
+
+function payzenCountriesRestrictMenuDisplay(retrictCountriesPaymentId) {
+    var countryRestrict = $('#' + retrictCountriesPaymentId).val();
+    if (countryRestrict === '2') {
+        $('#' + retrictCountriesPaymentId + '_MENU').show();
+    } else {
+        $('#' + retrictCountriesPaymentId + '_MENU').hide();
+    }
+}
+
+function payzenOneClickMenuDisplay() {
+    var oneClickPayment = $('#PAYZEN_STD_1_CLICK_PAYMENT').val();
+    if (oneClickPayment == 'True') {
+        $('#PAYZEN_STD_1_CLICK_MENU').show();
+    } else {
+        $('#PAYZEN_STD_1_CLICK_MENU').hide();
+    }
+}
+
+function payzenDisplayMultiSelect(selectId) {
+    $('#' + selectId).show();
+    $('#' + selectId).focus();
+    $('#LABEL_' + selectId).hide();
+}
+
+function payzenDisplayLabel(selectId, clickMessage) {
+    $('#' + selectId).hide();
+    $('#LABEL_' + selectId).show();
+    $('#LABEL_' + selectId).text(payzenGetLabelText(selectId, clickMessage));
+}
+
+function payzenGetLabelText(selectId, clickMessage) {
+    var select = document.getElementById(selectId);
+    var labelText = '', option;
+
+    for (var i = 0, len = select.options.length; i < len; i++) {
+        option = select.options[i];
+
+        if (option.selected) {
+            labelText += option.text + ', ';
+        }
+    }
+
+    labelText = labelText.substring(0, labelText.length - 2);
+    if (!labelText) {
+        labelText = clickMessage;
+    }
+
+    return labelText;
 }

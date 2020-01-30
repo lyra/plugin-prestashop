@@ -31,7 +31,7 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
             return false;
         }
 
-        if (Configuration::get($this->prefix.'ENABLE_OPTS') == 'True') {
+        if (Configuration::get($this->prefix.'ENABLE_OPTS') === 'True') {
             $options = self::getAvailableOptions($cart);
 
             if (empty($options)) {
@@ -51,11 +51,11 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
 
         $billing_address = new Address((int)$cart->id_address_invoice);
 
-        // check address validity according to FacilyPay Oney payment specifications
+        // Check address validity according to FacilyPay Oney payment specifications
         $errors = PayzenTools::checkAddress($billing_address, 'billing', $this->name);
 
         if (empty($errors)) {
-            // billing address is valid, check delivery address
+            // Billing address is valid, check delivery address
             $delivery_address = new Address((int)$cart->id_address_delivery);
 
             $errors = PayzenTools::checkAddress($delivery_address, 'delivery', $this->name);
@@ -72,17 +72,17 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // override with FacilyPay Oney payment cards
+        // Override with FacilyPay Oney payment cards
         if (isset($data['card_type']) && $data['card_type']) {
             $request->set('payment_cards', $data['card_type']);
         } else {
             $request->set('payment_cards', 'FULLCB3X;FULLCB4X');
         }
 
-        // by default PrestaShop does not manage customer type
+        // By default PrestaShop does not manage customer type
         $request->set('cust_status', 'PRIVATE');
 
-        // override FullCb specific params
+        // Override FullCb specific params
         $request->set('validation_mode', '0');
         $request->set('capture_delay', '0');
 
@@ -91,7 +91,7 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
 
     public static function getAvailableOptions($cart)
     {
-        // fullcb payment options
+        // Fullcb payment options
         $options = @unserialize(Configuration::get('PAYZEN_FULLCB_OPTIONS'));
 
         if (!is_array($options) || empty($options)) {
@@ -116,7 +116,7 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
 
                 $option['localized_label'] = $option_label;
 
-                // compute some fields
+                // Compute some fields
                 $count = (int)$option['count'];
                 $rate = (float)$option['rate'];
 
@@ -162,7 +162,7 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
         $vars = parent::getTplVars($cart);
 
         $options = array();
-        if (Configuration::get($this->prefix.'ENABLE_OPTS') == 'True') {
+        if (Configuration::get($this->prefix.'ENABLE_OPTS') === 'True') {
             $options = self::getAvailableOptions($cart);
         }
 
@@ -173,7 +173,7 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
 
     public function hasForm()
     {
-        return Configuration::get($this->prefix.'ENABLE_OPTS') == 'True';
+        return Configuration::get($this->prefix.'ENABLE_OPTS') === 'True';
     }
 
     protected function getDefaultTitle()

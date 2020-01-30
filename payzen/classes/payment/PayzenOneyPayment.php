@@ -24,6 +24,12 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
     protected $currencies = array('EUR');
     protected $countries = array('FR', 'GP', 'MQ', 'GF', 'RE', 'YT');
+    protected $needs_cart_data = true;
+
+    public function getCountries()
+    {
+        return $this->countries;
+    }
 
     public function isAvailable($cart)
     {
@@ -31,7 +37,7 @@ class PayzenOneyPayment extends AbstractPayzenPayment
             return false;
         }
 
-        if (Configuration::get($this->prefix.'ENABLE_OPTIONS') == 'True') {
+        if (Configuration::get($this->prefix.'ENABLE_OPTIONS') === 'True') {
             $options = self::getAvailableOptions($cart);
 
             if (empty($options)) {
@@ -60,11 +66,11 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
         $billing_address = new Address((int)$cart->id_address_invoice);
 
-        // check address validity according to FacilyPay Oney payment specifications
+        // Check address validity according to FacilyPay Oney payment specifications
         $errors = PayzenTools::checkAddress($billing_address, 'billing', $this->name);
 
         if (empty($errors)) {
-            // billing address is valid, check delivery address
+            // Billing address is valid, check delivery address
             $delivery_address = new Address((int)$cart->id_address_delivery);
 
             $errors = PayzenTools::checkAddress($delivery_address, 'delivery', $this->name);
@@ -81,12 +87,12 @@ class PayzenOneyPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // override with FacilyPay Oney payment cards
-        $test_mode = $request->get('ctx_mode') == 'TEST';
+        // Override with FacilyPay Oney payment cards
+        $test_mode = $request->get('ctx_mode') === 'TEST';
         $request->set('payment_cards', $test_mode ? 'ONEY_SANDBOX' : 'ONEY');
 
         if (isset($data['opt']) && $data['opt']) {
-            // override option code parameter
+            // Override option code parameter
             $oney_options = self::getAvailableOptions($cart);
             $option = $oney_options[$data['opt']];
 
@@ -98,7 +104,7 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
     public static function getAvailableOptions($cart)
     {
-        // oney payment options
+        // Oney payment options
         $options = @unserialize(Configuration::get('PAYZEN_ONEY_OPTIONS'));
         if (!is_array($options) || empty($options)) {
             return array();
@@ -118,7 +124,7 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
                 $option['localized_label'] = $option_label;
 
-                // compute some fields
+                // Compute some fields
                 $count = (int)$option['count'];
                 $rate = (float)$option['rate'];
 
@@ -146,7 +152,7 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
                 $option['order_total'] = Tools::displayPrice($amount);
                 $option['first_payment'] = Tools::displayPrice($first);
-                $option['funding_count'] = $count - 1; // real number of payments concerned by funding
+                $option['funding_count'] = $count - 1; // Real number of payments concerned by funding
                 $option['monthly_payment'] = Tools::displayPrice($payment);
                 $option['funding_total'] = Tools::displayPrice(($count - 1) * $payment - $fees);
                 $option['funding_fees'] = Tools::displayPrice($fees);
@@ -164,7 +170,7 @@ class PayzenOneyPayment extends AbstractPayzenPayment
         $vars = parent::getTplVars($cart);
 
         $options = array();
-        if (Configuration::get($this->prefix.'ENABLE_OPTIONS') == 'True') {
+        if (Configuration::get($this->prefix.'ENABLE_OPTIONS') === 'True') {
             $options = self::getAvailableOptions($cart);
         }
 
@@ -175,7 +181,7 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
     public function hasForm()
     {
-        return Configuration::get($this->prefix.'ENABLE_OPTIONS') == 'True';
+        return Configuration::get($this->prefix.'ENABLE_OPTIONS') === 'True';
     }
 
     protected function getDefaultTitle()

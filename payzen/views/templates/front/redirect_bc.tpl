@@ -12,11 +12,7 @@
   {include file="$tpl_dir./breadcrumb.tpl"}
 {/if}
 
-{if isset($payzen_params) && $payzen_params.vads_action_mode == 'SILENT'}
-  <h1>{l s='Payment processing' mod='payzen'}</h1>
-{else}
   <h1>{l s='Redirection to payment gateway' mod='payzen'}</h1>
-{/if}
 
 {assign var='current_step' value='payment'}
 {include file="$tpl_dir./order-steps.tpl"}
@@ -33,11 +29,7 @@
       <img src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" style="margin-bottom: 5px" />
       <br />
 
-      {if $payzen_params.vads_action_mode == 'SILENT'}
-        {l s='Please wait a moment. Your order payment is now processing.' mod='payzen'}
-      {else}
-        {l s='Please wait, you will be redirected to the payment gateway.' mod='payzen'}
-      {/if}
+      {l s='Please wait, you will be redirected to the payment gateway.' mod='payzen'}
 
       <br /> <br />
       {l s='If nothing happens in 10 seconds, please click the button below.' mod='payzen'}

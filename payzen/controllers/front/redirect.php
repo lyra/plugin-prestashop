@@ -55,7 +55,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
     {
         parent::initHeader();
 
-        // to avoid document expired warning
+        // To avoid document expired warning
         session_cache_limiter('private_no_expire');
 
         header("Cache-Control: no-store, no-cache, must-revalidate");
@@ -64,7 +64,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
     }
 
     /**
-     * PrestaShop 1.7 : override page name in template to use same styles as checkout page.
+     * PrestaShop 1.7: override page name in template to use same styles as checkout page.
      * @return array
      */
     public function getTemplateVarPage()
@@ -85,30 +85,30 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
     {
         $cart = $this->context->cart;
 
-        // page to redirect to if errors
+        // Page to redirect to if errors
         $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
 
-        // check cart errors
+        // Check cart errors
         if (!Validate::isLoadedObject($cart) || $cart->nbProducts() <= 0) {
             $this->payzenRedirect('index.php?controller='.$page);
         } elseif (!$cart->id_customer || !$cart->id_address_delivery || !$cart->id_address_invoice || !$this->module->active) {
             if (version_compare(_PS_VERSION_, '1.7', '<') && !Configuration::get('PS_ORDER_PROCESS_TYPE')) {
-                $page .= '&step=1'; // not one page checkout, goto first checkout step
+                $page .= '&step=1'; // Not one page checkout, goto first checkout step
             }
 
             $this->payzenRedirect('index.php?controller='.$page);
         }
 
-        $type = Tools::getValue('payzen_payment_type', null); // the selected payment submodule
+        $type = Tools::getValue('payzen_payment_type', null); // The selected payment submodule
         if (!$type && $this->iframe) {
-            // only standard payment can be done inside iframe
+            // Only standard payment can be done inside iframe
             $type = 'standard';
         }
 
         if (!in_array($type, $this->accepted_payment_types)) {
-            $this->logger->logWarning('Error: payment type "' . $type . '" is not supported. Load standard payment by default.');
+            $this->logger->logWarning('Error: payment type "'.$type.'" is not supported. Load standard payment by default.');
 
-            // do not log sensitive data
+            // Do not log sensitive data
             $sensitive_data = array('payzen_card_number', 'payzen_cvv', 'payzen_expiry_month', 'payzen_expiry_year');
             $dataToLog = array();
             foreach ($_REQUEST as $key => $value) {
@@ -119,9 +119,9 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
                 }
             }
 
-            $this->logger->logWarning('Request data : ' . print_r($dataToLog, true));
+            $this->logger->logWarning('Request data: '.print_r($dataToLog, true));
 
-            $type = 'standard'; // force standard payment
+            $type = 'standard'; // Force standard payment
         }
 
         $payment = null;
@@ -131,17 +131,15 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
             case 'standard':
                 $payment = new PayzenStandardPayment();
 
-                if ($payment->getEntryMode() == 2 || $payment->getEntryMode() == 3) {
+                if ($payment->getEntryMode() == 2) {
                     $data['card_type'] = Tools::getValue('payzen_card_type');
-
-                    if ($payment->getEntryMode() == 3) {
-                        $data['card_number'] = Tools::getValue('payzen_card_number');
-                        $data['cvv'] = Tools::getValue('payzen_cvv');
-                        $data['expiry_month'] = Tools::getValue('payzen_expiry_month');
-                        $data['expiry_year'] = Tools::getValue('payzen_expiry_year');
-                    }
                 } elseif ($payment->getEntryMode() == 4) {
                     $data['iframe_mode'] = true;
+                }
+
+                // Payment by alias.
+                if (Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True') {
+                    $data['payment_by_identifier'] = Tools::getValue('alias', '0');
                 }
 
                 break;
@@ -203,7 +201,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
                 break;
         }
 
-        // validate payment data
+        // Validate payment data
         $errors = $payment->validate($cart, $data);
         if (!empty($errors)) {
             $this->context->cookie->payzenPayErrors = implode("\n", $errors);
@@ -219,21 +217,37 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
             $this->payzenRedirect('index.php?controller='.$page);
         }
 
-        if (Configuration::get('PAYZEN_CART_MANAGEMENT') != PayzenTools::KEEP_CART) {
-            unset($this->context->cookie->id_cart); // to avoid double call to this page
+        if (Configuration::get('PAYZEN_CART_MANAGEMENT') !== PayzenTools::KEEP_CART) {
+            unset($this->context->cookie->id_cart); // To avoid double call to this page
         }
 
-        // prepare data for payment gateway form
+        // Prepare data for payment gateway form
         $request = $payment->prepareRequest($cart, $data);
         $fields = $request->getRequestFieldsArray(false, false /* data escape will be done in redirect template */);
 
         $dataToLog = $request->getRequestFieldsArray(true, false);
-        $this->logger->logInfo('Data to be sent to payment gateway : ' . print_r($dataToLog, true));
+        $this->logger->logInfo('Data to be sent to payment gateway: '.print_r($dataToLog, true));
 
         $this->context->smarty->assign('payzen_params', $fields);
         $this->context->smarty->assign('payzen_url', $request->get('platform_url'));
         $this->context->smarty->assign('payzen_logo', _MODULE_DIR_.'payzen/views/img/'.$payment->getLogo());
-        $this->context->smarty->assign('payzen_title', $request->get('order_info'));
+
+        // Parse order_info parameter.
+        $parts = explode('&', $request->get('order_info'));
+
+        // Recover payment method title.
+        $module_id = Tools::substr($parts[0], Tools::strlen('module_id='));
+        $class_name = 'Payzen'.Tools::ucfirst(str_replace('_', '', $module_id)).'Payment';
+        $class_obj = new $class_name();
+        $title = $class_obj->getTitle((int)$cart->id_lang);
+        if (isset($parts[1])) {
+            $option_id = Tools::substr($parts[1], Tools::strlen('option_id='));
+            $multi_options = $class_obj::getAvailableOptions($cart);
+            $option = $multi_options[$option_id];
+            $title .= ' ('.$option['count'].' x)';
+        }
+
+        $this->context->smarty->assign('payzen_title', $title);
 
         if ($this->iframe) {
             $this->setTemplate(PayzenTools::getTemplatePath('iframe/redirect.tpl'));
@@ -249,7 +263,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
     private function payzenRedirect($url)
     {
         if ($this->iframe) {
-            // iframe mode, use template to redirect to top window
+            // Iframe mode, use template to redirect to top window
             $this->context->smarty->assign('payzen_url', PayzenTools::getPageLink($url));
             $this->setTemplate(PayzenTools::getTemplatePath('iframe/response.tpl'));
         } else {

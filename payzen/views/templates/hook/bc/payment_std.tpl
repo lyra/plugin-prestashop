@@ -12,21 +12,34 @@
 {/if}
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
-  {if $payzen_std_card_data_mode == 1}
+  {if $payzen_std_card_data_mode == 1 && !$payzen_saved_identifier}
     <a href="javascript: $('#payzen_standard').submit();" title="{l s='Click here to pay by credit card' mod='payzen'}">
   {else}
-    <a class="unclickable" title="{l s='Enter payment information and click « Pay » button' mod='payzen'}">
+    <a class="unclickable"
+      {if $payzen_saved_identifier}
+        title="{l s='Choose pay with registred means of payment or enter payment information and click « Pay » button' mod='payzen'}"
+      {else}
+        title="{l s='Enter payment information and click « Pay » button' mod='payzen'}"
+      {/if}
+    >
   {/if}
     <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+    {if $payzen_saved_identifier}
+      {include file="./payment_std_oneclick.tpl"}
+    {/if}
 
     <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}"
-          method="post"
-          {if $payzen_std_card_data_mode == 3}onsubmit="javascript: return payzenCheckFields();"{/if}
-          id="payzen_standard">
+          method="post" id="payzen_standard"
+          {if $payzen_saved_identifier} style="display: none;"{/if}
+    >
 
       <input type="hidden" name="payzen_payment_type" value="standard" />
 
-      {if ($payzen_std_card_data_mode == 2) OR ($payzen_std_card_data_mode == 3)}
+      {if $payzen_saved_identifier}
+        <input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" />
+      {/if}
+
+      {if ($payzen_std_card_data_mode == 2)}
         <br />
 
         {assign var=first value=true}
@@ -54,42 +67,45 @@
         <br />
         <div style="margin-bottom: 12px;"></div>
 
-        {if $payzen_std_card_data_mode == 3}
-          <label for="payzen_card_number">{l s='Card number' mod='payzen'}</label><br />
-          <input type="text" name="payzen_card_number" value="" autocomplete="off" maxlength="19" id="payzen_card_number" style="max-width: 220px;" class="data" >
-          <br />
-
-          <label for="payzen_expiry_month">{l s='Expiration date' mod='payzen'}</label><br />
-          <select name="payzen_expiry_month" id="payzen_expiry_month" style="width: 90px;" class="data">
-            <option value="">{l s='Month' mod='payzen'}</option>
-            {section name=expiry start=1 loop=13 step=1}
-            <option value="{$smarty.section.expiry.index|intval}">{$smarty.section.expiry.index|str_pad:2:"0":$smarty.const.STR_PAD_LEFT}</option>
-            {/section}
-          </select>
-
-          <select name="payzen_expiry_year" id="payzen_expiry_year" style="width: 90px;" class="data">
-            <option value="">{l s='Year' mod='payzen'}</option>
-            {assign var=year value=$smarty.now|date_format:"%Y"}
-            {section name=expiry start=$year loop=$year+9 step=1}
-            <option value="{$smarty.section.expiry.index|intval}">{$smarty.section.expiry.index|intval}</option>
-            {/section}
-          </select>
-          <br />
-
-          <label for="payzen_cvv">{l s='CVV' mod='payzen'}</label><br />
-          <input type="text" name="payzen_cvv" value="" autocomplete="off" maxlength="4" id="payzen_cvv" style="max-width: 55px;" class="data" >
-          <br />
+        {if $payzen_saved_identifier}
+            <div>
+                <ul>
+                    {if $payzen_std_card_data_mode == 2}
+                        <li>
+                            <span class="payzen_span">{l s='You will enter payment data after order confirmation.' mod='payzen'}</span>
+                        </li>
+                    {/if}
+                    <li style="margin: 8px 0px 8px;">
+                        <span class="payzen_span">{l s='OR' mod='payzen'}</span>
+                    </li>
+                    <li>
+                        <p class="payzen_link" onclick="payzenOneclickPaymentSelect(1)">{l s='Click here to pay with your registered means of payment.' mod='payzen'}</p>
+                    </li>
+                </ul>
+            </div>
         {/if}
 
         {if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}
-          <input type="submit" name="submit" value="{l s='Pay' mod='payzen'}" class="button" />
+          <input id="payzen_submit_form" type="submit" name="submit" value="{l s='Pay' mod='payzen'}" class="button"/>
         {else}
-          <button type="submit" name="submit" class="button btn btn-default standard-checkout button-medium" >
+          <button id="payzen_submit_form" type="submit" name="submit" class="button btn btn-default standard-checkout button-medium">
             <span>{l s='Pay' mod='payzen'}</span>
           </button>
         {/if}
       {/if}
     </form>
+
+    {if $payzen_saved_identifier}
+      <script type="text/javascript">
+        $('#payzen_standard_link').click(function(){
+          {if ($payzen_std_card_data_mode == 2)}
+            $('#payzen_submit_form').click();
+          {else}
+            $('#payzen_standard').submit();
+          {/if}
+        });
+      </script>
+    {/if}
   </a>
 </div>
 

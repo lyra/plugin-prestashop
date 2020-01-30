@@ -6,7 +6,7 @@ PayZen for PrestaShop is an open source plugin that links e-commerce websites ba
 
 To update the payment module, you must first uninstall and delete the previous version. Make sure you saved the parameters of your module before deleting it.
 
-To install the module, follow these steps :
+To install the module, follow these steps:
 
 - Goto "Modules" menu ("Modules & services" in old PrestaShop versions).
 - Upload "payzen" directory to `[PRESTASHOP]/modules/` via FTP or upload module ZIP from PrestaShop backend interface.

@@ -17,7 +17,7 @@ class PayzenIframeModuleFrontController extends ModuleFrontController
      */
     public function postProcess()
     {
-        if (Configuration::get('PAYZEN_CART_MANAGEMENT') != PayzenTools::KEEP_CART) {
+        if (Configuration::get('PAYZEN_CART_MANAGEMENT') !== PayzenTools::KEEP_CART) {
             if ($this->context->cart->id) {
                 $this->context->cookie->payzenCartId = (int)$this->context->cart->id;
             }

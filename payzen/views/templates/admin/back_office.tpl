@@ -131,6 +131,70 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
+        <legend onclick="javascript: payzenAdditionalOptionsToggle(this);" style="cursor: pointer;">
+          <span class="ui-icon ui-icon-triangle-1-e" style="display: inline-block; vertical-align: middle;"></span>
+          {l s='REST API KEYS' mod='payzen'}
+        </legend>
+
+        <p style="font-size: .85em; color: #7F7F7F;">
+         {l s='Configure this section if you are using order operations from Prestashop backend or if you are using « Embedded payment fields » mode.' mod='payzen'}
+        <br />
+         {l s='REST API keys are available in your store Back Office (menu: Settings > Shops > REST API keys).' mod='payzen'}
+        </p>
+
+        <section style="display: none; padding-top: 15px;">
+          <label for="PAYZEN_PRIVKEY_TEST">{l s='Test password' mod='payzen'}</label>
+          <div class="margin-form">
+            <input type="password" id="PAYZEN_PRIVKEY_TEST" name="PAYZEN_PRIVKEY_TEST" value="{$PAYZEN_PRIVKEY_TEST|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off" />
+          </div>
+          <p></p>
+
+          <label for="PAYZEN_PRIVKEY_PROD">{l s='Production password' mod='payzen'}</label>
+          <div class="margin-form">
+            <input type="password" id="PAYZEN_PRIVKEY_PROD" name="PAYZEN_PRIVKEY_PROD" value="{$PAYZEN_PRIVKEY_PROD|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
+          </div>
+          <p></p>
+
+          <label for="PAYZEN_PUBKEY_TEST">{l s='Public test key' mod='payzen'}</label>
+          <div class="margin-form">
+            <input type="text" id="PAYZEN_PUBKEY_TEST" name="PAYZEN_PUBKEY_TEST" value="{$PAYZEN_PUBKEY_TEST|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
+          </div>
+          <p></p>
+
+          <label for="PAYZEN_PUBKEY_PROD">{l s='Public production key' mod='payzen'}</label>
+          <div class="margin-form">
+            <input type="text" id="PAYZEN_PUBKEY_PROD" name="PAYZEN_PUBKEY_PROD" value="{$PAYZEN_PUBKEY_PROD|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
+          </div>
+          <p></p>
+
+          <label for="PAYZEN_RETKEY_TEST">{l s='HMAC-SHA-256 test key' mod='payzen'}</label>
+          <div class="margin-form">
+            <input type="password" id="PAYZEN_RETKEY_TEST" name="PAYZEN_RETKEY_TEST" value="{$PAYZEN_RETKEY_TEST|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
+          </div>
+          <p></p>
+
+          <label for="PAYZEN_RETKEY_PROD">{l s='HMAC-SHA-256 production key' mod='payzen'}</label>
+          <div class="margin-form">
+            <input type="password" id="PAYZEN_RETKEY_PROD" name="PAYZEN_RETKEY_PROD" value="{$PAYZEN_RETKEY_PROD|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
+          </div>
+          <p></p>
+
+          <label>{l s='API REST Notification URL' mod='payzen'}</label>
+          <div class="margin-form">
+            {$PAYZEN_REST_NOTIFY_URL|escape:'html':'UTF-8'}<br />
+            <p>
+              <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/warn.png">
+              <span style="color: red; display: inline-block;">
+                {l s='URL to copy into your bank Back Office > Settings > Notification rules.' mod='payzen'}<br />
+                {l s='In multistore mode, notification URL is the same for all the stores.' mod='payzen'}
+              </span>
+            </p>
+          </div>
+        </section>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+
+      <fieldset>
         <legend>{l s='PAYMENT PAGE' mod='payzen'}</legend>
 
         <label for="PAYZEN_DEFAULT_LANGUAGE">{l s='Default language' mod='payzen'}</label>
@@ -174,9 +238,15 @@
       <fieldset>
         <legend>{l s='PAYMENT PAGE CUSTOMIZE' mod='payzen'}</legend>
 
-        <label for="PAYZEN_THEME_CONFIG">{l s='Theme configuration' mod='payzen'}</label>
+        <label>{l s='Theme configuration' mod='payzen'}</label>
         <div class="margin-form">
-          <input type="text" id="PAYZEN_THEME_CONFIG" name="PAYZEN_THEME_CONFIG" value="{$PAYZEN_THEME_CONFIG|escape:'html':'UTF-8'}" style="width: 470px;">
+          {include file="./input_text_lang.tpl"
+              languages=$prestashop_languages
+              current_lang=$prestashop_lang
+              input_name="PAYZEN_THEME_CONFIG"
+              input_value=$PAYZEN_THEME_CONFIG
+              style="width: 470px;"
+           }
           <p>{l s='The theme configuration to customize the payment page.' mod='payzen'}</p>
         </div>
 
@@ -304,6 +374,16 @@
         <p style="font-size: .85em; color: #7F7F7F;">{l s='Configure this section if you use advanced risk assessment module or if you have a FacilyPay Oney contract.' mod='payzen'}</p>
 
         <section style="display: none; padding-top: 15px;">
+          <label for="PAYZEN_SEND_CART_DETAIL">{l s='Send shopping cart details' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_SEND_CART_DETAIL" name="PAYZEN_SEND_CART_DETAIL">
+              {foreach from=$payzen_enable_disable_options key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SEND_CART_DETAIL === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p>{l s='If you disable this option, the shopping cart details will not be sent to the gateway. Attention, in some cases, this option has to be enabled. For more information, refer to the module documentation.' mod='payzen'}</p>
+          </div>
+
           <label for="PAYZEN_COMMON_CATEGORY">{l s='Category mapping' mod='payzen'}</label>
           <div class="margin-form">
             <select id="PAYZEN_COMMON_CATEGORY" name="PAYZEN_COMMON_CATEGORY" style="width: 220px;" onchange="javascript: payzenCategoryTableVisibility();">
@@ -505,7 +585,28 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_STD_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_STD_COUNTRY" name="PAYZEN_STD_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_STD_COUNTRY')">
+            {foreach from=$payzen_countries_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+        </div>
+
+        <div id="PAYZEN_STD_COUNTRY_MENU" {if $PAYZEN_STD_COUNTRY === '1'} style="display: none;"{/if}>
+          <label for="PAYZEN_STD_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_STD_COUNTRY_LST" name="PAYZEN_STD_COUNTRY_LST[]" multiple="multiple" size="7">
+              {foreach from=$payzen_countries_list['ps_countries'] key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_STD_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+          </div>
+        </div>
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -576,62 +677,32 @@
           <p>{l s='Select how the card data will be entered. Attention, to use bank data acquisition on the merchant site, you must ensure that you have subscribed to this option with your bank.' mod='payzen'}</p>
         </div>
 
-        <div id="PAYZEN_STD_REST_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE != '5'} style="display: none;"{/if}>
-          <p><b>{l s='REST API SETTINGS' mod='payzen'}</b></p>
-          <p style="font-size: .85em; color: #7F7F7F;">{l s='REST API keys are available in your store Back Office (menu: Settings > Shops > REST API keys).' mod='payzen'}</p>
-
-          <label for="PAYZEN_STD_PRIVKEY_TEST">{l s='Test password' mod='payzen'}</label>
+        <div id="PAYZEN_STD_CANCEL_IFRAME_MENU" {if $PAYZEN_STD_CARD_DATA_MODE !== '4'} style="display: none;"{/if}>
+          <label for="PAYZEN_STD_CANCEL_IFRAME">{l s='Cancel payment in iframe mode' mod='payzen'}</label>
           <div class="margin-form">
-            <input type="password" id="PAYZEN_STD_PRIVKEY_TEST" name="PAYZEN_STD_PRIVKEY_TEST" value="{$PAYZEN_STD_PRIVKEY_TEST|escape:'html':'UTF-8'}" style="width: 470px;" />
+            <select id="PAYZEN_STD_CANCEL_IFRAME" name="PAYZEN_STD_CANCEL_IFRAME">
+              {foreach from=$payzen_yes_no_options key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_CANCEL_IFRAME === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p>{l s='Select « Yes » if you want to propose payment cancellation in iframe mode.' sprintf='PayZen' mod='payzen'}</p>
           </div>
-          <p></p>
+        </div>
 
-          <label for="PAYZEN_STD_PRIVKEY_PROD">{l s='Production password' mod='payzen'}</label>
+        <div id="PAYZEN_REST_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE != '5'} style="display: none;"{/if}>
+          <label for="PAYZEN_STD_REST_DISPLAY_MODE">{l s='Display mode' mod='payzen'}</label>
           <div class="margin-form">
-            <input type="password" id="PAYZEN_STD_PRIVKEY_PROD" name="PAYZEN_STD_PRIVKEY_PROD" value="{$PAYZEN_STD_PRIVKEY_PROD|escape:'html':'UTF-8'}" style="width: 470px;" />
-          </div>
-          <p></p>
-
-          <label for="PAYZEN_STD_PUBKEY_TEST">{l s='Public test key' mod='payzen'}</label>
-          <div class="margin-form">
-            <input type="text" id="PAYZEN_STD_PUBKEY_TEST" name="PAYZEN_STD_PUBKEY_TEST" value="{$PAYZEN_STD_PUBKEY_TEST|escape:'html':'UTF-8'}" style="width: 470px;" />
-          </div>
-          <p></p>
-
-          <label for="PAYZEN_STD_PUBKEY_PROD">{l s='Public production key' mod='payzen'}</label>
-          <div class="margin-form">
-            <input type="text" id="PAYZEN_STD_PUBKEY_PROD" name="PAYZEN_STD_PUBKEY_PROD" value="{$PAYZEN_STD_PUBKEY_PROD|escape:'html':'UTF-8'}" style="width: 470px;" />
-          </div>
-          <p></p>
-
-          <label for="PAYZEN_STD_RETKEY_TEST">{l s='HMAC-SHA-256 test key' mod='payzen'}</label>
-          <div class="margin-form">
-            <input type="password" id="PAYZEN_STD_RETKEY_TEST" name="PAYZEN_STD_RETKEY_TEST" value="{$PAYZEN_STD_RETKEY_TEST|escape:'html':'UTF-8'}" style="width: 470px;" />
-          </div>
-          <p></p>
-
-          <label for="PAYZEN_STD_RETKEY_PROD">{l s='HMAC-SHA-256 production key' mod='payzen'}</label>
-          <div class="margin-form">
-            <input type="password" id="PAYZEN_STD_RETKEY_PROD" name="PAYZEN_STD_RETKEY_PROD" value="{$PAYZEN_STD_RETKEY_PROD|escape:'html':'UTF-8'}" style="width: 470px;" />
-          </div>
-          <p></p>
-
-          <label>{l s='API REST Notification URL' mod='payzen'}</label>
-          <div class="margin-form">
-            {$PAYZEN_STD_REST_NOTIFY_URL|escape:'html':'UTF-8'}<br />
-           <p>
-             <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/warn.png">
-              <span style="color: red; display: inline-block;">
-                {l s='URL to copy into your bank Back Office > Settings > Notification rules.' mod='payzen'}<br />
-                {l s='In multistore mode, notification URL is the same for all the stores.' mod='payzen'}
-              </span>
-            </p>
+            <select id="PAYZEN_STD_REST_DISPLAY_MODE" name="PAYZEN_STD_REST_DISPLAY_MODE">
+              {foreach from=$payzen_rest_display_mode_options key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_REST_DISPLAY_MODE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p>{l s='Select the mode to use to display embedded payment fields.' mod='payzen'}</p>
           </div>
 
-          <p><b>{l s='CUSTOMIZATION' mod='payzen'}</b></p>
           <label for="PAYZEN_STD_REST_THEME">{l s='Theme' mod='payzen'}</label>
           <div class="margin-form">
-            <select id="PAYZEN_STD_REST_THEME" name="PAYZEN_STD_REST_THEME" onchange="javascript: payzenOneyEnableOptionsChanged();">
+            <select id="PAYZEN_STD_REST_THEME" name="PAYZEN_STD_REST_THEME">
               {foreach from=$payzen_std_rest_theme_options key="key" item="option"}
                 <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_REST_THEME === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
               {/foreach}
@@ -640,7 +711,7 @@
           </div>
           <p></p>
 
-          <label for="PAYZEN_STD_REST_PLACEHOLDER">{l s='Custom fields placeholders' mod='payzen'}</label>
+          <label for="PAYZEN_STD_REST_PLACEHLDR">{l s='Custom fields placeholders' mod='payzen'}</label>
           <div class="margin-form">
             <table class="table" cellspacing="0" cellpadding="10">
               <tbody>
@@ -650,9 +721,9 @@
                     {include file="./input_text_lang.tpl"
                       languages=$prestashop_languages
                       current_lang=$prestashop_lang
-                      input_name="PAYZEN_STD_REST_PLACEHOLDER[pan]"
-                      field_id="PAYZEN_STD_REST_PLACEHOLDER_pan"
-                      input_value=$PAYZEN_STD_REST_PLACEHOLDER.pan
+                      input_name="PAYZEN_STD_REST_PLACEHLDR[pan]"
+                      field_id="PAYZEN_STD_REST_PLACEHLDR_pan"
+                      input_value=$PAYZEN_STD_REST_PLACEHLDR.pan
                       style="width: 150px;"
                     }
                   </td>
@@ -664,9 +735,9 @@
                     {include file="./input_text_lang.tpl"
                       languages=$prestashop_languages
                       current_lang=$prestashop_lang
-                      input_name="PAYZEN_STD_REST_PLACEHOLDER[expiry]"
-                      field_id="PAYZEN_STD_REST_PLACEHOLDER_expiry"
-                      input_value=$PAYZEN_STD_REST_PLACEHOLDER.expiry
+                      input_name="PAYZEN_STD_REST_PLACEHLDR[expiry]"
+                      field_id="PAYZEN_STD_REST_PLACEHLDR_expiry"
+                      input_value=$PAYZEN_STD_REST_PLACEHLDR.expiry
                       style="width: 150px;"
                     }
                   </td>
@@ -678,9 +749,9 @@
                     {include file="./input_text_lang.tpl"
                       languages=$prestashop_languages
                       current_lang=$prestashop_lang
-                      input_name="PAYZEN_STD_REST_PLACEHOLDER[cvv]"
-                      field_id="PAYZEN_STD_REST_PLACEHOLDER_cvv"
-                      input_value=$PAYZEN_STD_REST_PLACEHOLDER.cvv
+                      input_name="PAYZEN_STD_REST_PLACEHLDR[cvv]"
+                      field_id="PAYZEN_STD_REST_PLACEHLDR_cvv"
+                      input_value=$PAYZEN_STD_REST_PLACEHLDR.cvv
                       style="width: 150px;"
                     }
                   </td>
@@ -699,7 +770,21 @@
           </div>
           <p></p>
 
+        </div>
+
+        <div id="PAYZEN_STD_1_CLICK_PAYMENT_MENU">
+          <label for="PAYZEN_STD_1_CLICK_PAYMENT">{l s='Payment by token' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_STD_1_CLICK_PAYMENT" name="PAYZEN_STD_1_CLICK_PAYMENT">
+              {foreach from=$payzen_yes_no_options key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_1_CLICK_PAYMENT === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p>{l s='The payment by token allows to pay orders without re-entering bank data at each payment. The "payment by token" option should be enabled on your %s store to use this feature.' sprintf='PayZen' mod='payzen'}</p>
           </div>
+
+        </div>
+
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
@@ -745,7 +830,28 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_MULTI_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_MULTI_COUNTRY" name="PAYZEN_MULTI_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_MULTI_COUNTRY')">
+            {foreach from=$payzen_countries_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_MULTI_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+        </div>
+
+        <div id="PAYZEN_MULTI_COUNTRY_MENU" {if $PAYZEN_MULTI_COUNTRY === '1'} style="display: none;"{/if}>
+          <label for="PAYZEN_MULTI_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_MULTI_COUNTRY_LST" name="PAYZEN_MULTI_COUNTRY_LST[]" multiple="multiple" size="7">
+              {foreach from=$payzen_countries_list['ps_countries'] key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_MULTI_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+          </div>
+        </div>
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -908,7 +1014,38 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        {if isset ($payzen_countries_list['CHOOZEO'])}
+            <label for="PAYZEN_CHOOZEO_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_CHOOZEO_COUNTRY" name="PAYZEN_CHOOZEO_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_CHOOZEO_COUNTRY')">
+                {foreach from=$payzen_countries_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_CHOOZEO_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+            </div>
+
+            <div id="PAYZEN_CHOOZEO_COUNTRY_MENU" {if $PAYZEN_CHOOZEO_COUNTRY === '1'} style="display: none;"{/if}>
+              <label for="PAYZEN_CHOOZEO_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+              <div class="margin-form">
+                <select id="PAYZEN_CHOOZEO_COUNTRY_LST" name="PAYZEN_CHOOZEO_COUNTRY_LST[]" multiple="multiple" size="7">
+                  {if isset ($payzen_countries_list['CHOOZEO'])}
+                      {foreach from=$payzen_countries_list['CHOOZEO'] key="key" item="option"}
+                          <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_CHOOZEO_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                      {/foreach}
+                  {/if}
+                </select>
+              </div>
+            </div>
+        {else}
+            <input type="hidden" name ="PAYZEN_CHOOZEO_COUNTRY" value="1" ></input>
+            <input type="hidden" name ="PAYZEN_CHOOZEO_COUNTRY_LST[]" value ="">
+            <p style="background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 20px; padding: 10px;">
+                {l s='Payment method unavailable for the list of countries defined on your PrestaShop store.' mod='payzen'}
+            </p>
+        {/if}
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1036,7 +1173,38 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        {if isset ($payzen_countries_list['ONEY'])}
+            <label for="PAYZEN_ONEY_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_ONEY_COUNTRY" name="PAYZEN_ONEY_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_ONEY_COUNTRY')">
+                {foreach from=$payzen_countries_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_ONEY_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+            </div>
+
+            <div id="PAYZEN_ONEY_COUNTRY_MENU" {if $PAYZEN_ONEY_COUNTRY === '1'} style="display: none;"{/if}>
+              <label for="PAYZEN_ONEY_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+              <div class="margin-form">
+                <select id="PAYZEN_ONEY_COUNTRY_LST" name="PAYZEN_ONEY_COUNTRY_LST[]" multiple="multiple" size="7">
+                  {if isset ($payzen_countries_list['ONEY'])}
+                      {foreach from=$payzen_countries_list['ONEY'] key="key" item="option"}
+                          <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_ONEY_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                      {/foreach}
+                  {/if}
+                </select>
+              </div>
+            </div>
+        {else}
+            <input type="hidden" name ="PAYZEN_ONEY_COUNTRY" value="1" ></input>
+            <input type="hidden" name ="PAYZEN_ONEY_COUNTRY_LST[]" value ="">
+            <p style="background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 20px; padding: 10px;">
+                {l s='Payment method unavailable for the list of countries defined on your PrestaShop store.' mod='payzen'}
+            </p>
+        {/if}
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1184,7 +1352,16 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        <div id="PAYZEN_FULLCB_COUNTRY_MENU">
+          <input type="hidden" name ="PAYZEN_FULLCB_COUNTRY" value="1" ></input>
+          <input type="hidden" name ="PAYZEN_FULLCB_COUNTRY_LST[]" value ="FR">
+          <label for="PAYZEN_FULLCB_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+          <div class="margin-form">
+            <span style="font-size: 13px; padding-top: 5px; vertical-align: middle;"><b>{$payzen_countries_list['ps_countries']['FR']|escape:'html':'UTF-8'}</b></span>
+          </div>
+        </div>
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1328,7 +1505,28 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_ANCV_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_ANCV_COUNTRY" name="PAYZEN_ANCV_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_ANCV_COUNTRY')">
+            {foreach from=$payzen_countries_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_ANCV_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+        </div>
+
+        <div id="PAYZEN_ANCV_COUNTRY_MENU" {if $PAYZEN_ANCV_COUNTRY === '1'} style="display: none;"{/if}>
+          <label for="PAYZEN_ANCV_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_ANCV_COUNTRY_LST" name="PAYZEN_ANCV_COUNTRY_LST[]" multiple="multiple" size="7">
+              {foreach from=$payzen_countries_list['ps_countries'] key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_ANCV_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+          </div>
+        </div>
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1399,7 +1597,38 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        {if isset ($payzen_countries_list['SEPA'])}
+            <label for="PAYZEN_SEPA_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_SEPA_COUNTRY" name="PAYZEN_SEPA_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_SEPA_COUNTRY')">
+                {foreach from=$payzen_countries_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SEPA_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+            </div>
+
+            <div id="PAYZEN_SEPA_COUNTRY_MENU" {if $PAYZEN_SEPA_COUNTRY === '1'} style="display: none;"{/if}>
+              <label for="PAYZEN_SEPA_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+              <div class="margin-form">
+                <select id="PAYZEN_SEPA_COUNTRY_LST" name="PAYZEN_SEPA_COUNTRY_LST[]" multiple="multiple" size="7">
+                  {if isset ($payzen_countries_list['SEPA'])}
+                      {foreach from=$payzen_countries_list['SEPA'] key="key" item="option"}
+                          <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_SEPA_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                      {/foreach}
+                  {/if}
+                </select>
+              </div>
+            </div>
+        {else}
+            <input type="hidden" name ="PAYZEN_SEPA_COUNTRY" value="1" ></input>
+            <input type="hidden" name ="PAYZEN_SEPA_COUNTRY_LST[]" value ="">
+            <p style="background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 20px; padding: 10px;">
+                {l s='Payment method unavailable for the list of countries defined on your PrestaShop store.' mod='payzen'}
+            </p>
+        {/if}
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1434,6 +1663,22 @@
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>
+
+      <fieldset>
+        <legend>{l s='PAYMENT OPTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_SEPA_MANDATE_MODE">{l s='SEPA direct debit mode' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_SEPA_MANDATE_MODE" name="PAYZEN_SEPA_MANDATE_MODE">
+            {foreach from=$payzen_sepa_mandate_mode_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SEPA_MANDATE_MODE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Select SEPA direct debit mode. Attention, the two last choices require the payment by token option on %s.' sprintf='PayZen' mod='payzen'}</p>
+        </div>
+      </fieldset>
+      <div class="clear">&nbsp;</div>
+
     </div>
     {/if}
 
@@ -1470,7 +1715,28 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_PAYPAL_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_PAYPAL_COUNTRY" name="PAYZEN_PAYPAL_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_PAYPAL_COUNTRY')">
+            {foreach from=$payzen_countries_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_PAYPAL_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+        </div>
+
+        <div id="PAYZEN_PAYPAL_COUNTRY_MENU" {if $PAYZEN_PAYPAL_COUNTRY === '1'} style="display: none;"{/if}>
+          <label for="PAYZEN_PAYPAL_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_PAYPAL_COUNTRY_LST" name="PAYZEN_PAYPAL_COUNTRY_LST[]" multiple="multiple" size="7">
+              {foreach from=$payzen_countries_list['ps_countries'] key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_PAYPAL_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+          </div>
+        </div>
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1541,7 +1807,38 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        {if isset ($payzen_countries_list['SOFORT'])}
+            <label for="PAYZEN_SOFORT_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_SOFORT_COUNTRY" name="PAYZEN_SOFORT_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_SOFORT_COUNTRY')">
+                {foreach from=$payzen_countries_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SOFORT_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+            </div>
+
+            <div id="PAYZEN_SOFORT_COUNTRY_MENU" {if $PAYZEN_SOFORT_COUNTRY === '1'} style="display: none;"{/if}>
+              <label for="PAYZEN_SOFORT_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+              <div class="margin-form">
+                <select id="PAYZEN_SOFORT_COUNTRY_LST" name="PAYZEN_SOFORT_COUNTRY_LST[]" multiple="multiple" size="7">
+                  {if isset ($payzen_countries_list['SOFORT'])}
+                      {foreach from=$payzen_countries_list['SOFORT'] key="key" item="option"}
+                          <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_SOFORT_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                      {/foreach}
+                  {/if}
+                </select>
+              </div>
+            </div>
+        {else}
+            <input type="hidden" name ="PAYZEN_SOFORT_COUNTRY" value="1" ></input>
+            <input type="hidden" name ="PAYZEN_SOFORT_COUNTRY_LST[]" value ="">
+            <p style="background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 20px; padding: 10px;">
+                {l s='Payment method unavailable for the list of countries defined on your PrestaShop store.' mod='payzen'}
+            </p>
+        {/if}
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1589,7 +1886,28 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='AMOUNT RESTRICTIONS' mod='payzen'}</legend>
+        <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+        <label for="PAYZEN_OTHER_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_OTHER_COUNTRY" name="PAYZEN_OTHER_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_OTHER_COUNTRY')">
+            {foreach from=$payzen_countries_options key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_OTHER_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+          <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+        </div>
+
+        <div id="PAYZEN_OTHER_COUNTRY_MENU" {if $PAYZEN_OTHER_COUNTRY === '1'} style="display: none;"{/if}>
+        <label for="PAYZEN_OTHER_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+        <div class="margin-form">
+          <select id="PAYZEN_OTHER_COUNTRY_LST" name="PAYZEN_OTHER_COUNTRY_LST[]" multiple="multiple" size="7">
+            {foreach from=$payzen_countries_list['ps_countries'] key="key" item="option"}
+              <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_OTHER_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+            {/foreach}
+          </select>
+        </div>
+        </div>
 
         <label>{l s='Customer group amount restriction' mod='payzen'}</label>
         <div class="margin-form">
@@ -1621,6 +1939,9 @@
           <script type="text/html" id="payzen_other_payment_means_row_option">
             {include file="./row_other_payment_means_option.tpl"
               payment_means_cards=$payzen_payment_cards_options
+              countries_list=$payzen_countries_list['ps_countries']
+              validation_mode_options=$payzen_validation_mode_options
+              enable_disable_options=$payzen_enable_disable_options
               languages=$prestashop_languages
               current_lang=$prestashop_lang
               key="PAYZEN_OTHER_PAYMENT_SCRIPT_MEANS_KEY"
@@ -1635,8 +1956,12 @@
             <tr>
               <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
               <th style="font-size: 10px;">{l s='Means of payment' mod='payzen'}</th>
+              <th style="font-size: 10px;">{l s='Countries' mod='payzen'}</th>
               <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
               <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
+              <th style="font-size: 10px;">{l s='Capture' mod='payzen'}</th>
+              <th style="font-size: 10px;">{l s='Validation mode' mod='payzen'}</th>
+              <th style="font-size: 10px;">{l s='Cart data' mod='payzen'}</th>
               <th style="font-size: 10px;"></th>
             </tr>
           </thead>
@@ -1645,6 +1970,9 @@
             {foreach from=$PAYZEN_OTHER_PAYMENT_MEANS key="key" item="option"}
               {include file="./row_other_payment_means_option.tpl"
                 payment_means_cards=$payzen_payment_cards_options
+                countries_list=$payzen_countries_list['ps_countries']
+                validation_mode_options=$payzen_validation_mode_options
+                enable_disable_options=$payzen_enable_disable_options
                 languages=$prestashop_languages
                 current_lang=$prestashop_lang
                 key=$key
@@ -1653,7 +1981,7 @@
             {/foreach}
 
             <tr id="payzen_other_payment_means_option_add">
-              <td colspan="4"></td>
+              <td colspan="8"></td>
               <td>
                 <button type="button" onclick="javascript: payzenAddOtherPaymentMeansOption(false, '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
               </td>
@@ -1669,8 +1997,12 @@
             {l s='Click on « Add » button to configure one or more payment means.' mod='payzen'}<br />
             <b>{l s='Label' mod='payzen'} : </b>{l s='The label of the means of payment to display on your site.' mod='payzen'}<br />
             <b>{l s='Means of payment' mod='payzen'} : </b>{l s='Choose the means of payment you want to propose.' mod='payzen'}<br />
+            <b>{l s='Countries' mod='payzen'} : </b>{l s='Countries where the means of payment will be available. Keep blank to authorize all countries.' mod='payzen'}<br />
             <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the means of payment.' mod='payzen'}<br />
             <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the means of payment.' mod='payzen'}<br />
+            <b>{l s='Capture' mod='payzen'} : </b>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}<br />
+            <b>{l s='Validation mode' mod='payzen'} : </b>{l s='If manual is selected, you will have to confirm payments manually in your bank Back Office.' mod='payzen'}<br />
+            <b>{l s='Cart data' mod='payzen'} : </b>{l s='If you disable this option, the shopping cart details will not be sent to the gateway. Attention, in some cases, this option has to be enabled. For more information, refer to the module documentation.' mod='payzen'}<br />
             <b>{l s='Do not forget to click on « Save » button to save your modifications.' mod='payzen'}</b>
           </p>
         </div>

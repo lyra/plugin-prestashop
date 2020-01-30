@@ -22,6 +22,11 @@ class PayzenSofortPayment extends AbstractPayzenPayment
     protected $currencies = array('EUR', 'CHF', 'GBP', 'PLN');
     protected $countries = array('DE', 'AT', 'BE', 'ES', 'FR', 'HU', 'IT', 'NL', 'PL', 'CZ', 'GB', 'SK', 'CH');
 
+    public function getCountries()
+    {
+        return $this->countries;
+    }
+
     public function validate($cart, $data = array())
     {
         $errors = parent::validate($cart, $data);
@@ -47,7 +52,7 @@ class PayzenSofortPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // override with SOFORT payment card
+        // Override with SOFORT payment card
         $request->set('payment_cards', 'SOFORT_BANKING');
 
         return $request;

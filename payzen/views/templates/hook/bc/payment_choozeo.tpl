@@ -23,35 +23,29 @@
           <input type="hidden" name="payzen_payment_type" value="choozeo" />
           <br />
 
-          {assign var=first value=true}
           {foreach from=$payzen_choozeo_options key="key" item="option"}
             <label class="payzen_card_click" for="payzen_card_type_{$key|escape:'html':'UTF-8'}">
               <input type="radio"
                      name="payzen_card_type"
                      id="payzen_card_type_{$key|escape:'html':'UTF-8'}"
-                     value="{$key|escape:'html':'UTF-8'}"
-                     {if $first == true} checked="checked"{/if}
-                     onclick="javascript: $('#payzen_choozeo').submit();" />
+                     value="{$key|escape:'html':'UTF-8'}" />
               <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/{$key|lower|escape:'html':'UTF-8'}.png"
                    alt="{$option|escape:'html':'UTF-8'}"
                    title="{$option|escape:'html':'UTF-8'}" />
             </label>
-
-            {assign var=first value=false}
           {/foreach}
         </form>
       </a>
   </div>
 
-  <![if IE]>
-    <script type="text/javascript">
-    // <![CDATA[
-      $('div.payment_module.payzen_choozeo a img').on('click', function(e) {
-        $(this).parent().click();
-      });
-    // ]]>
-    </script>
-  <![endif]>
+  <script type="text/javascript">
+  // <![CDATA[
+    $('div.payment_module.payzen_choozeo a img').on('click', function(e) {
+      $(this).parent().find('input').prop("checked", true); 
+      $('#payzen_choozeo').submit();
+    });
+  // ]]>
+  </script>
 
   {if {$payzen_choozeo_options|@count} == 1}
     <script type="text/javascript">

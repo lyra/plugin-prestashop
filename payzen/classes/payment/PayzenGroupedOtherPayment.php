@@ -20,6 +20,8 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
     protected $name = 'grouped_other';
 
     protected $other_payments;
+    protected $needs_cart_data = false;
+    protected $force_local_cart_data = true;
 
     public function setPaymentMeans($other_payments)
     {
@@ -32,7 +34,7 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
             return false;
         }
 
-        // check available payment options
+        // Check available payment options
         if (empty($this->other_payments)) {
             return false;
         }
@@ -74,9 +76,37 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
      */
     public function prepareRequest($cart, $data = array())
     {
+        // Recover payment parameters.
+        $available_payments = PayzenOtherPayment::getAvailablePaymentMeans($cart);
+        $validation_mode = '-1';
+        $capture_delay = '';
+
+        foreach ($available_payments as $option) {
+            if ($option['code'] === $data['card_type']) {
+                $validation_mode = $option['validation'];
+                $capture_delay = $option['capture'];
+
+                // Send cart data to payment gateway?
+                $this->needs_cart_data = isset($option['cart']) && ($option['cart'] === 'True');
+
+                break;
+            }
+        }
+
         $request = parent::prepareRequest($cart, $data);
 
+        // Set payment card
         $request->set('payment_cards', $data['card_type']);
+
+        // Set validation mode
+        if ($validation_mode !== '-1') {
+            $request->set('validation_mode', $validation_mode);
+        }
+
+        // Set capture delay
+        if (is_numeric($capture_delay)) {
+            $request->set('capture_delay', $capture_delay);
+        }
 
         return $request;
     }
