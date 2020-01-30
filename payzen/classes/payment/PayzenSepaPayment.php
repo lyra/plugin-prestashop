@@ -26,6 +26,11 @@ class PayzenSepaPayment extends AbstractPayzenPayment
         'RE', 'RO', 'BL', 'MF', 'PM', 'SM', 'SK', 'SE', 'CH', 'GB'
     );
 
+    public function getCountries()
+    {
+        return $this->countries;
+    }
+
     public function validate($cart, $data = array())
     {
         $errors = parent::validate($cart, $data);
@@ -51,8 +56,9 @@ class PayzenSepaPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // override with SEPA card
+        // Override with SEPA card
         $request->set('payment_cards', 'SDD');
+        $request->set('page_action', Configuration::get($this->prefix.'MANDATE_MODE'));
 
         return $request;
     }

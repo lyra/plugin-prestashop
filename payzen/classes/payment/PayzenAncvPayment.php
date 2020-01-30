@@ -29,7 +29,7 @@ class PayzenAncvPayment extends AbstractPayzenPayment
         $billing_address = new Address((int)$cart->id_address_invoice);
         $billing_country = new Country((int)$billing_address->id_country);
 
-        if ($billing_country->iso_code != 'FR') {
+        if ($billing_country->iso_code !== 'FR') {
             $errors[] = $this->l('Country not supported by ANCV payment.');
         }
 
@@ -44,7 +44,7 @@ class PayzenAncvPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // override with ANCV card
+        // Override with ANCV card
         $request->set('payment_cards', 'E_CV');
 
         return $request;

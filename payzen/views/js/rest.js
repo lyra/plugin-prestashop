@@ -11,7 +11,6 @@
  * REST API JS tools.
  */
 
-
 $(function() {
     setTimeout(function() {
         if ($('#cgv').length) {
@@ -31,7 +30,7 @@ $(function() {
     }, 0);
 });
 
-var PAYZEN_DFAULT_MESSAGES = ['CLIENT_300', 'CLIENT_304', 'CLIENT_502', 'PSP_539']; // use default messages for these errors
+var PAYZEN_DEFAULT_MESSAGES = ['CLIENT_300', 'CLIENT_304', 'CLIENT_502', 'PSP_539']; // use default messages for these errors
 var PAYZEN_RECOVERABLE_ERRORS = [
     'CLIENT_300', 'CLIENT_304', 'CLIENT_502',
     'PSP_539', 'CLIENT_001', 'CLIENT_101',
@@ -41,10 +40,11 @@ var PAYZEN_RECOVERABLE_ERRORS = [
 
 var payzenInitRestEvents = function() {
     KR.onError(function(e) {
+        $('.payzen .processing').css('display', 'none');
+        $('#payzen_oneclick_payment_description').show();
+
         if ($('#payzen_standard').length && $('#payzen_standard').data('submitted')) {
             // PrestaShop 1.7 template.
-            $('.payzen .processing').css('display', 'none');
-
             $('#payment-confirmation button').removeAttr('disabled');
             $('#payzen_standard').data('submitted', false);
         }
@@ -57,7 +57,7 @@ var payzenInitRestEvents = function() {
         }
 
         var msg = '';
-        if (PAYZEN_DFAULT_MESSAGES.indexOf(e.errorCode) > -1) {
+        if (PAYZEN_DEFAULT_MESSAGES.indexOf(e.errorCode) > -1) {
             msg = e.errorMessage + (e.errorMessage.endsWith('.') ? '' : '.');
         } else {
             msg = payzenTranslate(e.errorCode);

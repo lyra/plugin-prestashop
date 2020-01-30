@@ -25,7 +25,7 @@ class PayzenMultiPayment extends AbstractPayzenPayment
             return false;
         }
 
-        // check available payment options
+        // Check available payment options
         $options = self::getAvailableOptions($cart);
         if (empty($options)) {
             return false;
@@ -36,14 +36,14 @@ class PayzenMultiPayment extends AbstractPayzenPayment
 
     public static function getAvailableOptions($cart = null)
     {
-        // multi payment options
+        // Multi payment options
         $options = @unserialize(Configuration::get('PAYZEN_MULTI_OPTIONS'));
         if (!is_array($options) || empty($options)) {
             return array();
         }
 
         if (!$cart) {
-            return $options; // all options
+            return $options; // All options
         }
 
         $amount = $cart->getOrderTotal();
@@ -86,12 +86,12 @@ class PayzenMultiPayment extends AbstractPayzenPayment
     {
         $all_cards = PayzenTools::getSupportedMultiCardTypes();
 
-        // get selected card types
+        // Get selected card types
         $config_cards = Configuration::get($this->prefix.'PAYMENT_CARDS');
         if (!empty($config_cards)) {
-            $cards = explode(';', $config_cards); // card codes only
+            $cards = explode(';', $config_cards); // Card codes only
 
-            // retrieve card labels
+            // Retrieve card labels
             $avail_cards = array();
             foreach ($all_cards as $code => $label) {
                 if (in_array($code, $cards)) {
@@ -99,7 +99,7 @@ class PayzenMultiPayment extends AbstractPayzenPayment
                 }
             }
         } else {
-            // no card type selected, display all supported cards
+            // No card type selected, display all supported cards
             $avail_cards = $all_cards;
         }
 
@@ -123,22 +123,19 @@ class PayzenMultiPayment extends AbstractPayzenPayment
         $first = $config_first ? round(($config_first / 100) * $amount) : null;
         $request->setMultiPayment(null /* to use already set amount */, $first, $option['count'], $option['period']);
 
-        // override cb contract
+        // Override cb contract
         $request->set('contracts', ($option['contract']) ? 'CB='.$option['contract'] : null);
 
-        $request->set('order_info2', 'option_id='.$data['opt']);
-
         if (isset($data['card_type']) && $data['card_type']) {
-            // override payemnt_cards parameter
+            // Override payemnt_cards parameter
             $request->set('payment_cards', $data['card_type']);
         } else {
             $cards = Configuration::get($this->prefix.'PAYMENT_CARDS');
             $request->set('payment_cards', $cards);
         }
 
-        // override title to append selected option
-        $title = $this->getTitle((int)$cart->id_lang).' ('.$option['count'].' x)';
-        $request->set('order_info', $title);
+        // Override title to append selected option
+        $request->set('order_info', 'module_id='.$this->name.'&option_id='.$data['opt']);
 
         return $request;
     }

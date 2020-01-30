@@ -22,13 +22,18 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
     protected $currencies = array('EUR');
     protected $countries = array('FR', 'GP', 'MQ', 'GF', 'RE', 'YT');
 
+    public function getCountries()
+    {
+        return $this->countries;
+    }
+
     public function isAvailable($cart)
     {
         if (!parent::isAvailable($cart)) {
             return false;
         }
 
-        // check available payment options
+        // Check available payment options
         $options = self::getAvailableOptions($cart);
         if (empty($options)) {
             return false;
@@ -77,16 +82,16 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // override with Choozeo payment card
+        // Override with Choozeo payment card
         $request->set('payment_cards', $data['card_type']);
 
-        // by default PrestaShop does not manage customer type
+        // By default PrestaShop does not manage customer type
         $request->set('cust_status', 'PRIVATE');
 
         // Choozeo supports only automatic validation
         $request->set('validation_mode', '0');
 
-        // send FR even address is in DOM-TOM unless form is rejected
+        // Send FR even address is in DOM-TOM unless form is rejected
         $request->set('cust_country', 'FR');
 
         return $request;
