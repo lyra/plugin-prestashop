@@ -34,7 +34,7 @@
 
         var url = decodeURIComponent("{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}") + '&' + Date.now();
         {if $payzen_saved_identifier}
-            url = url + '&alias=' + $('#payzen_payment_by_identifier').val();
+            url = url + '&payzen_payment_by_identifier=' + $('#payzen_payment_by_identifier').val();
         {/if}
 
         $('#payzen_iframe').attr('src', url);
