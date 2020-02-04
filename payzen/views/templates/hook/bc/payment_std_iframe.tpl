@@ -52,7 +52,7 @@
 
       var url = "{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}";
       {if $payzen_saved_identifier}
-            url = url + '&alias=' + $('#payzen_payment_by_identifier').val();
+            url = url + '&payzen_payment_by_identifier=' + $('#payzen_payment_by_identifier').val();
       {/if}
 
       $('#payzen_iframe').attr('src', decodeURIComponent(url) + '&' + Date.now());

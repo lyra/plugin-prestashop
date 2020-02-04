@@ -50,7 +50,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.12.0';
+        $this->version = '1.12.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1368,7 +1368,7 @@ class Payzen extends PaymentModule
      */
     private function refund($order, $amount = null)
     {
-        if ((int) $order->getCurrentState() == Configuration::get('PS_OS_REFUND')) {
+        if ((int)$order->getCurrentState() == Configuration::get('PS_OS_REFUND')) {
             return;
         }
 
@@ -1846,7 +1846,7 @@ class Payzen extends PaymentModule
             $multi_options = PayzenMultiPayment::getAvailableOptions();
             $option = $multi_options[$option_id];
 
-            $count = (int) $option['count'];
+            $count = (int)$option['count'];
 
             $total_amount = $response->get('amount');
 
@@ -1856,7 +1856,7 @@ class Payzen extends PaymentModule
                 $first_amount = round($total_amount / $count);
             }
 
-            $installment_amount = (int) (string) (($total_amount - $first_amount) / ($count - 1));
+            $installment_amount = (int)(string)(($total_amount - $first_amount) / ($count - 1));
 
             $first_timestamp = strtotime($response->get('presentation_date').' UTC');
 
@@ -1871,7 +1871,7 @@ class Payzen extends PaymentModule
             for ($i = 1; $i <= $option['count']; $i++) {
                 $trans_id = $i.'-'.$response->get('trans_id');
 
-                $delay = (int) $option['period'] * ($i - 1);
+                $delay = (int)$option['period'] * ($i - 1);
                 $timestamp = strtotime("+$delay days", $first_timestamp);
 
                 switch (true) {
