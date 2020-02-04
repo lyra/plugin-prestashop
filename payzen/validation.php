@@ -111,15 +111,15 @@ if (isset($cart->id_shop)) {
     Context::getContext()->shop = Shop::initialize();
 }
 
-Context::getContext()->customer = new Customer((int) $cart->id_customer);
+Context::getContext()->customer = new Customer((int)$cart->id_customer);
 Context::getContext()->customer->logged = 1;
 
-Context::getContext()->cart = $cart = new Cart((int) $cart_id); // Reload cart to take into nto account customer group
+Context::getContext()->cart = $cart = new Cart((int)$cart_id); // Reload cart to take into nto account customer group
 
-$address = new Address((int) $cart->id_address_invoice);
-Context::getContext()->country = new Country((int) $address->id_country);
-Context::getContext()->language = new Language((int) $cart->id_lang);
-Context::getContext()->currency = new Currency((int) $cart->id_currency);
+$address = new Address((int)$cart->id_address_invoice);
+Context::getContext()->country = new Country((int)$address->id_country);
+Context::getContext()->language = new Language((int)$cart->id_lang);
+Context::getContext()->currency = new Currency((int)$cart->id_currency);
 Context::getContext()->link = new Link();
 
 /* Module main object */
@@ -131,7 +131,7 @@ $order_id = Order::getOrderByCartId($cart_id);
 if ($order_id === false) {
     /* Order has not been processed yet */
 
-    $new_state = (int) Payzen::nextOrderState($response);
+    $new_state = (int)Payzen::nextOrderState($response);
 
     if ($response->isAcceptedPayment()) {
         $logger->logInfo("Payment accepted for cart #$cart_id. New order state is $new_state.");
@@ -169,8 +169,8 @@ if ($order_id === false) {
     /* Order already registered */
     $logger->logInfo("Order #$order_id already registered for cart #$cart_id.");
 
-    $order = new Order((int) $order_id);
-    $old_state = (int) $order->getCurrentState();
+    $order = new Order((int)$order_id);
+    $old_state = (int)$order->getCurrentState();
 
     $logger->logInfo("The current state for order corresponding to cart #$cart_id is ($old_state).");
 
@@ -188,7 +188,7 @@ if ($order_id === false) {
     }
 
     $outofstock = Payzen::isOutOfStock($order);
-    $new_state = (int) Payzen::nextOrderState($response, $total_refund, $outofstock);
+    $new_state = (int)Payzen::nextOrderState($response, $total_refund, $outofstock);
 
     /* Final states */
     $consistent_states = array(

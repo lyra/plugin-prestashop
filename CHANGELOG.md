@@ -1,3 +1,6 @@
+1.12.0, 2020-02-04:
+- [alias] Bug fix: card data was requested even if the buyer chose to use his registered means of payment.
+
 1.12.0, 2020-01-30:
 - Bug fix: 3DS result is not correctly saved in backend order details when using embedded payment fields.
 - Bug fix: Fix theme config setting for iframe mode.

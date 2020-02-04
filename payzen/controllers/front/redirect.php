@@ -43,7 +43,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
     public function init()
     {
-        $this->iframe = (int) Tools::getValue('content_only', 0) == 1;
+        $this->iframe = (int)Tools::getValue('content_only', 0) == 1;
 
         parent::init();
     }
@@ -139,7 +139,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
                 // Payment by alias.
                 if (Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True') {
-                    $data['payment_by_identifier'] = Tools::getValue('alias', '0');
+                    $data['payment_by_identifier'] = Tools::getValue('payzen_payment_by_identifier', '0');
                 }
 
                 break;
