@@ -3,7 +3,7 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
@@ -13,7 +13,6 @@
  */
 class PayzenSubmitModuleFrontController extends ModuleFrontController
 {
-
     public $ssl = true;
 
     private $currentCart;
@@ -29,36 +28,36 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
     public function postProcess()
     {
-        $this->iframe = (int)Tools::getValue('content_only', 0) == 1;
+        $this->iframe = (int) Tools::getValue('content_only', 0) == 1;
 
         if ($this->iframe) {
-            unset($this->context->cookie->payzenCartId); // Used in iframe mode
+            unset($this->context->cookie->payzenCartId); // Used in iframe mode.
         }
 
         $cart_id = Tools::getValue('vads_order_id');
-        $this->currentCart = new Cart((int)$cart_id);
+        $this->currentCart = new Cart((int) $cart_id);
 
         $this->logger->logInfo("User return to shop process starts for cart #$cart_id.");
 
-        // Page to redirect to if errors
+        // Page to redirect to if errors.
         $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
 
-        // Check cart errors
-        if (!Validate::isLoadedObject($this->currentCart) || $this->currentCart->nbProducts() <= 0) {
+        // Check cart errors.
+        if (! Validate::isLoadedObject($this->currentCart) || $this->currentCart->nbProducts() <= 0) {
             $this->logger->logWarning("Cart is empty, redirect to cart page. Cart ID: $cart_id.");
 
-            $this->payzenRedirect('index.php?controller='.$page);
+            $this->payzenRedirect('index.php?controller=' . $page);
         }
 
-        if (!$this->currentCart->id_customer || !$this->currentCart->id_address_delivery ||
-            !$this->currentCart->id_address_invoice || !$this->module->active) {
+        if (! $this->currentCart->id_customer || ! $this->currentCart->id_address_delivery ||
+            ! $this->currentCart->id_address_invoice || ! $this->module->active) {
             $this->logger->logWarning("No address selected for customer or module disabled, redirect to first checkout step. Cart ID: $cart_id.");
 
-            if (version_compare(_PS_VERSION_, '1.7', '<') && !Configuration::get('PS_ORDER_PROCESS_TYPE')) {
-                $page .= '&step=1'; // Not one page checkout, goto first checkout step
+            if (version_compare(_PS_VERSION_, '1.7', '<') && ! Configuration::get('PS_ORDER_PROCESS_TYPE')) {
+                $page .= '&step=1'; // Not one page checkout, goto first checkout step.
             }
 
-            $this->payzenRedirect('index.php?controller='.$page);
+            $this->payzenRedirect('index.php?controller=' . $page);
         }
 
         $this->processPaymentReturn();
@@ -66,7 +65,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
     private function processPaymentReturn()
     {
-        require_once _PS_MODULE_DIR_.'payzen/classes/PayzenResponse.php';
+        require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
 
         /** @var PayzenResponse $response */
         $response = new PayzenResponse(
@@ -79,22 +78,22 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
         $cart_id = $this->currentCart->id;
 
-        // Check the authenticity of the request
-        if (!$response->isAuthentified()) {
+        // Check the authenticity of the request.
+        if (! $response->isAuthentified()) {
             $ip = Tools::getRemoteAddr();
-            $this->logger->logError("{$ip} tries to access module/payzen/submit page without valid signature with parameters: ".print_r($_REQUEST, true));
+            $this->logger->logError("{$ip} tries to access module/payzen/submit page without valid signature with parameters: " . print_r($_REQUEST, true));
             $this->logger->logError('Signature algorithm selected in module settings must be the same as one selected in gateway Back Office.');
 
             Tools::redirectLink('index.php');
         }
 
-        // Search order in db
+        // Search order in db.
         $order_id = Order::getOrderByCartId($cart_id);
 
         if ($order_id == false) {
-            // Order has not been processed yet
+            // Order has not been processed yet.
 
-            $new_state = (int)Payzen::nextOrderState($response);
+            $new_state = (int) Payzen::nextOrderState($response);
 
             if ($response->isAcceptedPayment()) {
                 $this->logger->logWarning("Payment for cart #$cart_id has been processed by client return! This means the IPN URL did not work.");
@@ -102,17 +101,17 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
                 $order = $this->module->saveOrder($this->currentCart, $new_state, $response);
 
-                // Redirect to success page
+                // Redirect to success page.
                 $this->redirectSuccess($order, true);
             } else {
-                // Payment KO
+                // Payment KO.
 
                 $save_on_failure = (Configuration::get('PAYZEN_FAILURE_MANAGEMENT') === PayzenTools::ON_FAILURE_SAVE);
                 if ($save_on_failure || Payzen::isOney($response)) {
-                    // Save on failure option is selected or oney payment: save order and go to history page
+                    // Save on failure option is selected or Oney payment: save order and go to history page.
                     $this->logger->logWarning("Payment for order #$cart_id has been processed by client return! This means the IPN URL did not work.");
 
-                    $msg = Payzen::isOney($response) ? 'FacilyPay Oney payment' : 'Save on failure option is selected';
+                    $msg = Payzen::isOney($response) ? 'Oney payment' : 'Save on failure option is selected';
                     $this->logger->logInfo("$msg: save failed order for cart #$cart_id. New order state is $new_state.");
 
                     $order = $this->module->saveOrder($this->currentCart, $new_state, $response);
@@ -122,54 +121,54 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
                 } else {
                     $this->context->cookie->id_cart = $cart_id;
 
-                    // Option 2 choosen: get back to checkout process
+                    // Option 2 choosen: get back to checkout process.
                     $this->logger->logInfo("Payment failed, redirect to order checkout page, cart ID: #$cart_id.");
 
-                    if (!$response->isCancelledPayment()) {
-                        // ... and show message if not cancelled
+                    if (! $response->isCancelledPayment()) {
+                        // ... and show message if not cancelled.
                         $this->context->cookie->payzenPayErrors = $this->module->l('Your payment was not accepted. Please, try to re-order.', 'submit');
                     }
 
                     $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
-                    if (version_compare(_PS_VERSION_, '1.7', '<') && !Configuration::get('PS_ORDER_PROCESS_TYPE')) {
+                    if (version_compare(_PS_VERSION_, '1.7', '<') && ! Configuration::get('PS_ORDER_PROCESS_TYPE')) {
                         $page .= '&step=3';
 
                         if (version_compare(_PS_VERSION_, '1.5.1', '<')) {
-                            $page .= '&cgv=1&id_carrier='.$this->currentCart->id_carrier;
+                            $page .= '&cgv=1&id_carrier=' . $this->currentCart->id_carrier;
                         }
                     }
 
-                    $this->payzenRedirect('index.php?controller='.$page);
+                    $this->payzenRedirect('index.php?controller=' . $page);
                 }
             }
         } else {
-            // Order already registered
+            // Order already registered.
             $this->logger->logInfo("Order already registered for cart #$cart_id.");
 
-            $order = new Order((int)$order_id);
-            $old_state = (int)$order->getCurrentState();
+            $order = new Order((int) $order_id);
+            $old_state = (int) $order->getCurrentState();
 
             $this->logger->logInfo("The current state for order corresponding to cart #$cart_id is ($old_state).");
 
             $outofstock = Payzen::isOutOfStock($order);
-            $new_state = (int)Payzen::nextOrderState($response, false, $outofstock);
+            $new_state = (int) Payzen::nextOrderState($response, false, $outofstock);
 
-            // For PrestaShop < 1.6.1, expect either original "Out of stock" state or ours to check order consistency
+            // For PrestaShop < 1.6.1, expect either original "Out of stock" state or ours to check order consistency.
             $bc_os_state_valid = $outofstock;
-            if (!Configuration::get('PS_OS_OUTOFSTOCK_PAID')) {
+            if (! Configuration::get('PS_OS_OUTOFSTOCK_PAID')) {
                 $bc_os_state_valid &= Payzen::isStateInArray($new_state, array('PS_OS_OUTOFSTOCK', 'PAYZEN_OS_PAYMENT_OUTOFSTOCK'));
             }
 
             if (($old_state === $new_state) || $bc_os_state_valid) {
-                // No changes, just display a confirmation message
+                // No changes, just display a confirmation message.
                 $this->logger->logInfo("No changes for order associated with cart #$cart_id, order remains in state ($old_state).");
 
                 if ($response->isAcceptedPayment()) {
-                    // Just display a confirmation message
+                    // Just display a confirmation message.
                     $this->logger->logInfo("Payment success confirmed for cart #$cart_id.");
                     $this->redirectSuccess($order);
                 } else {
-                    // Just redirect to order history page
+                    // Just redirect to order history page.
                     $this->logger->logInfo("Payment failure confirmed for cart #$cart_id.");
                     $this->payzenRedirect('index.php?controller=history');
                 }
@@ -181,18 +180,18 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
                     );
                     $this->redirectSuccess($order);
                 } else {
-                    // Order is in a pending state, payment is not pending: error case
+                    // Order is in a pending state, payment is not pending: error case.
                     $this->logger->logWarning("Error: inconsistent order state ($old_state) and payment result ({$response->getTransStatus()}), cart ID: #$cart_id.");
                     $this->payzenRedirect(
-                        'index.php?controller=order-confirmation&id_cart='.$cart_id.'&id_module='.$this->module->id.
-                        '&id_order='.$order->id.'&key='.$order->secure_key.'&error=yes'
+                        'index.php?controller=order-confirmation&id_cart=' . $cart_id . '&id_module=' . $this->module->id .
+                        '&id_order=' . $order->id . '&key=' . $order->secure_key . '&error=yes'
                     );
                 }
             } else {
                 $this->logger->logWarning("Unknown order state ID ($old_state) for cart #$cart_id. Managed by merchant.");
 
                 if ($response->isAcceptedPayment()) {
-                    // Redirect to success page
+                    // Redirect to success page.
                     $this->logger->logInfo("Payment success for cart #$cart_id. Redirect to success page.");
                     $this->redirectSuccess($order);
                 } else {
@@ -205,18 +204,18 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
     private function redirectSuccess($order, $check = false)
     {
-        // Display a confirmation message
-        $link = 'index.php?controller=order-confirmation&id_cart='.$order->id_cart.'&id_module='.$this->module->id.
-             '&id_order='.$order->id.'&key='.$order->secure_key;
+        // Display a confirmation message.
+        $link = 'index.php?controller=order-confirmation&id_cart=' . $order->id_cart . '&id_module=' . $this->module->id .
+             '&id_order=' . $order->id . '&key=' . $order->secure_key;
 
-        // Amount paid not equals initial amount. Error !
+        // Amount paid not equals initial amount. Error!
         if (Payzen::hasAmountError($order)) {
             $link .= '&amount_error=yes';
         }
 
         if (Configuration::get('PAYZEN_MODE') === 'TEST') {
             if ($check) {
-                // TEST mode (user is the webmaster): IPN did not work, so we display a warning
+                // TEST mode (user is the webmaster): IPN did not work, so we display a warning.
                 $link .= '&check_url_warn=yes';
             }
 
@@ -231,7 +230,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
     private function payzenRedirect($url)
     {
         if ($this->iframe) {
-            // Iframe mode, use template to redirect to top window
+            // IFrame mode, use template to redirect to top window.
             $this->context->smarty->assign('payzen_url', PayzenTools::getPageLink($url));
             $this->setTemplate(PayzenTools::getTemplatePath('iframe/response.tpl'));
         } else {

@@ -2,7 +2,7 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
@@ -31,29 +31,31 @@ function payzenDeleteMultiOption(key) {
     if ($('#payzen_multi_options_table tbody tr').length === 1) {
         $('#payzen_multi_options_btn').show();
         $('#payzen_multi_options_table').hide();
+        $('#payzen_multi_options_table').append("<input type=\"hidden\" id=\"PAYZEN_MULTI_OPTIONS\" name=\"PAYZEN_MULTI_OPTIONS\" value=\"\">");
     }
 }
 
-function payzenAddOneyOption(first) {
+function payzenAddOneyOption(first, suffix = '') {
     if (first) {
-        $('#payzen_oney_options_btn').hide();
-        $('#payzen_oney_options_table').show();
+        $('#payzen_oney' + suffix + '_options_btn').hide();
+        $('#payzen_oney' + suffix + '_options_table').show();
     }
 
     var timestamp = new Date().getTime();
+    var key = suffix != '' ? /PAYZEN_ONEY34_KEY/g : /PAYZEN_ONEY_KEY/g;
+    var rowTpl = $('#payzen_oney' + suffix + '_row_option').html();
+    rowTpl = rowTpl.replace(key, '' + timestamp);
 
-    var rowTpl = $('#payzen_oney_row_option').html();
-    rowTpl = rowTpl.replace(/PAYZEN_ONEY_KEY/g, '' + timestamp);
-
-    $(rowTpl).insertBefore('#payzen_oney_option_add');
+    $(rowTpl).insertBefore('#payzen_oney' + suffix + '_option_add');
 }
 
-function payzenDeleteOneyOption(key) {
-    $('#payzen_oney_option_' + key).remove();
+function payzenDeleteOneyOption(key, suffix = '') {
+    $('#payzen_oney' + suffix + '_option_' + key).remove();
 
-    if ($('#payzen_oney_options_table tbody tr').length === 1) {
-        $('#payzen_oney_options_btn').show();
-        $('#payzen_oney_options_table').hide();
+    if ($('#payzen_oney' + suffix + '_options_table tbody tr').length === 1) {
+        $('#payzen_oney' + suffix + '_options_btn').show();
+        $('#payzen_oney' + suffix + '_options_table').hide();
+        $('#payzen_oney' + suffix + '_options_table').append("<input type=\"hidden\" id=\"PAYZEN_ONEY" + suffix + "_OPTIONS\" name=\"PAYZEN_ONEY" + suffix + "_OPTIONS\" value=\"\">");
     }
 }
 
@@ -94,7 +96,7 @@ function payzenDeliveryTypeChanged(key) {
     }
 
     var speed = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_speed').val();
-    if ((type === 'RECLAIM_IN_SHOP') && (speed === 'PRIORITY')) {
+    if (speed === 'PRIORITY') {
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').show();
     } else {
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').hide();
@@ -105,7 +107,7 @@ function payzenDeliverySpeedChanged(key) {
     var speed = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_speed').val();
     var type = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_type').val();
 
-    if ((type === 'RECLAIM_IN_SHOP') && (speed === 'PRIORITY')) {
+    if (speed === 'PRIORITY') {
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').show();
     } else {
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').hide();

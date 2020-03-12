@@ -3,12 +3,12 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) {
+if (! defined('_PS_VERSION_')) {
     exit;
 }
 
@@ -30,14 +30,14 @@ class PayzenOtherPayment extends AbstractPayzenPayment
     {
         $this->payment_code = $payment_code;
         $this->payment_title = $payment_title;
-        $this->logo = Tools::strtolower($payment_code).'.png';
+        $this->logo = Tools::strtolower($payment_code) . '.png';
         $this->min_amount = $min_amount;
         $this->max_amount = $max_amount;
     }
 
     protected function checkAmountRestriction($cart)
     {
-        if (!parent::checkAmountRestriction($cart)) {
+        if (! parent::checkAmountRestriction($cart)) {
             return false;
         }
 
@@ -67,7 +67,7 @@ class PayzenOtherPayment extends AbstractPayzenPayment
 
         $inputs = $option->getInputs();
         $inputs[] = array('type' => 'hidden', 'name' => 'payzen_payment_code', 'value' => $this->payment_code);
-        $inputs[] = array('type' => 'hidden', 'name' => 'payzen_payment_title', 'value' => $this->getTitle((int)$cart->id_lang));
+        $inputs[] = array('type' => 'hidden', 'name' => 'payzen_payment_title', 'value' => $this->getTitle((int) $cart->id_lang));
 
         $option->setInputs($inputs);
 
@@ -80,7 +80,7 @@ class PayzenOtherPayment extends AbstractPayzenPayment
      */
     public function prepareRequest($cart, $data = array())
     {
-        // Recover payment parameters
+        // Recover payment parameters.
         $available_payments = $this->getAvailablePaymentMeans($cart);
         $validation_mode = '-1';
         $capture_delay = '';
@@ -99,15 +99,15 @@ class PayzenOtherPayment extends AbstractPayzenPayment
 
         $request = parent::prepareRequest($cart, $data);
 
-        // Set payment card
+        // Set payment card.
         $request->set('payment_cards', $data['card_type']);
 
-        // Set validation mode
+        // Set validation mode.
         if ($validation_mode !== '-1') {
             $request->set('validation_mode', $validation_mode);
         }
 
-        // Set Capture delay
+        // Set Capture delay.
         if (is_numeric($capture_delay)) {
             $request->set('capture_delay', $capture_delay);
         }
@@ -135,20 +135,20 @@ class PayzenOtherPayment extends AbstractPayzenPayment
 
     public static function getAvailablePaymentMeans($cart = null)
     {
-        // Other payment means
+        // Other payment means.
         $other_payment_means = @unserialize(Configuration::get('PAYZEN_OTHER_PAYMENT_MEANS'));
-        if (!is_array($other_payment_means) || empty($other_payment_means)) {
+        if (! is_array($other_payment_means) || empty($other_payment_means)) {
             return array();
         }
 
-        if (!$cart) {
-            return $other_payment_means; // All options
+        if (! $cart) {
+            return $other_payment_means; // All options.
         }
 
         $amount = $cart->getOrderTotal();
         $enabled_options = array();
-        $billing_address = new Address((int)$cart->id_address_invoice);
-        $billing_country = new Country((int)$billing_address->id_country);
+        $billing_address = new Address((int) $cart->id_address_invoice);
+        $billing_country = new Country((int) $billing_address->id_country);
 
         foreach ($other_payment_means as $key => $option) {
             $min = $option['min_amount'];

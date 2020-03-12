@@ -3,12 +3,12 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) {
+if (! defined('_PS_VERSION_')) {
     exit();
 }
 
@@ -138,15 +138,7 @@ if (! class_exists('PayzenResponse', false)) {
          */
         public function isAcceptedPayment()
         {
-            $confirmedStatuses = array(
-                'AUTHORISED',
-                'AUTHORISED_TO_VALIDATE',
-                'CAPTURED',
-                'CAPTURE_FAILED', /* capture will be redone */
-                'ACCEPTED'
-            );
-
-            return in_array($this->transStatus, $confirmedStatuses) || $this->isPendingPayment();
+            return in_array($this->transStatus, PayzenApi::getSuccessStatuses()) || $this->isPendingPayment();
         }
 
         /**
@@ -156,25 +148,16 @@ if (! class_exists('PayzenResponse', false)) {
          */
         public function isPendingPayment()
         {
-            $pendingStatuses = array(
-                'INITIAL',
-                'WAITING_AUTHORISATION',
-                'WAITING_AUTHORISATION_TO_VALIDATE',
-                'UNDER_VERIFICATION',
-                'WAITING_FOR_PAYMENT'
-            );
-
-            return in_array($this->transStatus, $pendingStatuses);
+            return in_array($this->transStatus, PayzenApi::getPendingStatuses());
         }
 
         /**
-         * Check if the payment process was interrupted by the client.
+         * Check if the payment process was interrupted by the buyer.
          * @return bool
          */
         public function isCancelledPayment()
         {
-            $cancelledStatuses = array('NOT_CREATED', 'ABANDONED');
-            return in_array($this->transStatus, $cancelledStatuses);
+            return in_array($this->transStatus, PayzenApi::getCancelledStatuses());
         }
 
         /**
@@ -183,8 +166,7 @@ if (! class_exists('PayzenResponse', false)) {
          */
         public function isToValidatePayment()
         {
-            $toValidateStatuses = array('WAITING_AUTHORISATION_TO_VALIDATE', 'AUTHORISED_TO_VALIDATE');
-            return in_array($this->transStatus, $toValidateStatuses);
+            return in_array($this->transStatus, PayzenApi::getToValidateStatuses());
         }
 
         /**

@@ -2,7 +2,7 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  *}
@@ -30,7 +30,7 @@
     </iframe>
 
     {if $payzen_can_cancel_iframe}
-        <button class="payzen-iframe" id="payzen_cancel_iframe" style="display: none;"">{l s='< Cancel and return to payment choice' mod='payzen'}</button>
+        <button class="payzen-iframe" id="payzen_cancel_iframe" style="display: none;">{l s='< Cancel and return to payment choice' mod='payzen'}</button>
     {/if}
   </a>
 
@@ -76,14 +76,15 @@
       $('#payzen_iframe').attr('src', decodeURIComponent(url) + '&' + Date.now());
     }
 
-      $(function() {
-        $('#payzen_standard_link').click(payzenShowIframe);
-        $('#payzen_cancel_iframe').click(function() {
-          payzenHideIframe();
-          return false;
-        });
-        $('.payment_module a:not(.payzen-standard-link)').click(payzenHideIframe);
+    $(function() {
+      $('#payzen_standard_link').click(payzenShowIframe);
+      $('#payzen_cancel_iframe').click(function() {
+        payzenHideIframe();
+        return false;
       });
+
+      $('.payment_module a:not(.payzen-standard-link)').click(payzenHideIframe);
+    });
   </script>
 </div>
 
