@@ -3,12 +3,12 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) {
+if (! defined('_PS_VERSION_')) {
     exit;
 }
 
@@ -19,7 +19,7 @@ class PayzenHelperForm
 {
     private function __construct()
     {
-        // Do not instantiate this class
+        // Do not instantiate this class.
     }
 
     public static function getAdminFormContext()
@@ -54,23 +54,23 @@ class PayzenHelperForm
             'TELEPHONY' => $payzen->l('Telephony', 'payzenhelperform')
         );
 
-        // Get documentation links
+        // Get documentation links.
         $doc_files = array();
-        $filenames = glob(_PS_MODULE_DIR_.'payzen/installation_doc/'.PayzenTools::getDocPattern());
+        $filenames = glob(_PS_MODULE_DIR_ . 'payzen/installation_doc/' . PayzenTools::getDocPattern());
 
         $doc_languages = array(
             'fr' => 'Français',
             'en' => 'English',
             'es' => 'Español',
             'de' => 'Deutsch'
-            // Complete when other languages are managed
+            // Complete when other languages are managed.
         );
 
         foreach ($filenames as $filename) {
             $base_filename = basename($filename, '.pdf');
-            $lang = Tools::substr($base_filename, -2); // Extract language code
+            $lang = Tools::substr($base_filename, -2); // Extract language code.
 
-            $doc_files[$base_filename.'.pdf'] = $doc_languages[$lang];
+            $doc_files[$base_filename . '.pdf'] = $doc_languages[$lang];
         }
 
         $placeholders = self::getArrayConfig('PAYZEN_STD_REST_PLACEHLDR');
@@ -78,17 +78,17 @@ class PayzenHelperForm
             $placeholders = array('pan' => '', 'expiry' => '', 'cvv' => '');
         }
 
-        $enabledCountries = Country::getCountries((int)$context->language->id, true);
-        $all_countries =    Country::getCountries((int)$context->language->id, false);
+        $enabledCountries = Country::getCountries((int) $context->language->id, true);
+        $all_countries =    Country::getCountries((int) $context->language->id, false);
         $countryList = array();
         foreach ($enabledCountries as $value) {
             $countryList['ps_countries'][$value['iso_code']] = $value['name'];
         }
 
         foreach (PayzenTools::$submodules as $key => $module) {
-            $module_class_name = 'Payzen'.$module.'Payment';
+            $module_class_name = 'Payzen' . $module.'Payment';
             $instance_module = new $module_class_name();
-            if (method_exists($instance_module, 'getCountries') && !empty($instance_module->getCountries())) {
+            if (method_exists($instance_module, 'getCountries') && ! empty($instance_module->getCountries())) {
                 $submodule_specific_countries = $instance_module->getCountries();
                 foreach ($submodule_specific_countries as $country) {
                     if (isset($countryList['ps_countries'][$country])) {
@@ -210,11 +210,11 @@ class PayzenHelperForm
                 'material' => 'Material'
             ),
 
-            'prestashop_categories' => Category::getCategories((int)$context->language->id, true, false),
+            'prestashop_categories' => Category::getCategories((int) $context->language->id, true, false),
             'prestashop_languages' => Language::getLanguages(false),
-            'prestashop_lang' => Language::getLanguage((int)$context->language->id),
+            'prestashop_lang' => Language::getLanguage((int) $context->language->id),
             'prestashop_carriers' => Carrier::getCarriers(
-                (int)$context->language->id,
+                (int) $context->language->id,
                 true,
                 false,
                 false,
@@ -247,7 +247,7 @@ class PayzenHelperForm
             'PAYZEN_REST_NOTIFY_URL' => self::getIpnUrl(),
 
             'PAYZEN_DEFAULT_LANGUAGE' => Configuration::get('PAYZEN_DEFAULT_LANGUAGE'),
-            'PAYZEN_AVAILABLE_LANGUAGES' => !Configuration::get('PAYZEN_AVAILABLE_LANGUAGES') ?
+            'PAYZEN_AVAILABLE_LANGUAGES' => ! Configuration::get('PAYZEN_AVAILABLE_LANGUAGES') ?
                                             array('') :
                                             explode(';', Configuration::get('PAYZEN_AVAILABLE_LANGUAGES')),
             'PAYZEN_DELAY' => Configuration::get('PAYZEN_DELAY'),
@@ -279,7 +279,7 @@ class PayzenHelperForm
             'PAYZEN_STD_AMOUNTS' => self::getArrayConfig('PAYZEN_STD_AMOUNTS'),
             'PAYZEN_STD_DELAY' => Configuration::get('PAYZEN_STD_DELAY'),
             'PAYZEN_STD_VALIDATION' => Configuration::get('PAYZEN_STD_VALIDATION'),
-            'PAYZEN_STD_PAYMENT_CARDS' => !Configuration::get('PAYZEN_STD_PAYMENT_CARDS') ?
+            'PAYZEN_STD_PAYMENT_CARDS' => ! Configuration::get('PAYZEN_STD_PAYMENT_CARDS') ?
                                             array('') :
                                             explode(';', Configuration::get('PAYZEN_STD_PAYMENT_CARDS')),
             'PAYZEN_STD_PROPOSE_ONEY' => Configuration::get('PAYZEN_STD_PROPOSE_ONEY'),
@@ -297,7 +297,7 @@ class PayzenHelperForm
             'PAYZEN_MULTI_DELAY' => Configuration::get('PAYZEN_MULTI_DELAY'),
             'PAYZEN_MULTI_VALIDATION' => Configuration::get('PAYZEN_MULTI_VALIDATION'),
             'PAYZEN_MULTI_CARD_MODE' => Configuration::get('PAYZEN_MULTI_CARD_MODE'),
-            'PAYZEN_MULTI_PAYMENT_CARDS' => !Configuration::get('PAYZEN_MULTI_PAYMENT_CARDS') ?
+            'PAYZEN_MULTI_PAYMENT_CARDS' => ! Configuration::get('PAYZEN_MULTI_PAYMENT_CARDS') ?
                                             array('') :
                                             explode(';', Configuration::get('PAYZEN_MULTI_PAYMENT_CARDS')),
             'PAYZEN_MULTI_OPTIONS' => self::getArrayConfig('PAYZEN_MULTI_OPTIONS'),
@@ -315,6 +315,14 @@ class PayzenHelperForm
             'PAYZEN_ONEY_VALIDATION' => Configuration::get('PAYZEN_ONEY_VALIDATION'),
             'PAYZEN_ONEY_ENABLE_OPTIONS' => Configuration::get('PAYZEN_ONEY_ENABLE_OPTIONS'),
             'PAYZEN_ONEY_OPTIONS' => self::getArrayConfig('PAYZEN_ONEY_OPTIONS'),
+
+            'PAYZEN_ONEY34_TITLE' => self::getLangConfig('PAYZEN_ONEY34_TITLE'),
+            'PAYZEN_ONEY34_ENABLED' => Configuration::get('PAYZEN_ONEY34_ENABLED'),
+            'PAYZEN_ONEY34_AMOUNTS' => self::getArrayConfig('PAYZEN_ONEY34_AMOUNTS'),
+            'PAYZEN_ONEY34_DELAY' => Configuration::get('PAYZEN_ONEY34_DELAY'),
+            'PAYZEN_ONEY34_VALIDATION' => Configuration::get('PAYZEN_ONEY34_VALIDATION'),
+            'PAYZEN_ONEY34_ENABLE_OPTIONS' => Configuration::get('PAYZEN_ONEY34_ENABLE_OPTIONS'),
+            'PAYZEN_ONEY34_OPTIONS' => self::getArrayConfig('PAYZEN_ONEY34_OPTIONS'),
 
             'PAYZEN_FULLCB_TITLE' => self::getLangConfig('PAYZEN_FULLCB_TITLE'),
             'PAYZEN_FULLCB_ENABLED' => Configuration::get('PAYZEN_FULLCB_ENABLED'),
@@ -353,12 +361,12 @@ class PayzenHelperForm
         );
 
         foreach (PayzenTools::$submodules as $key => $module) {
-            $tpl_vars['PAYZEN_'.$key.'_COUNTRY'] = Configuration::get('PAYZEN_'.$key.'_COUNTRY');
-            $tpl_vars['PAYZEN_'.$key.'_COUNTRY_LST'] = !Configuration::get('PAYZEN_'.$key.'_COUNTRY_LST') ?
-                array() : explode(';', Configuration::get('PAYZEN_'.$key.'_COUNTRY_LST'));
+            $tpl_vars['PAYZEN_' . $key . '_COUNTRY'] = Configuration::get('PAYZEN_' . $key . '_COUNTRY');
+            $tpl_vars['PAYZEN_' . $key . '_COUNTRY_LST'] = ! Configuration::get('PAYZEN_' . $key . '_COUNTRY_LST') ?
+                array() : explode(';', Configuration::get('PAYZEN_' . $key . '_COUNTRY_LST'));
         }
 
-        if (!PayzenTools::$plugin_features['embedded']) {
+        if (! PayzenTools::$plugin_features['embedded']) {
             unset($tpl_vars['payzen_card_data_mode_options']['5']);
         }
 
@@ -369,12 +377,12 @@ class PayzenHelperForm
     {
         $shop = new Shop(Configuration::get('PS_SHOP_DEFAULT'));
 
-        // SSL enabled on default shop ?
+        // SSL enabled on default shop?
         $id_shop_group = isset($shop->id_shop_group) ? $shop->id_shop_group : $shop->id_group_shop;
         $ssl = Configuration::get('PS_SSL_ENABLED', null, $id_shop_group, $shop->id);
 
-        $ipn = ($ssl ? 'https://'.$shop->domain_ssl : 'http://'.$shop->domain)
-            .$shop->getBaseURI().'modules/payzen/validation.php';
+        $ipn = ($ssl ? 'https://' . $shop->domain_ssl : 'http://' . $shop->domain)
+            . $shop->getBaseURI() . 'modules/payzen/validation.php';
 
         return $ipn;
     }
@@ -383,7 +391,7 @@ class PayzenHelperForm
     {
         $value = @unserialize(Configuration::get($name));
 
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             $value = array();
         }
 
@@ -409,14 +417,14 @@ class PayzenHelperForm
         /* @var Payzen */
         $payzen = Module::getInstanceByName('payzen');
 
-        $sql = 'SELECT DISTINCT gl.`id_group`, gl.`name` FROM `'._DB_PREFIX_.'group_lang` AS gl
-            INNER JOIN `'._DB_PREFIX_.'module_group` AS mg
+        $sql = 'SELECT DISTINCT gl.`id_group`, gl.`name` FROM `' . _DB_PREFIX_ . 'group_lang` AS gl
+            INNER JOIN `' . _DB_PREFIX_ . 'module_group` AS mg
             ON (
                 gl.`id_group` = mg.`id_group`
-                AND mg.`id_module` = '.(int)$payzen->id.'
-                AND mg.`id_shop` = '.(int)$context->shop->id.'
+                AND mg.`id_module` = ' . (int) $payzen->id . '
+                AND mg.`id_shop` = ' . (int) $context->shop->id . '
             )
-            WHERE gl.`id_lang` = '.(int)$context->language->id;
+            WHERE gl.`id_lang` = ' . (int) $context->language->id;
 
         return Db::getInstance()->executeS($sql);
     }

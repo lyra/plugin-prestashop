@@ -12,17 +12,17 @@ if (! defined('_PS_VERSION_')) {
     exit;
 }
 
-class PayzenOneyPayment extends AbstractPayzenPayment
+class PayzenOney34Payment extends AbstractPayzenPayment
 {
-    const ONEY_THREE_TIMES_MAX_FEES = 10;
-    const ONEY_FOUR_TIMES_MAX_FEES = 20;
+    const ONEY34_THREE_TIMES_MAX_FEES = 10;
+    const ONEY34_FOUR_TIMES_MAX_FEES = 20;
 
-    protected $prefix = 'PAYZEN_ONEY_';
+    protected $prefix = 'PAYZEN_ONEY34_';
     protected $tpl_name = 'payment_oney.tpl';
-    protected $logo = 'oney.png';
-    protected $name = 'oney';
+    protected $logo = 'oney_3x_4x.png';
+    protected $name = 'oney34';
 
-    protected $label = "FacilyPay Oney";
+    protected $label = "3 or 4 times Oney";
 
     protected $currencies = array('EUR');
     protected $countries = array('FR', 'GP', 'MQ', 'GF', 'RE', 'YT');
@@ -39,12 +39,9 @@ class PayzenOneyPayment extends AbstractPayzenPayment
             return false;
         }
 
-        if (Configuration::get($this->prefix . 'ENABLE_OPTIONS') === 'True') {
-            $options = self::getAvailableOptions($cart);
-
-            if (empty($options)) {
-                return false;
-            }
+        $options = self::getAvailableOptions($cart);
+        if (empty($options)) {
+            return false;
         }
 
         if (! PayzenTools::checkOneyRequirements($cart, $this->label)) {
@@ -59,6 +56,11 @@ class PayzenOneyPayment extends AbstractPayzenPayment
         return true;
     }
 
+    protected function isOney34()
+    {
+        return true;
+    }
+
     public function validate($cart, $data = array())
     {
         $errors = parent::validate($cart, $data);
@@ -68,14 +70,14 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
         $billing_address = new Address((int) $cart->id_address_invoice);
 
-        // Check address validity according to FacilyPay Oney payment specifications.
-        $errors = PayzenTools::checkAddress($billing_address, 'billing', $this->name);
+        // Check address validity according to 3 or 4 times Oney payment specifications.
+        $errors = PayzenTools::checkAddress($billing_address, 'billing', 'oney');
 
         if (empty($errors)) {
             // Billing address is valid, check delivery address.
             $delivery_address = new Address((int) $cart->id_address_delivery);
 
-            $errors = PayzenTools::checkAddress($delivery_address, 'delivery', $this->name);
+            $errors = PayzenTools::checkAddress($delivery_address, 'delivery', 'oney');
         }
 
         return $errors;
@@ -89,9 +91,8 @@ class PayzenOneyPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // Override with FacilyPay Oney payment cards.
-        $test_mode = $request->get('ctx_mode') === 'TEST';
-        $request->set('payment_cards', $test_mode ? 'ONEY_SANDBOX' : 'ONEY');
+        // Override with 3 or 4 times Oney payment cards.
+        $request->set('payment_cards', 'ONEY_3X_4X');
 
         if (isset($data['opt']) && $data['opt']) {
             // Override option code parameter.
@@ -106,8 +107,8 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
     public static function getAvailableOptions($cart)
     {
-        // FacilyPay Oney payment options.
-        $options = @unserialize(Configuration::get('PAYZEN_ONEY_OPTIONS'));
+        // 3 or 4 times Oney payment options.
+        $options = @unserialize(Configuration::get('PAYZEN_ONEY34_OPTIONS'));
         if (! is_array($options) || empty($options)) {
             return array();
         }
@@ -122,7 +123,7 @@ class PayzenOneyPayment extends AbstractPayzenPayment
             if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
                 $default = is_string($option['label']) ? $option['label'] : $option['count'] . ' x';
                 $option_label = is_array($option['label']) && isset($option['label'][$cart->id_lang]) ?
-                    $option['label'][$cart->id_lang] : $default;
+                $option['label'][$cart->id_lang] : $default;
 
                 $option['localized_label'] = $option_label;
 
@@ -133,10 +134,10 @@ class PayzenOneyPayment extends AbstractPayzenPayment
                 $max_fees = null;
                 switch ($count) {
                     case 3:
-                        $max_fees = self::ONEY_THREE_TIMES_MAX_FEES;
+                        $max_fees = self::ONEY34_THREE_TIMES_MAX_FEES;
                         break;
                     case 4:
-                        $max_fees = self::ONEY_FOUR_TIMES_MAX_FEES;
+                        $max_fees = self::ONEY34_FOUR_TIMES_MAX_FEES;
                         break;
                     default:
                         $max_fees = null;
@@ -171,25 +172,20 @@ class PayzenOneyPayment extends AbstractPayzenPayment
     {
         $vars = parent::getTplVars($cart);
 
-        $options = array();
-        if (Configuration::get($this->prefix . 'ENABLE_OPTIONS') === 'True') {
-            $options = self::getAvailableOptions($cart);
-        }
-
-        $vars['payzen_oney_options'] = $options;
-        $vars['title'] = sprintf($this->l('Click here to pay with %s', 'payment_other'), $this->label);
-        $vars['suffix'] = '';
+        $vars['payzen_oney_options'] = self::getAvailableOptions($cart);
+        $vars['title'] = sprintf($this->l('Click here to pay with %s', 'payment_other'), $this->l('3 or 4 times Oney'));
+        $vars['suffix'] = '34';
 
         return $vars;
     }
 
     public function hasForm()
     {
-        return Configuration::get($this->prefix . 'ENABLE_OPTIONS') === 'True';
+        return true;
     }
 
     protected function getDefaultTitle()
     {
-        return $this->l('Payment with FacilyPay Oney');
+        return $this->l('Payment in 3 or 4 times Oney');
     }
 }

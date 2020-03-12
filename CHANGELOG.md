@@ -1,4 +1,10 @@
-1.12.0, 2020-02-04:
+1.13.0, 2020-03-04:
+- Bug fix: Fix amount issue relative to multiple partial refunds.
+- Bug fix: Shipping costs not included in the refunded amount through the PrestaShop backend.
+- [oney] Adding 3x 4x Oney means of payment as submodule.
+- Improve payment statuses management.
+
+1.12.1, 2020-02-04:
 - [alias] Bug fix: card data was requested even if the buyer chose to use his registered means of payment.
 
 1.12.0, 2020-01-30:

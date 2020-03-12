@@ -3,12 +3,12 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) {
+if (! defined('_PS_VERSION_')) {
     exit;
 }
 
@@ -29,11 +29,11 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
 
     public function isAvailable($cart)
     {
-        if (!parent::isAvailable($cart)) {
+        if (! parent::isAvailable($cart)) {
             return false;
         }
 
-        // Check available payment options
+        // Check available payment options.
         $options = self::getAvailableOptions($cart);
         if (empty($options)) {
             return false;
@@ -44,7 +44,7 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
 
     public static function getAvailableOptions($cart = null)
     {
-        // Choozeo payment options
+        // Choozeo payment options.
         $options = @unserialize(Configuration::get('PAYZEN_CHOOZEO_OPTIONS'));
         $amount = $cart->getOrderTotal();
 
@@ -59,7 +59,7 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
 
 
             if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
-                $enabled_options[$key] = Tools::strtolower(Tools::substr($key, -2)).' CB';
+                $enabled_options[$key] = Tools::strtolower(Tools::substr($key, -2)) . ' CB';
             }
         }
 
@@ -82,16 +82,16 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // Override with Choozeo payment card
+        // Override with Choozeo payment card.
         $request->set('payment_cards', $data['card_type']);
 
-        // By default PrestaShop does not manage customer type
+        // By default PrestaShop does not manage customer type.
         $request->set('cust_status', 'PRIVATE');
 
-        // Choozeo supports only automatic validation
+        // Choozeo supports only automatic validation.
         $request->set('validation_mode', '0');
 
-        // Send FR even address is in DOM-TOM unless form is rejected
+        // Send FR even address is in DOM-TOM unless form is rejected.
         $request->set('cust_country', 'FR');
 
         return $request;

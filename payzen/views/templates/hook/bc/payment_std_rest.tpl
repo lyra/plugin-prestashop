@@ -2,13 +2,13 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  *}
 
 {if version_compare($smarty.const._PS_VERSION_, '1.6', '>=')}
-<div class="row"><div class="col-xs-12{if version_compare($smarty.const._PS_VERSION_, '1.6.0.11', '<')} col-md-6{/if}">
+  <div class="row"><div class="col-xs-12{if version_compare($smarty.const._PS_VERSION_, '1.6.0.11', '<')} col-md-6{/if}">
 {/if}
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
@@ -78,5 +78,5 @@
 </div>
 
 {if version_compare($smarty.const._PS_VERSION_, '1.6', '>=')}
-</div></div>
+  </div></div>
 {/if}

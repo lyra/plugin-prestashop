@@ -3,12 +3,12 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) {
+if (! defined('_PS_VERSION_')) {
     exit;
 }
 
@@ -21,11 +21,11 @@ class PayzenMultiPayment extends AbstractPayzenPayment
 
     public function isAvailable($cart)
     {
-        if (!parent::isAvailable($cart)) {
+        if (! parent::isAvailable($cart)) {
             return false;
         }
 
-        // Check available payment options
+        // Check available payment options.
         $options = self::getAvailableOptions($cart);
         if (empty($options)) {
             return false;
@@ -36,14 +36,14 @@ class PayzenMultiPayment extends AbstractPayzenPayment
 
     public static function getAvailableOptions($cart = null)
     {
-        // Multi payment options
+        // Multi payment options.
         $options = @unserialize(Configuration::get('PAYZEN_MULTI_OPTIONS'));
-        if (!is_array($options) || empty($options)) {
+        if (! is_array($options) || empty($options)) {
             return array();
         }
 
-        if (!$cart) {
-            return $options; // All options
+        if (! $cart) {
+            return $options; // All options.
         }
 
         $amount = $cart->getOrderTotal();
@@ -54,7 +54,7 @@ class PayzenMultiPayment extends AbstractPayzenPayment
             $max = $option['max_amount'];
 
             if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
-                $default = is_string($option['label']) ? $option['label'] : $option['count'].' x';
+                $default = is_string($option['label']) ? $option['label'] : $option['count'] . ' x';
                 $option_label = is_array($option['label']) && isset($option['label'][$cart->id_lang]) ?
                     $option['label'][$cart->id_lang] : $default;
 
@@ -72,7 +72,7 @@ class PayzenMultiPayment extends AbstractPayzenPayment
         $vars = parent::getTplVars($cart);
         $vars['payzen_multi_options'] = self::getAvailableOptions($cart);
 
-        $entry_mode = Configuration::get($this->prefix.'CARD_MODE');
+        $entry_mode = Configuration::get($this->prefix . 'CARD_MODE');
         $vars['payzen_multi_card_mode'] = $entry_mode;
 
         if ($entry_mode === '2') {
@@ -86,12 +86,12 @@ class PayzenMultiPayment extends AbstractPayzenPayment
     {
         $all_cards = PayzenTools::getSupportedMultiCardTypes();
 
-        // Get selected card types
-        $config_cards = Configuration::get($this->prefix.'PAYMENT_CARDS');
-        if (!empty($config_cards)) {
-            $cards = explode(';', $config_cards); // Card codes only
+        // Get selected card types.
+        $config_cards = Configuration::get($this->prefix . 'PAYMENT_CARDS');
+        if (! empty($config_cards)) {
+            $cards = explode(';', $config_cards); // Card codes only.
 
-            // Retrieve card labels
+            // Retrieve card labels.
             $avail_cards = array();
             foreach ($all_cards as $code => $label) {
                 if (in_array($code, $cards)) {
@@ -99,7 +99,7 @@ class PayzenMultiPayment extends AbstractPayzenPayment
                 }
             }
         } else {
-            // No card type selected, display all supported cards
+            // No card type selected, display all supported cards.
             $avail_cards = $all_cards;
         }
 
@@ -121,21 +121,21 @@ class PayzenMultiPayment extends AbstractPayzenPayment
 
         $config_first = $option['first'];
         $first = $config_first ? round(($config_first / 100) * $amount) : null;
-        $request->setMultiPayment(null /* to use already set amount */, $first, $option['count'], $option['period']);
+        $request->setMultiPayment(null /* To use already set amount. */, $first, $option['count'], $option['period']);
 
-        // Override cb contract
-        $request->set('contracts', ($option['contract']) ? 'CB='.$option['contract'] : null);
+        // Override cb contract.
+        $request->set('contracts', ($option['contract']) ? 'CB=' . $option['contract'] : null);
 
         if (isset($data['card_type']) && $data['card_type']) {
-            // Override payemnt_cards parameter
+            // Override payment_cards parameter.
             $request->set('payment_cards', $data['card_type']);
         } else {
-            $cards = Configuration::get($this->prefix.'PAYMENT_CARDS');
+            $cards = Configuration::get($this->prefix . 'PAYMENT_CARDS');
             $request->set('payment_cards', $cards);
         }
 
-        // Override title to append selected option
-        $request->set('order_info', 'module_id='.$this->name.'&option_id='.$data['opt']);
+        // Override title to append selected option.
+        $request->set('order_info', 'module_id=' . $this->name . '&option_id=' . $data['opt']);
 
         return $request;
     }

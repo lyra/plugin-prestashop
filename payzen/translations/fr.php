@@ -3,7 +3,7 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
@@ -25,11 +25,12 @@ $_MODULE['<{payzen}prestashop>payzen_19f45ab62d9b12f1d2e618df66c8e79a'] = 'Le mo
 $_MODULE['<{payzen}prestashop>payzen_78905f7fb28257f82302dc9e54674bf1'] = 'Vous devez désactiver le sous-module FacilyPay Oney pour l\'activer dans le paiement standard.';
 $_MODULE['<{payzen}prestashop>payzen_e07687e77666c7f6dc6392ad5065b242'] = 'Le champ « %s » est obligatoire.';
 $_MODULE['<{payzen}prestashop>payzen_19272b8c39222fc6c2efaea956f284e8'] = 'Un problème est survenu lors de l\'enregistrement du champ « %s ».';
-$_MODULE['<{payzen}prestashop>payzen_6913797be2be5ef2b88c5fe4a40cc67f'] = 'L\'envoi multiple est activé. Le paiement FacilyPay Oney ne peut être utilisé.';
-$_MODULE['<{payzen}prestashop>payzen_4c7fd4e78164fd8c7c942f71d800010b'] = 'Veuillez renseigner les montants minimum et maximum dans l\'onglet paiement FacilyPay Oney tel que convenu avec Banque Accord.';
+$_MODULE['<{payzen}prestashop>payzen_4d17f4df0eb78c11cc9a117f758fd119'] = 'L\'envoi multiple est activé. %s ne peut être utilisé.';
+$_MODULE['<{payzen}prestashop>payzen_6a14f84938192712c3c0b4f6a002e47a'] = 'Veuillez renseigner les montants minimum et maximum dans l\'onglet %s tel que convenu avec Banque Accord.';
+$_MODULE['<{payzen}prestashop>payzen_b505a142e0ed6323b3f1b0502038785c'] = '%s - Restriction sur le montant par groupe de clients';
 $_MODULE['<{payzen}prestashop>payzen_7008f87686916c028948d315f839f61d'] = 'Avertissement, veuillez augmenter les limites de POST et REQUEST dans le patch suhosin de PHP pour enregistrer correctement la configuration du module. La valeur recommandée est %s.';
 $_MODULE['<{payzen}prestashop>payzen_f256f832dfe80ba76cee02f6731f7e08'] = 'Avertissement, veuillez augmenter la valeur de la directive max_input_vars dans php.ini pour enregistrer correctement les configurations du module. La valeur recommandée est %s.';
-$_MODULE['<{payzen}prestashop>payzen_e534df2cb5cb910a52d6d39c45f10b44'] = 'Erreur de remboursement.';
+$_MODULE['<{payzen}prestashop>payzen_e534df2cb5cb910a52d6d39c45f10b44'] = 'Erreur de remboursement';
 $_MODULE['<{payzen}prestashop>payzen_5aa54fd75476b003b325dfa5465d6e92'] = 'Attention! N\'oubliez pas de configurer l\'association des options de livraison dans le module PayZen: CONFIGURATION GÉNÉRALE > OPTIONS ADDITIONNELLES.';
 $_MODULE['<{payzen}prestashop>payzen_9339edbdbed965d1b4d77834747ec411'] = 'Marque de carte choisie par l\'acheteur.';
 $_MODULE['<{payzen}prestashop>payzen_4e78d859310273cc53c19b16221b874f'] = 'Marque de carte par défaut utilisée.';
@@ -126,7 +127,9 @@ $_MODULE['<{payzen}prestashop>payzenchoozeopayment_23baf30b8f6002ec6f83a79271d1c
 $_MODULE['<{payzen}prestashop>payzenfullcbpayment_129b76792cea13dd8d0c2d61cf90d43f'] = 'Paiement avec Full CB';
 $_MODULE['<{payzen}prestashop>payzengroupedotherpayment_4c82df878d344136c0a801d767b126f6'] = 'Autres moyens de paiement';
 $_MODULE['<{payzen}prestashop>payzenmultipayment_d412c918bf6e2dd65e2dbcebcaf8a5a1'] = 'Paiement par carte bancaire en plusieurs fois';
-$_MODULE['<{payzen}prestashop>payzenoneypayment_ba23145ed5d391c93162698854dbee45'] = 'Paiement avec FacilyPay Oney';
+$_MODULE['<{payzen}prestashop>payzenoney34payment_b44e3703065aad220e22766051ddf633'] = '3 ou 4 fois Oney';
+$_MODULE['<{payzen}prestashop>payzenoney34payment_154d861d596de744efe3cb7e85852545'] = 'Paiement en 3 ou 4 fois Oney';
+$_MODULE['<{payzen}prestashop>payzenoneypayment_ba23145ed5d391c93162698854dbee45'] = 'Paiement avec FacilyPay Oney (Déprécié)';
 $_MODULE['<{payzen}prestashop>payzenotherpayment_1fd438949ab2066eb62ab9f745168d15'] = 'Paiement avec %s';
 $_MODULE['<{payzen}prestashop>payzenpaypalpayment_a9aeea3dd735b895bd65ef44ec168d8e'] = 'Paiement avec PayPal';
 $_MODULE['<{payzen}prestashop>payzensepapayment_15d066f02d65ddab4a4efb55a65bb5c0'] = 'Pays non supporté par le paiement SEPA.';
@@ -139,6 +142,8 @@ $_MODULE['<{payzen}prestashop>submit_687ae6ebf50a06125319516eee9f5fdb'] = 'Votre
 $_MODULE['<{payzen}prestashop>back_office_175a98d85602da7af8b62197b75704f1'] = 'Paiement standard - Restriction sur le montant par groupe de clients';
 $_MODULE['<{payzen}prestashop>back_office_d57aca7ebe91cb421fd25666cf11ebe0'] = 'Paiement en plusieurs fois - Restriction sur le montant par groupe de clients';
 $_MODULE['<{payzen}prestashop>back_office_46e0a9984f6dc97ee9cdd752c3ca09e3'] = 'Paiement en plusieurs fois - Options de paiement';
+$_MODULE['<{payzen}prestashop>back_office_ff0deacc2a16b13e7b7170423d612869'] = 'Paiement en 3 ou 4 fois Oney - Restriction sur le montant par groupe de clients';
+$_MODULE['<{payzen}prestashop>back_office_b3c62a9e42a94e59eeaf9668e6cec945'] = 'Paiement en 3 ou 4 fois Oney - Options de paiement';
 $_MODULE['<{payzen}prestashop>back_office_56136368d92fb1daadd803626e5d21ea'] = 'Paiement FacilyPay Oney - Restriction sur le montant par groupe de clients';
 $_MODULE['<{payzen}prestashop>back_office_eeef9ab9eb1d165130f9e155aa54cf8e'] = 'Paiement FacilyPay Oney - Options de paiement';
 $_MODULE['<{payzen}prestashop>back_office_68c09ee1fc31e75b1ce1ebee46512c42'] = 'Paiement Full CB - Restriction sur le montant par groupe de clients';
@@ -267,7 +272,7 @@ $_MODULE['<{payzen}prestashop>back_office_f7bcde3fb027af5c453a240ba8cdce3c'] = '
 $_MODULE['<{payzen}prestashop>back_office_3db0e38c8137caecea9dec60b43b068a'] = 'Configuration générale du module';
 $_MODULE['<{payzen}prestashop>back_office_e01f415a7b36032f990bcd35f3aaac00'] = 'Types de carte';
 $_MODULE['<{payzen}prestashop>back_office_e6decfa6f820d999f4dafc5018bdccdb'] = 'Le(s) type(s) de carte pouvant être utilisé(s) pour le paiement. Ne rien sélectionner pour utiliser la configuration de la plateforme.';
-$_MODULE['<{payzen}prestashop>back_office_78c2479f16e574a1d082def94dc2e0ef'] = 'Proposer FacilyPay Oney';
+$_MODULE['<{payzen}prestashop>back_office_78c2479f16e574a1d082def94dc2e0ef'] = 'Proposer FacilyPay Oney (Déprécié)';
 $_MODULE['<{payzen}prestashop>back_office_c9d00f52a63c4e53b8169a93adf0b57f'] = 'Sélectionner « Oui » pour proposer FacilyPay Oney dans le paiement standard. Attention, vous devez vous assurer que vous avez un contrat FacilyPay Oney.';
 $_MODULE['<{payzen}prestashop>back_office_eff3d253a81e17d249b12c1e40d53953'] = 'OPTIONS AVANCÉES';
 $_MODULE['<{payzen}prestashop>back_office_c239a367447ad7b1ae922a8e017f033d'] = 'Mode de saisie des données de la carte';
@@ -315,13 +320,14 @@ $_MODULE['<{payzen}prestashop>back_office_bd8ee4ec38df265aee78e99f37be36c9'] = '
 $_MODULE['<{payzen}prestashop>back_office_0e93ce3b9f389ff2a1293344b983dd9f'] = 'PAIEMENT CHOOZEO';
 $_MODULE['<{payzen}prestashop>back_office_2ec00e49c767ce07c7640dcf61d04c31'] = 'Méthode de paiement indisponible pour la liste de pays définie sur votre boutique PrestaShop.';
 $_MODULE['<{payzen}prestashop>back_office_009f24214ec5f02e74cd3f042ca6643a'] = 'Définir la restriction sur le montant pour chaque carte.';
-$_MODULE['<{payzen}prestashop>back_office_7d55b20a8de0d7dadf1e65cf856037e6'] = 'PAIEMENT FACILYPAY ONEY';
+$_MODULE['<{payzen}prestashop>back_office_7d55b20a8de0d7dadf1e65cf856037e6'] = 'PAIEMENT FACILYPAY ONEY (DÉPRÉCIÉ)';
 $_MODULE['<{payzen}prestashop>back_office_4951b2a4c7c29e0163b0c083ca191133'] = 'Activer la sélection des options';
 $_MODULE['<{payzen}prestashop>back_office_a1305e1dddf9b9bb969dd8a5a6ccbbae'] = 'Activer la sélection des options de paiement sur le site marchand.';
 $_MODULE['<{payzen}prestashop>back_office_ca0dbad92a874b2f69b549293387925e'] = 'Code';
 $_MODULE['<{payzen}prestashop>back_office_dcb66ff6e4a2517ade22183779939c9d'] = 'Taux';
-$_MODULE['<{payzen}prestashop>back_office_20768530efe0e51a0bf2053676c1df8d'] = 'Le code de l\'option tel que défini dans votre contrat FacilyPay Oney.';
+$_MODULE['<{payzen}prestashop>back_office_20768530efe0e51a0bf2053676c1df8d'] = 'Le code de l\'option tel que défini dans votre contrat Oney.';
 $_MODULE['<{payzen}prestashop>back_office_93403b1c86f89ec15054c97f95fc2dc9'] = 'Le taux d\'intérêt pour l\'option.';
+$_MODULE['<{payzen}prestashop>back_office_8c54f877ffb3db47cd981c8ac0bb7705'] = 'PAIEMENT EN 3 OU 4 FOIS ONEY';
 $_MODULE['<{payzen}prestashop>back_office_3850c6a168744811e9dfb2be196ee52c'] = 'PAIEMENT FULLCB';
 $_MODULE['<{payzen}prestashop>back_office_88d53497f4a92958c67c73a9f2f52df3'] = 'Plafond';
 $_MODULE['<{payzen}prestashop>back_office_cd6b82bf6a7de115b0e70898419ef02e'] = 'Configurer les options de paiement Full CB.';
@@ -349,6 +355,7 @@ $_MODULE['<{payzen}prestashop>back_office_efcf30cac96c7edd1e8eb1c6aa507a26'] = '
 $_MODULE['<{payzen}prestashop>back_office_42ed277b2d23ac14d5d6a9f2e8fe6141'] = 'Montant maximum pour proposer le moyen de paiement.';
 $_MODULE['<{payzen}prestashop>back_office_c9cc8cce247e49bae79f15173ce97354'] = 'Enregistrer';
 $_MODULE['<{payzen}prestashop>row_multi_option_f2a6c498fb90ee345d997f888fce3b18'] = 'Supprimer';
+$_MODULE['<{payzen}prestashop>row_oney34_option_f2a6c498fb90ee345d997f888fce3b18'] = 'Supprimer';
 $_MODULE['<{payzen}prestashop>row_oney_option_f2a6c498fb90ee345d997f888fce3b18'] = 'Supprimer';
 $_MODULE['<{payzen}prestashop>row_other_payment_means_option_0f07b61e5890550505f9678a3ec22315'] = 'Cliquer pour éditer';
 $_MODULE['<{payzen}prestashop>row_other_payment_means_option_9d6745bd1d93e25ecfdf111fdf923b06'] = 'Configuration générale du module';
@@ -414,7 +421,6 @@ $_MODULE['<{payzen}prestashop>payment_fullcb_b117c15650859690a7871852f0129684'] 
 $_MODULE['<{payzen}prestashop>payment_fullcb_99938b17c91170dfb0c2f3f8bc9f2a85'] = 'Payer';
 $_MODULE['<{payzen}prestashop>payment_multi_b9ce7425c6db26037794b726b7015198'] = 'Cliquez ici pour payer en plusieurs fois';
 $_MODULE['<{payzen}prestashop>payment_multi_c1d3bcb8ff5604a71a0593a731e613f0'] = 'Cliquez sur une option pour payer en plusieurs fois';
-$_MODULE['<{payzen}prestashop>payment_oney_4803e7f3699700fce00b93f24e48d23d'] = 'Cliquez ici pour payer avec FacilyPay Oney';
 $_MODULE['<{payzen}prestashop>payment_oney_b117c15650859690a7871852f0129684'] = 'Choisissez une option de paiement puis cliquez sur le bouton « Payer »';
 $_MODULE['<{payzen}prestashop>payment_oney_99938b17c91170dfb0c2f3f8bc9f2a85'] = 'Payer';
 $_MODULE['<{payzen}prestashop>payment_other_6a23ae1a65710f2c71f415a58cc954e4'] = 'Cliquez ici pour payer avec %s';

@@ -2,7 +2,7 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
@@ -17,7 +17,7 @@ $(function() {
             if ($('#cgv').is(':checked')) {
                 $('.payzen .kr-payment-button').removeAttr('disabled');
             } else {
-                // unchecked CVG, disable payment button
+                // Unchecked CVG, disable payment button.
                 $('.payzen .kr-payment-button').attr('disabled', 'disabled');
             }
         }
@@ -30,7 +30,7 @@ $(function() {
     }, 0);
 });
 
-var PAYZEN_DEFAULT_MESSAGES = ['CLIENT_300', 'CLIENT_304', 'CLIENT_502', 'PSP_539']; // use default messages for these errors
+var PAYZEN_DEFAULT_MESSAGES = ['CLIENT_300', 'CLIENT_304', 'CLIENT_502', 'PSP_539']; // Use default messages for these errors.
 var PAYZEN_RECOVERABLE_ERRORS = [
     'CLIENT_300', 'CLIENT_304', 'CLIENT_502',
     'PSP_539', 'CLIENT_001', 'CLIENT_101',
@@ -49,7 +49,7 @@ var payzenInitRestEvents = function() {
             $('#payzen_standard').data('submitted', false);
         }
 
-        // not recoverable error, reload page after a while
+        // Not recoverable error, reload page after a while.
         if (PAYZEN_RECOVERABLE_ERRORS.indexOf(e.errorCode) === -1) {
             setTimeout(function() {
                 window.location.reload();
@@ -71,9 +71,9 @@ var payzenInitRestEvents = function() {
     });
 };
 
-// translate error message
+// Translate error message.
 var payzenTranslate = function(code) {
-    var lang = PAYZEN_LANGUAGE; // global variable that contains current language
+    var lang = PAYZEN_LANGUAGE; // Global variable that contains current language.
     var messages = PAYZEN_ERROR_MESSAGES.hasOwnProperty(lang) ? PAYZEN_ERROR_MESSAGES[lang] : PAYZEN_ERROR_MESSAGES['en'];
 
     if (!messages.hasOwnProperty(code)) {

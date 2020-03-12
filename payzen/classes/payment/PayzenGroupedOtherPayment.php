@@ -3,12 +3,12 @@
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
- * @author    Lyra Network (https://www.lyra-network.com/)
+ * @author    Lyra Network (https://www.lyra.com/)
  * @copyright Lyra Network
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) {
+if (! defined('_PS_VERSION_')) {
     exit;
 }
 
@@ -30,11 +30,11 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
 
     public function isAvailable($cart)
     {
-        if (!parent::isAvailable($cart)) {
+        if (! parent::isAvailable($cart)) {
             return false;
         }
 
-        // Check available payment options
+        // Check available payment options.
         if (empty($this->other_payments)) {
             return false;
         }
@@ -48,7 +48,7 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
 
         $options = array();
         foreach ($this->other_payments as $payment) {
-            $title = is_array($payment['title']) ? $payment['title'][(int)$cart->id_lang] : $payment['title'];
+            $title = is_array($payment['title']) ? $payment['title'][(int) $cart->id_lang] : $payment['title'];
 
             $options[$payment['code']] = $title;
         }
@@ -63,7 +63,7 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
         $option = parent::getPaymentOption($cart);
 
         $inputs = $option->getInputs();
-        $inputs[] = array('type' => 'hidden', 'name' => 'payzen_payment_title', 'value' => $this->getTitle((int)$cart->id_lang));
+        $inputs[] = array('type' => 'hidden', 'name' => 'payzen_payment_title', 'value' => $this->getTitle((int) $cart->id_lang));
 
         $option->setInputs($inputs);
 
@@ -95,15 +95,15 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
 
         $request = parent::prepareRequest($cart, $data);
 
-        // Set payment card
+        // Set payment card.
         $request->set('payment_cards', $data['card_type']);
 
-        // Set validation mode
+        // Set validation mode.
         if ($validation_mode !== '-1') {
             $request->set('validation_mode', $validation_mode);
         }
 
-        // Set capture delay
+        // Set capture delay.
         if (is_numeric($capture_delay)) {
             $request->set('capture_delay', $capture_delay);
         }
