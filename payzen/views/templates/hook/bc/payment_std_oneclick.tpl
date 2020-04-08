@@ -7,7 +7,6 @@
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  *}
 
-<br /><br />
 <div style="padding-left: 40px;" id="payzen_oneclick_payment_description">
   <ul id="payzen_oneclick_payment_description_1">
     <li>
@@ -26,13 +25,13 @@
   <script type="text/javascript">
     function payzenOneclickPaymentSelect(paymentByIdentifier) {
       if (paymentByIdentifier) {
-        $("#payzen_oneclick_payment_description").show();
-        $("#payzen_standard").hide();
-        $("#payzen_payment_by_identifier").val("1");
+        $('#payzen_oneclick_payment_description').show();
+        $('#payzen_standard').hide();
+        $('#payzen_payment_by_identifier').val('1');
       } else {
-        $("#payzen_oneclick_payment_description").hide();
-        $("#payzen_standard").show();
-        $("#payzen_payment_by_identifier").val("0");
+        $('#payzen_oneclick_payment_description').hide();
+        $('#payzen_standard').show();
+        $('#payzen_payment_by_identifier').val('0');
       }
     }
   </script>
@@ -53,57 +52,26 @@
   <script type="text/javascript">
     function payzenOneclickPaymentSelect(paymentByIdentifier) {
       if (paymentByIdentifier) {
-        $("#payzen_oneclick_payment_description_1").show();
-        $("#payzen_oneclick_payment_description_2").hide()
-        $("#payzen_payment_by_identifier").val("1");
+        $('#payzen_oneclick_payment_description_1').show();
+        $('#payzen_oneclick_payment_description_2').hide()
+        $('#payzen_payment_by_identifier').val('1');
       } else {
-        $("#payzen_oneclick_payment_description_1").hide();
-        $("#payzen_oneclick_payment_description_2").show();
-        $("#payzen_payment_by_identifier").val("0");
+        $('#payzen_oneclick_payment_description_1').hide();
+        $('#payzen_oneclick_payment_description_2').show();
+        $('#payzen_payment_by_identifier').val('0');
       }
 
       {if ($payzen_std_card_data_mode == '5')}
-        payzenUpdateRestToken();
-        setTimeout(function () {
-          payzenInitRestEvents();
-        }, 200);
+        $('.payzen .kr-form-error').html('');
+
+        if ($('#payzen_payment_by_identifier').val() == '1') {
+          var token = "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}";
+        } else {
+          var token = "{$payzen_rest_form_token|escape:'html':'UTF-8'}";
+        }
+
+        KR.setFormConfig({ formToken: token });
       {/if}
-    }
-
-    function payzenUpdateRestToken() {
-      KR.removeForms();
-
-      if ($("#payzen_payment_by_identifier").val() == '1') {
-        var token = "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}";
-      } else {
-        var token = "{$payzen_rest_form_token|escape:'html':'UTF-8'}";
-      }
-
-      var isPopin = document.getElementsByClassName('kr-popin-button');
-      if (isPopin.length !== 0) {
-        var button =  '<button type="button" id="payzen_hidden_button" class="kr-payment-button"></button>';
-      } else {
-        var button = '<div style="display: none;">'
-                   + '   <button type="button" id="payzen_hidden_button" class="kr-payment-button"></button>'
-                   + '</div>';
-      }
-
-      $("#payzen_standard_rest_wrapper").html(
-          ' <div class="payzen kr-embedded" {if $payzen_rest_popin} kr-popin{/if} kr-form-token="' + token + '" >'
-          + '  <div class="kr-pan"></div>'
-          + '  <div class="kr-expiry"></div>'
-          + '  <div class="kr-security-code"></div>'
-
-          + button
-
-          + '  <div class="kr-field processing" style="display: none; border: none !important;">'
-          + '      <div style="background-image: url({$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/loading_big.gif);'
-          + '                  margin: 0 auto; display: block; height: 35px; background-position: center;'
-          + '                  background-repeat: no-repeat; background-size: 35px;">'
-          + '      </div>'
-          + '   </div>'
-          + '   <div class="kr-form-error"></div>'
-          + '</div>');
     }
     </script>
 {/if}

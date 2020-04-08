@@ -25,6 +25,7 @@
   {/if}
     <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
     {if $payzen_saved_identifier}
+      <br /><br />
       {include file="./payment_std_oneclick.tpl"}
     {/if}
 
