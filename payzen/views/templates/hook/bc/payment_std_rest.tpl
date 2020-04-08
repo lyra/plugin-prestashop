@@ -22,7 +22,7 @@
     <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
 
     <div id="payzen_standard_rest_wrapper" style="padding-top: 10px; padding-left: 40px;">
-      <div class="kr-embedded" {if $payzen_rest_popin} kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
+      <div class="kr-embedded"{if $payzen_rest_popin} kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
         <div class="kr-pan"></div>
         <div class="kr-expiry"></div>
         <div class="kr-security-code"></div>
@@ -30,9 +30,7 @@
         {if !$payzen_rest_popin}
           <div style="display: none;">
         {/if}
-
         <button type="button" id="payzen_hidden_button" class="kr-payment-button"></button>
-
         {if !$payzen_rest_popin}
           </div>
         {/if}

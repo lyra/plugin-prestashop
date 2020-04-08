@@ -22,6 +22,7 @@
 {/if}
 
     {if $payzen_saved_identifier}
+      <br /><br />
       {include file="./payment_std_oneclick.tpl"}
       <input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" />
     {/if}

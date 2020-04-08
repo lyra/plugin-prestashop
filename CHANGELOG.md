@@ -1,3 +1,7 @@
+1.13.1, 2020-04-07:
+- Restore compatibility with PHP v5.3.
+- [embedded] Bugfix: Payment fields error relative to new JavaScript client library.
+
 1.13.0, 2020-03-04:
 - Bug fix: Fix amount issue relative to multiple partial refunds.
 - Bug fix: Shipping costs not included in the refunded amount through the PrestaShop backend.
