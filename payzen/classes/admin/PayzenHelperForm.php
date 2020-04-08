@@ -88,7 +88,7 @@ class PayzenHelperForm
         foreach (PayzenTools::$submodules as $key => $module) {
             $module_class_name = 'Payzen' . $module.'Payment';
             $instance_module = new $module_class_name();
-            if (method_exists($instance_module, 'getCountries') && ! empty($instance_module->getCountries())) {
+            if (method_exists($instance_module, 'getCountries') && $instance_module->getCountries()) {
                 $submodule_specific_countries = $instance_module->getCountries();
                 foreach ($submodule_specific_countries as $country) {
                     if (isset($countryList['ps_countries'][$country])) {

@@ -11,7 +11,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
 <section id="payzen_standard_rest_wrapper" style="margin-bottom: 2rem;">
-  <div class="payzen kr-embedded" {if $payzen_rest_popin} kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
+  <div class="payzen kr-embedded"{if $payzen_rest_popin} kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
      <div class="kr-pan"></div>
      <div class="kr-expiry"></div>
      <div class="kr-security-code"></div>
@@ -30,6 +30,7 @@
                   background-repeat: no-repeat; background-size: 35px;">
        </div>
      </div>
+
      <div class="kr-form-error"></div>
   </div>
 </section>
