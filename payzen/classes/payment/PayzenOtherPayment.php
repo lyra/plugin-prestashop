@@ -163,4 +163,17 @@ class PayzenOtherPayment extends AbstractPayzenPayment
 
         return $enabled_options;
     }
+
+    public static function getMethodByCode($code)
+    {
+        $payment_means = self::getAvailablePaymentMeans();
+
+        foreach ($payment_means as $option) {
+            if ($option['code'] === $code) {
+                return $option;
+            }
+        }
+
+        return null;
+    }
 }

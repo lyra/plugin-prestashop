@@ -1,3 +1,10 @@
+1.13.2, 2020-05-20:
+- [embedded] Manage new metadata field format returned in REST API IPN.
+- Bug fix: Fix sent data according to new Transaction/Update REST WS.
+- Send PrestaShop username and IP as a comment on refund WS calls.
+- Improve some plugin translations.
+- Improve redirection to gateway page.
+
 1.13.1, 2020-04-07:
 - Restore compatibility with PHP v5.3.
 - [embedded] Bugfix: Payment fields error relative to new JavaScript client library.

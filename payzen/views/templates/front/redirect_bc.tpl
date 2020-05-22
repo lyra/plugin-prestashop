@@ -12,7 +12,7 @@
   {include file="$tpl_dir./breadcrumb.tpl"}
 {/if}
 
-  <h1>{l s='Redirection to payment gateway' mod='payzen'}</h1>
+<h1 style="margin-bottom: 20px;">{l s='Redirection to payment gateway' mod='payzen'}</h1>
 
 {assign var='current_step' value='payment'}
 {include file="$tpl_dir./order-steps.tpl"}

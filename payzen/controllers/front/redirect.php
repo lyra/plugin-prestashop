@@ -128,6 +128,8 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         $payment = null;
         $data = array();
 
+        $option = '';
+
         switch ($type) {
             case 'standard':
                 $payment = new PayzenStandardPayment();
@@ -150,24 +152,35 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
                 $data['card_type'] = Tools::getValue('payzen_card_type');
 
                 $payment = new PayzenMultiPayment();
+                $options = PayzenMultiPayment::getAvailableOptions($cart);
+                $option = ' (' . $options[$data['opt']]['count'] . ' x)';
                 break;
 
             case 'oney':
                 $payment = new PayzenOneyPayment();
 
                 $data['opt'] = Tools::getValue('payzen_oney_option');
+
+                $options = PayzenOneyPayment::getAvailableOptions($cart);
+                $option = ' (' . $options[$data['opt']]['count'] . ' x)';
                 break;
 
             case 'oney34':
                 $payment = new PayzenOney34Payment();
 
                 $data['opt'] = Tools::getValue('payzen_oney34_option');
+
+                $options = PayzenOney34Payment::getAvailableOptions($cart);
+                $option = ' (' . $options[$data['opt']]['count'] . ' x)';
                 break;
 
             case 'fullcb':
                 $payment = new PayzenFullcbPayment();
 
                 $data['card_type'] = Tools::getValue('payzen_card_type');
+
+                $options = PayzenFullcbPayment::getAvailableOptions($cart);
+                $option = ' (' . $options[$data['card_type']]['count'] . ' x)';
                 break;
 
             case 'ancv':
@@ -193,7 +206,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
             case 'other':
                 $code = Tools::getValue('payzen_payment_code');
-                $label = Tools::getValue('payzen_payment_label');
+                $label = Tools::getValue('payzen_payment_title');
 
                 $payment = new PayzenOtherPayment();
                 $payment->init($code, $label);
@@ -239,21 +252,8 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         $this->context->smarty->assign('payzen_url', $request->get('platform_url'));
         $this->context->smarty->assign('payzen_logo', _MODULE_DIR_ . 'payzen/views/img/' . $payment->getLogo());
 
-        // Parse order_info parameter.
-        $parts = explode('&', $request->get('order_info'));
-
         // Recover payment method title.
-        $module_id = Tools::substr($parts[0], Tools::strlen('module_id='));
-        $class_name = 'Payzen' . Tools::ucfirst(str_replace('_', '', $module_id)) . 'Payment';
-        $class_obj = new $class_name();
-        $title = $class_obj->getTitle((int) $cart->id_lang);
-        if (isset($parts[1])) {
-            $option_id = Tools::substr($parts[1], Tools::strlen('option_id='));
-            $multi_options = $class_obj::getAvailableOptions($cart);
-            $option = $multi_options[$option_id];
-            $title .= ' (' . $option['count'] . ' x)';
-        }
-
+        $title = $payment->getTitle((int) $cart->id_lang) . $option;
         $this->context->smarty->assign('payzen_title', $title);
 
         if ($this->iframe) {
