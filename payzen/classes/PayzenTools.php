@@ -29,7 +29,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.13.1';
+    private static $PLUGIN_VERSION = '1.13.2';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -753,7 +753,9 @@ class PayzenTools
             $response['vads_order_id'] = self::getProperty($orderDetails, 'orderId');
         }
 
-        if (($metadata = self::getProperty($transaction, 'metadata')) && ($orderInfo = self::getProperty($metadata, 'orderInfo'))) {
+        if ($metadata = self::getProperty($transaction, 'metadata')) {
+            $orderInfo = key_exists('orderInfo', $metadata) ? self::getProperty($metadata, 'orderInfo') :
+                self::getProperty($metadata, 'info');
             $response['vads_order_info'] = $orderInfo;
         }
 
@@ -865,5 +867,11 @@ class PayzenTools
 
         // Return true if calculated hash and sent hash are the same.
         return ($hash == $data['kr-hash']);
+    }
+
+    public static function ucClassName($name)
+    {
+        $parts = explode('_', $name);
+        return implode('', array_map('Tools::ucfirst', $parts));
     }
 }
