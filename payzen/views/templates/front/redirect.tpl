@@ -11,14 +11,15 @@
 {block name='content'}
   <section id="content">
     <div class="row">
-      <div class="col-md-8">
-        <section id="payzen_content" class="checkout-step -current">
-          <h1 class="step-title h3">
-            <span class="step-number"></span>
+      <div class="col-xs-12 col-lg-8">
+        <section id="payzen_content" class="checkout-step -current" style="text-align: center;">
+          <h1 class="step-title h3" style="margin-bottom: 20px;">
             {l s='Redirection to payment gateway' mod='payzen'}
           </h1>
 
           <div class="content">
+            <h3>{$payzen_title|escape:'html':'UTF-8'}</h3>
+
             <form action="{$payzen_url|escape:'html':'UTF-8'}" method="post" id="payzen_form" name="payzen_form" onsubmit="payzenDisablePayment();">
               {foreach from=$payzen_params key='key' item='value'}
                 <input type="hidden" name="{$key|escape:'html':'UTF-8'}" value="{$value|escape:'html':'UTF-8'}" />

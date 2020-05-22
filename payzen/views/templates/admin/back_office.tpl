@@ -766,7 +766,7 @@
           <label for="PAYZEN_STD_REST_ATTEMPTS">{l s='Payment attempts number' mod='payzen'}</label>
           <div class="margin-form">
             <input type="text" id="PAYZEN_STD_REST_ATTEMPTS" name="PAYZEN_STD_REST_ATTEMPTS" value="{$PAYZEN_STD_REST_ATTEMPTS|escape:'html':'UTF-8'}" style="width: 150px;" />
-            <p>{l s='Maximum number of payment retries after a failed payment (between 0 and 10). Leave blank to use gateway configuration.' mod='payzen'}</p>
+            <p>{l s='Maximum number of payment retries after a failed payment (between 0 and 9). If blank, the gateway default value is 3.' mod='payzen'}</p>
           </div>
           <p></p>
 
@@ -928,38 +928,38 @@
             <button type="button" id="payzen_multi_options_btn"{if !empty($PAYZEN_MULTI_OPTIONS)} style="display: none;"{/if} onclick="javascript: payzenAddMultiOption(true, '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
 
             <table id="payzen_multi_options_table"{if empty($PAYZEN_MULTI_OPTIONS)} style="display: none;"{/if} class="table" cellpadding="10" cellspacing="0">
-	          <thead>
-	            <tr>
-	              <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
-	              {if in_array('CB', $payzen_multi_payment_cards_options)}
-	                <th style="font-size: 10px;">{l s='Contract' mod='payzen'}</th>
-	              {/if}
-	              <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Period' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='1st payment' mod='payzen'}</th>
-	              <th style="font-size: 10px;"></th>
-	            </tr>
-	          </thead>
+              <thead>
+                <tr>
+                  <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
+                  {if in_array('CB', $payzen_multi_payment_cards_options)}
+                    <th style="font-size: 10px;">{l s='Contract' mod='payzen'}</th>
+                  {/if}
+                  <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Period' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='1st payment' mod='payzen'}</th>
+                  <th style="font-size: 10px;"></th>
+                </tr>
+              </thead>
 
-	          <tbody>
-	            {foreach from=$PAYZEN_MULTI_OPTIONS key="key" item="option"}
-	              {include file="./row_multi_option.tpl"
-	                languages=$prestashop_languages
-	                current_lang=$prestashop_lang
-	                key=$key
-	                option=$option
-	              }
-	            {/foreach}
-	
-	            <tr id="payzen_multi_option_add">
-	              <td colspan="{if in_array('CB', $payzen_multi_payment_cards_options)}7{else}6{/if}"></td>
-	              <td>
-	                <button type="button" onclick="javascript: payzenAddMultiOption(false, '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
-	              </td>
-	            </tr>
-	          </tbody>
+              <tbody>
+                {foreach from=$PAYZEN_MULTI_OPTIONS key="key" item="option"}
+                  {include file="./row_multi_option.tpl"
+                    languages=$prestashop_languages
+                    current_lang=$prestashop_lang
+                    key=$key
+                    option=$option
+                  }
+                {/foreach}
+
+                <tr id="payzen_multi_option_add">
+                  <td colspan="{if in_array('CB', $payzen_multi_payment_cards_options)}7{else}6{/if}"></td>
+                  <td>
+                    <button type="button" onclick="javascript: payzenAddMultiOption(false, '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
+                  </td>
+                </tr>
+              </tbody>
             </table>
             <p>
               {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
@@ -1139,7 +1139,7 @@
       </div>
     {/if}
 
-	{if $payzen_plugin_features['oney']}
+    {if $payzen_plugin_features['oney']}
       <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
         <a href="#">{l s='PAYMENT IN 3 OR 4 TIMES ONEY' mod='payzen'}</a>
       </h4>
@@ -1241,7 +1241,7 @@
 
         <fieldset>
           <legend>{l s='PAYMENT OPTIONS' mod='payzen'}</legend>
-          
+
           <label>{l s='Payment options' mod='payzen'}</label>
           <div class="margin-form">
             <script type="text/html" id="payzen_oney34_row_option">
@@ -1257,36 +1257,36 @@
             <button type="button" id="payzen_oney34_options_btn"{if !empty($PAYZEN_ONEY34_OPTIONS)} style="display: none;"{/if} onclick="javascript: payzenAddOneyOption(true, '34', '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
 
             <table id="payzen_oney34_options_table"{if empty($PAYZEN_ONEY34_OPTIONS)} style="display: none;"{/if} class="table" cellpadding="10" cellspacing="0">
-	          <thead>
-	            <tr>
-	              <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Code' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
-	              <th style="font-size: 10px;">{l s='Rate' mod='payzen'}</th>
-	              <th style="font-size: 10px;"></th>
-	            </tr>
-	          </thead>
-	
-	          <tbody>
-	            {foreach from=$PAYZEN_ONEY34_OPTIONS key="key" item="option"}
-	              {include file="./row_oney_option.tpl"
-	                languages=$prestashop_languages
-	                current_lang=$prestashop_lang
-	                key=$key
-	                option=$option
-	                suffix='34'
-	              }
-	            {/foreach}
-	
-	            <tr id="payzen_oney34_option_add">
-	              <td colspan="6"></td>
-	              <td>
-	                <button type="button" onclick="javascript: payzenAddOneyOption(false, '34', '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
-	              </td>
-	            </tr>
-	          </tbody>
+              <thead>
+                <tr>
+                  <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Code' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Rate' mod='payzen'}</th>
+                  <th style="font-size: 10px;"></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {foreach from=$PAYZEN_ONEY34_OPTIONS key="key" item="option"}
+                  {include file="./row_oney_option.tpl"
+                    languages=$prestashop_languages
+                    current_lang=$prestashop_lang
+                    key=$key
+                    option=$option
+                    suffix='34'
+                  }
+                {/foreach}
+
+                <tr id="payzen_oney34_option_add">
+                  <td colspan="6"></td>
+                  <td>
+                    <button type="button" onclick="javascript: payzenAddOneyOption(false, '34', '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
+                  </td>
+                </tr>
+              </tbody>
             </table>
             <p>
               {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
@@ -1433,36 +1433,36 @@
               <button type="button" id="payzen_oney_options_btn"{if !empty($PAYZEN_ONEY_OPTIONS)} style="display: none;"{/if} onclick="javascript: payzenAddOneyOption(true, '', '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
 
               <table id="payzen_oney_options_table"{if empty($PAYZEN_ONEY_OPTIONS)} style="display: none;"{/if} class="table" cellpadding="10" cellspacing="0">
-	            <thead>
-	              <tr>
-	                <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
-	                <th style="font-size: 10px;">{l s='Code' mod='payzen'}</th>
-	                <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
-	                <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
-	                <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
-	                <th style="font-size: 10px;">{l s='Rate' mod='payzen'}</th>
-	                <th style="font-size: 10px;"></th>
-	              </tr>
-	            </thead>
-	
-	            <tbody>
-	              {foreach from=$PAYZEN_ONEY_OPTIONS key="key" item="option"}
-	                {include file="./row_oney_option.tpl"
-	                  languages=$prestashop_languages
-	                  current_lang=$prestashop_lang
-	                  key=$key
-	                  option=$option
-	                  suffix=''
-	                }
-	              {/foreach}
-	
-	              <tr id="payzen_oney_option_add">
-	                <td colspan="6"></td>
-	                <td>
-	                  <button type="button" onclick="javascript: payzenAddOneyOption(false, '', '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
-	                </td>
-	              </tr>
-	            </tbody>
+                <thead>
+                  <tr>
+                    <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
+                    <th style="font-size: 10px;">{l s='Code' mod='payzen'}</th>
+                    <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
+                    <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
+                    <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
+                    <th style="font-size: 10px;">{l s='Rate' mod='payzen'}</th>
+                    <th style="font-size: 10px;"></th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {foreach from=$PAYZEN_ONEY_OPTIONS key="key" item="option"}
+                    {include file="./row_oney_option.tpl"
+                      languages=$prestashop_languages
+                      current_lang=$prestashop_lang
+                      key=$key
+                      option=$option
+                      suffix=''
+                    }
+                  {/foreach}
+
+                  <tr id="payzen_oney_option_add">
+                    <td colspan="6"></td>
+                    <td>
+                      <button type="button" onclick="javascript: payzenAddOneyOption(false, '', '{l s='Delete' mod='payzen'}');">{l s='Add' mod='payzen'}</button>
+                    </td>
+                  </tr>
+                </tbody>
               </table>
               <p>
                 {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
@@ -1484,7 +1484,7 @@
         <div class="clear">&nbsp;</div>
       </div>
     {/if}
-    
+
     {if $payzen_plugin_features['fullcb']}
       <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
         <a href="#">{l s='FULLCB PAYMENT' mod='payzen'}</a>
@@ -2045,7 +2045,7 @@
             input_value=$PAYZEN_OTHER_TITLE
             style="width: 330px;"
           }
-          <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
+          <p>{l s='Method title to display on payment means page. Used only if « Regroup payment means » option is enabled.' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>

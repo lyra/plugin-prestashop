@@ -51,12 +51,6 @@ if (PayzenTools::checkRestIpnValidity()) {
 
     require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
 
-    // Patch for unrecieved metadata field.
-    if (! isset($data['vads_order_info'])) {
-        $payment = new PayzenStandardPayment();
-        $data['vads_order_info'] = $payment->getTitle($cart->id_lang);
-    }
-
     /** @var PayzenResponse $response */
     $response = new PayzenResponse($data, null, null, null);
 } elseif (PayzenTools::checkFormIpnValidity()) {

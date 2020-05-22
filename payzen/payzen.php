@@ -52,7 +52,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.13.1';
+        $this->version = '1.13.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1485,10 +1485,7 @@ class Payzen extends PaymentModule
 
             $amountInCents = $currency->convertAmountToInteger($amount);
 
-            // Retrieve payment method.
-            $parts = explode('&', $getPaymentDetails['answer']['metadata']['orderInfo']);
-            $method = Tools::substr($parts[0], Tools::strlen('module_id='));
-            $moduleId = array_search($method, PayzenTools::$submodules);
+            $commentText = $this->getUserInfo();
 
             if ($transStatus === 'CAPTURED') { // Transaction captured, we can do refund.
                 // Get already refunded amount.
@@ -1509,7 +1506,8 @@ class Payzen extends PaymentModule
                 $requestData = array(
                     'uuid' => $uuid,
                     'amount' => $amountInCents,
-                    'resolutionMode' => 'REFUND_ONLY'
+                    'resolutionMode' => 'REFUND_ONLY',
+                    'comment' => $commentText
                 );
 
                 $refundPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
@@ -1546,7 +1544,8 @@ class Payzen extends PaymentModule
                 if ($amountInCents >= $transAmount) { // Transaction cancel.
                     $requestData = array(
                         'uuid' => $uuid,
-                        'resolutionMode' => 'CANCELLATION_ONLY'
+                        'resolutionMode' => 'CANCELLATION_ONLY',
+                        'comment' => $commentText
                     );
 
                     $cancelPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
@@ -1555,32 +1554,14 @@ class Payzen extends PaymentModule
                     $this->logger->logInfo("Online payment cancel for order #{$order->id} is successful.");
                 } else {
                     // Partial transaction cancel, call update WS.
-                    $timestamp = time();
-
-                    $captureDelay = Configuration::get('PAYZEN_' . $moduleId . '_DELAY'); // Get submodule specific param.
-                    if (! is_numeric($captureDelay)) {
-                        // Get general param.
-                        $captureDelay = Configuration::get('PAYZEN_CAPTURE_DELAY');
-                    }
-
-                    $expectedCaptureDate = is_numeric($captureDelay) ? new DateTime('@' . strtotime("+$captureDelay days", $timestamp)) : null;
-
-                    $validationMode = Configuration::get('PAYZEN_' . $moduleId . '_VALIDATION'); // Get submodule specific param.
-                    if ($validationMode === '-1') {
-                        // Get general param.
-                        $validationMode = Configuration::get('PAYZEN_VALIDATION_MODE');
-                    }
-
-                    if ($validationMode !== '') {
-                        $validationMode = ($validationMode == '1') ? 'YES' : 'NO';
-                    }
 
                     $requestData = array(
                         'uuid' => $uuid,
-                        'cardUpdate.amount' => $amountInCents,
-                        'cardUpdate.currency' => $currency->getAlpha3(),
-                        'cardUpdate.expectedCaptureDate' => $expectedCaptureDate,
-                        'cardUpdate.manualValidation' => $validationMode
+                        'cardUpdate' => array(
+                            'amount' => $amountInCents,
+                            'currency' => $currency->getAlpha3()
+                        ),
+                        'comment' => $commentText
                     );
 
                     $updatePaymentResponse = $client->post('V4/Transaction/Update', json_encode($requestData));
@@ -1657,6 +1638,14 @@ class Payzen extends PaymentModule
         return $private_key;
     }
 
+    private function getUserInfo()
+    {
+        $commentText = 'PrestaShop user: ' . $this->context->employee->email;
+        $commentText .= ' ; IP address: ' . Tools::getRemoteAddr();
+
+        return $commentText;
+    }
+
     /**
      * Before (modifying or new) carrier save in backend.
      *
@@ -1713,18 +1702,34 @@ class Payzen extends PaymentModule
 
         // Parse order_info parameter.
         $parts = explode('&', $response->get('order_info'));
-
-        // Recover payment method title.
         $module_id = Tools::substr($parts[0], Tools::strlen('module_id='));
-        $class_name = 'Payzen' . Tools::ucfirst(str_replace('_', '', $module_id)) . 'Payment';
-        $class_obj = new $class_name();
-        $title = $class_obj->getTitle((int) $cart->id_lang);
+
+        // Recover used payment method.
+        $class_name = 'Payzen' . PayzenTools::ucClassName($module_id) . 'Payment';
+        if (! $module_id || ! class_exists($class_name)) {
+            $this->logger->logWarning("Invalid submodule identifier ($module_id) received from gateway for cart #{$cart->id}.");
+
+            // Use standard submodule as default.
+            $class_name = 'PayzenStandardPayment';
+        }
+
+        $payment = new $class_name();
+
+        // Specific case of "Other payment means" submodule.
+        if (is_a($payment, 'PayzenOtherPayment')) {
+            $method = PayzenOtherPayment::getMethodByCode($response->get('card_brand'));
+            $payment->init($method['code'], $method['title']);
+        }
+
+        $title = $payment->getTitle((int) $cart->id_lang);
 
         if (isset($parts[1])) {
+            // This is multiple payment submodule.
             $option_id = Tools::substr($parts[1], Tools::strlen('option_id='));
-            $multi_options = $class_obj::getAvailableOptions($cart);
+
+            $multi_options = $payment::getAvailableOptions();
             $option = $multi_options[$option_id];
-            $title .= ' (' . $option['count'] . ' x)';
+            $title .= $option ? ' (' . $option['count'] . ' x)' : '';
         }
 
         // Call payment module validateOrder.
@@ -1732,7 +1737,7 @@ class Payzen extends PaymentModule
             $cart->id,
             $state,
             $paid_total,
-            $title, // Title defined in admin panel and sent to gateway as order_info.
+            $title, // Title defined in admin panel.
             null, // $message.
             array(), // $extraVars.
             $currency_id, // $currency_special.
@@ -2087,6 +2092,9 @@ class Payzen extends PaymentModule
 
             // Recover module_id.
             $module_id = Tools::substr($parts[0], Tools::strlen('module_id='));
+            if (! $module_id) {
+                $module_id = 'standard';
+            }
 
             $customers_config[$customer->id][$module_id] = array(
                 'n' => $response->get('identifier'),
