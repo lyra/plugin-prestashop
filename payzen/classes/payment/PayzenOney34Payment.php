@@ -71,13 +71,13 @@ class PayzenOney34Payment extends AbstractPayzenPayment
         $billing_address = new Address((int) $cart->id_address_invoice);
 
         // Check address validity according to 3 or 4 times Oney payment specifications.
-        $errors = PayzenTools::checkAddress($billing_address, 'billing', 'oney');
+        $errors = PayzenTools::checkAddress($billing_address, 'billing', 'oney34');
 
         if (empty($errors)) {
             // Billing address is valid, check delivery address.
             $delivery_address = new Address((int) $cart->id_address_delivery);
 
-            $errors = PayzenTools::checkAddress($delivery_address, 'delivery', 'oney');
+            $errors = PayzenTools::checkAddress($delivery_address, 'delivery', 'oney34');
         }
 
         return $errors;

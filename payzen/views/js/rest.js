@@ -58,7 +58,10 @@ var payzenInitRestEvents = function() {
 
         var msg = '';
         if (PAYZEN_DEFAULT_MESSAGES.indexOf(e.errorCode) > -1) {
-            msg = e.errorMessage + (e.errorMessage.endsWith('.') ? '' : '.');
+            msg = e.errorMessage;
+            var endsWithDot = (msg.lastIndexOf('.') == (msg.length - 1) && msg.lastIndexOf('.') >= 0);
+
+            msg += (endsWithDot ? '' : '.');
         } else {
             msg = payzenTranslate(e.errorCode);
         }
