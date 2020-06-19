@@ -1,3 +1,11 @@
+1.13.3, 2020-06-19:
+- [embedded] Bug fix: Compatibility of payment with embedded fields with Internet Explorer 11.
+- Bug fix: Possibility to make refunds for a payment with many attempts.
+- [embedded] Bug fix: Fix JS error if payment token not created.
+- Bug fix: Delete double invoice entry in ps_order_invoice_payment table.
+- Improve refund payments feature.
+- [oney] Phone numbers are mandatory for Oney payment method.
+
 1.13.2, 2020-05-20:
 - [embedded] Manage new metadata field format returned in REST API IPN.
 - Bug fix: Fix sent data according to new Transaction/Update REST WS.
@@ -7,7 +15,7 @@
 
 1.13.1, 2020-04-07:
 - Restore compatibility with PHP v5.3.
-- [embedded] Bugfix: Payment fields error relative to new JavaScript client library.
+- [embedded] Bug fix: Payment fields error relative to new JavaScript client library.
 
 1.13.0, 2020-03-04:
 - Bug fix: Fix amount issue relative to multiple partial refunds.

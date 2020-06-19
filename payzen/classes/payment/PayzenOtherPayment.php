@@ -121,9 +121,9 @@ class PayzenOtherPayment extends AbstractPayzenPayment
             return $this->payment_title;
         } elseif (is_array($this->payment_title) && isset($this->payment_title[$lang])) {
             return $this->payment_title[$lang];
-        } else {
-            return $this->getDefaultTitle();
         }
+
+        return $this->getDefaultTitle();
     }
 
     protected function getDefaultTitle()

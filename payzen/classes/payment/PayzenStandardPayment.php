@@ -327,7 +327,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                 $return = $result['answer']['formToken'];
             }
         } catch (Exception $e) {
-            PayzenTools::getLogger()->logError($e->getMessage());
+            PayzenTools::getLogger()->logError("{$e->getMessage() }" . ($e->getCode() > 0 ? ' (' . $e->getCode() . ').' : ''));
         }
 
         return $return;

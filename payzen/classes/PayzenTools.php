@@ -29,7 +29,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.13.2';
+    private static $PLUGIN_VERSION = '1.13.3';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -46,7 +46,7 @@ class PayzenTools
     public static $multi_lang_fields = array(
         'PAYZEN_REDIRECT_SUCCESS_M', 'PAYZEN_REDIRECT_ERROR_M',
         'PAYZEN_STD_TITLE', 'PAYZEN_MULTI_TITLE', 'PAYZEN_ONEY_TITLE', 'PAYZEN_ONEY34_TITLE', 'PAYZEN_ANCV_TITLE',
-        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_CHOOZEO_TITLE', 'PAYZEN_THEME_CONFIG',
+        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_THEME_CONFIG',
         'PAYZEN_FULLCB_TITLE', 'PAYZEN_OTHER_TITLE'
     );
 
@@ -55,11 +55,19 @@ class PayzenTools
     public static $group_amount_fields = array(
         'PAYZEN_STD_AMOUNTS', 'PAYZEN_MULTI_AMOUNTS', 'PAYZEN_ANCV_AMOUNTS',
         'PAYZEN_ONEY_AMOUNTS', 'PAYZEN_ONEY34_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS',
-        'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_CHOOZEO_AMOUNTS',
-        'PAYZEN_CHOOZEO_OPTIONS', 'PAYZEN_FULLCB_AMOUNTS', 'PAYZEN_3DS_MIN_AMOUNT', 'PAYZEN_OTHER_AMOUNTS'
+        'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_FULLCB_AMOUNTS',
+        'PAYZEN_3DS_MIN_AMOUNT', 'PAYZEN_OTHER_AMOUNTS'
     );
 
     public static $address_regex = array(
+        'oney34' => array(
+            'name' => "#^[A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,63}$#ui",
+            'street' => "#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '.,-]{1,127}$#ui",
+            'zip' => '#^[0-9]{5}$#',
+            'city' => "#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,127}$#ui",
+            'country' => '#^FR|GP|MQ|GF|RE|YT$#i',
+            'phone' => '#^[0-9]{10}$#'
+        ),
         'oney' => array(
             'name' => "#^[A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,63}$#ui",
             'street' => "#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '.,-]{1,127}$#ui",
@@ -86,7 +94,6 @@ class PayzenTools
         'embedded' => true,
 
         'multi' => true,
-        'choozeo' => false,
         'oney' => true,
         'ancv' => true,
         'sepa' => true,
@@ -99,7 +106,6 @@ class PayzenTools
     public static $submodules = array(
         'STD' => 'Standard',
         'MULTI' => 'Multi',
-        'CHOOZEO' => 'Choozeo',
         'ONEY' => 'Oney',
         'ONEY34' => 'Oney34',
         'FULLCB' => 'Fullcb',
@@ -155,6 +161,10 @@ class PayzenTools
             $errors[] = sprintf($empty_msg, $payzen->l('First name', 'payzentools'), $address_type);
         } elseif (! preg_match($regex['name'], $address->firstname)) {
             $errors[] = sprintf($invalid_msg, $payzen->l('First name', 'payzentools'), $address_type);
+        }
+
+        if ($payment === 'oney34' && empty($address->phone) && empty($address->phone_mobile)) {
+            $errors[] = sprintf($empty_msg, $payzen->l('Phone', 'payzentools'), $address_type);
         }
 
         if (! empty($address->phone) && ! preg_match($regex['phone'], $address->phone)) {
@@ -447,34 +457,6 @@ class PayzenTools
             array('key' => 'PAYZEN_PAYPAL_DELAY', 'default' => '', 'label' => 'Capture delay'),
             array('key' => 'PAYZEN_PAYPAL_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_PAYPAL_AMOUNTS', 'default' => array(), 'label' => 'PayPal payment - Customer group amount restriction'),
-
-            array('key' => 'PAYZEN_CHOOZEO_TITLE',
-                'default' => array(
-                    'en' => 'Payment with Choozeo without fees',
-                    'fr' => 'Paiement avec Choozeo sans frais',
-                    'de' => 'Zahlung mit Choozeo ohne zusätzliche',
-                    'es' => 'Pago con Choozeo sin gastos'
-                ),
-                'label' => 'Method title'),
-            array('key' => 'PAYZEN_CHOOZEO_ENABLED', 'default' => 'False', 'label' => 'Activation'),
-            array('key' => 'PAYZEN_CHOOZEO_DELAY', 'default' => '', 'label' => 'Capture delay'),
-            array('key' => 'PAYZEN_CHOOZEO_AMOUNTS',
-                'default' => array(
-                    array('min_amount' => '135', 'max_amount' => '2000')
-                ),
-                'label' => 'Choozeo payment - Customer group amount restriction'),
-            array('key' => 'PAYZEN_CHOOZEO_OPTIONS', 'default' => array(
-                'EPNF_3X' => array(
-                    'enabled' => 'True',
-                    'min_amount' => '',
-                    'max_amount' => ''
-                ),
-                'EPNF_4X' => array(
-                    'enabled' => 'True',
-                    'min_amount' => '',
-                    'max_amount' => ''
-                )
-            ), 'label' => 'Choozeo payment - Payment options'),
 
             array('key' => 'PAYZEN_OTHER_GROUPED_VIEW', 'default' => 'False', 'label' => 'Regroup payment means'),
             array('key' => 'PAYZEN_OTHER_ENABLED', 'default' => 'True', 'label' => 'Activation'),
@@ -799,8 +781,8 @@ class PayzenTools
                 if ($riskControl = self::getProperty($fraudManagement, 'riskControl')) {
                     $response['vads_risk_control'] = '';
 
-                    foreach ($riskControl as $key => $value) {
-                        $response['vads_risk_control'] .= "$key=$value;";
+                    foreach ($riskControl as $value) {
+                        $response['vads_risk_control'] .= "{$value['name']}={$value['result']};";
                     }
                 }
 
@@ -819,15 +801,17 @@ class PayzenTools
         $answer = $response['answer'];
 
         if ($response['status'] !== 'SUCCESS') {
+            $errorMessage = $response['answer']['errorMessage'] . ' (' . $answer['errorCode'] . ').';
+
             if (isset($answer['detailedErrorMessage']) && ! empty($answer['detailedErrorMessage'])) {
-                $errorMessage = $answer['detailedErrorMessage'];
-            } else {
-                $errorMessage = 'Unknown refund error';
+                $errorMessage .= ' Detailed message: ' . $answer['detailedErrorMessage']
+                    . ' (' . $answer['detailedErrorCode'] . ').';
             }
 
             throw new PayzenWsException($errorMessage, $answer['errorCode']);
         } elseif (! empty($expectedStatuses) && ! in_array($answer['detailedStatus'], $expectedStatuses)) {
-            throw new Exception("Unexpected transaction status returned: {$answer['detailedStatus']}.");
+            $payzen = Module::getInstanceByName('payzen');
+            throw new Exception(sprintf($payzen->l('Unexpected transaction type received (%s).'), $answer['detailedStatus']));
         }
     }
 

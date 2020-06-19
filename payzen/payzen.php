@@ -21,7 +21,6 @@ require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenRest.php';
 
 require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/AbstractPayzenPayment.php';
 require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenAncvPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenChoozeoPayment.php';
 require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenFullcbPayment.php';
 require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenMultiPayment.php';
 require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenOneyPayment.php';
@@ -52,7 +51,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.13.2';
+        $this->version = '1.13.3';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -98,9 +97,10 @@ class Payzen extends PaymentModule
 
         // Install hooks.
         if (! parent::install() || ! $this->registerHook('header') || ! $this->registerHook('paymentReturn')
-            || ! $this->registerHook('adminOrder') || ! $this->registerHook('actionOrderSlipAdd')
+            || ! $this->registerHook('adminOrder') || ! $this->registerHook('actionObjectOrderSlipAddBefore')
             || ! $this->registerHook('actionProductCancel')
             || ! $this->registerHook('actionOrderStatusUpdate')
+            || ! $this->registerHook('actionOrderStatusPostUpdate')
             || ! $this->registerHook('actionAdminCarrierWizardControllerSaveBefore')
             || ! $this->registerHook('actionAdminCarriersOptionsModifier')) {
             return false;
@@ -304,11 +304,11 @@ class Payzen extends PaymentModule
             'redirect', 'redirect_bc', 'redirect_js',
             'iframe/redirect', 'iframe/redirect_bc', 'iframe/response', 'iframe/loader',
 
-            'bc/payment_ancv', 'bc/payment_choozeo', 'bc/payment_fullcb', 'bc/payment_multi', 'bc/payment_oney',
+            'bc/payment_ancv', 'bc/payment_fullcb', 'bc/payment_multi', 'bc/payment_oney',
             'bc/payment_paypal', 'bc/payment_sepa', 'bc/payment_sofort', 'bc/payment_std_eu', 'bc/payment_std_iframe',
             'bc/payment_std', 'bc/payment_std_rest',
 
-            'payment_choozeo', 'payment_fullcb', 'payment_multi', 'payment_oney', 'payment_return',
+            'payment_fullcb', 'payment_multi', 'payment_oney', 'payment_return',
             'payment_std_iframe', 'payment_std', 'payment_std_rest'
         );
         foreach ($tpls as $tpl) {
@@ -385,6 +385,7 @@ class Payzen extends PaymentModule
             if ($value === '') { // Consider empty strings as null.
                 $value = null;
             }
+
             // Load countries restriction list.
             $isCountriesList = (Tools::substr($key, -12) === '_COUNTRY_LST');
 
@@ -398,10 +399,6 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
-                        if (($key === 'PAYZEN_CHOOZEO_OPTIONS') && ! isset($option['enabled'])) {
-                            $value[$id]['enabled'] = 'False';
-                        }
-
                         if (isset($option['min_amount']) && $option['min_amount'] && (! is_numeric($option['min_amount']) || $option['min_amount'] < 0)) {
                             $value[$id]['min_amount'] = ''; // Error, reset incorrect value.
                             $error = true;
@@ -927,9 +924,9 @@ class Payzen extends PaymentModule
             return parent::useMobileTheme();
         } elseif (method_exists($this->context, 'getMobileDevice')) {
             return ($this->context->getMobileDevice() && file_exists(_PS_THEME_MOBILE_DIR_ . 'layout.tpl'));
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     private function addJs($js_file)
@@ -1005,7 +1002,7 @@ class Payzen extends PaymentModule
         }
 
         // Currency support.
-        if (!$this->checkCurrency()) {
+        if (! $this->checkCurrency()) {
             return;
         }
 
@@ -1027,12 +1024,6 @@ class Payzen extends PaymentModule
         if ($multi->isAvailable($cart)) {
             $this->context->smarty->assign($multi->getTplVars($cart));
             $html .= $this->display(__FILE__, 'bc/' . $multi->getTplName());
-        }
-
-        $choozeo = new PayzenChoozeoPayment();
-        if ($choozeo->isAvailable($cart)) {
-            $this->context->smarty->assign($choozeo->getTplVars($cart));
-            $html .= $this->display(__FILE__, 'bc/' . $choozeo->getTplName());
         }
 
         $oney = new PayzenOneyPayment();
@@ -1154,8 +1145,10 @@ class Payzen extends PaymentModule
                 }
 
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $standard->getTplName());
+                $isRestPayment = strpos($standard->getTplName(), 'rest'); // Check if it's really a payment by embedded fields.
 
-                if ($standard->getEntryMode() === '4' || $standard->getEntryMode() === '5') {
+                if ($standard->getEntryMode() === '4' ||
+                    (($standard->getEntryMode() === '5') && $isRestPayment)) {
                     // IFrame or REST mode.
                     $option->setAdditionalInformation($form . $additionalForm);
                     if ($oneClickPayment) {
@@ -1178,19 +1171,6 @@ class Payzen extends PaymentModule
             if ($multi->hasForm()) {
                 $this->context->smarty->assign($multi->getTplVars($cart));
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $multi->getTplName());
-                $option->setForm($form);
-            }
-
-            $options[] = $option;
-        }
-
-        $choozeo = new PayzenChoozeoPayment();
-        if ($choozeo->isAvailable($cart)) {
-            $option = $choozeo->getPaymentOption($cart);
-
-            if ($choozeo->hasForm()) {
-                $this->context->smarty->assign($choozeo->getTplVars($cart));
-                $form = $this->fetch('module:payzen/views/templates/hook/' . $choozeo->getTplName());
                 $option->setForm($form);
             }
 
@@ -1387,53 +1367,85 @@ class Payzen extends PaymentModule
             return;
         }
 
-        return $this->refund($order, $order->total_paid_real);
+        // Update order status is manually changed to "Refunded" (not by refund function).
+        $this->context->cookie->payzenManualUpdateRefundStatus = 'True';
+
+        // If any error during WS refund redirect to order details to avoid display success message.
+        if (! $this->refund($order, $order->total_paid_real)) {
+            Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . Tools::getValue('token'));
+        }
+
+        return true;
     }
 
     /**
-     * After cancelling a product in an order.
+     *  After updating order status.
      *
      * @param array $params
      */
-    public function hookActionProductCancel($params)
+    public function hookActionOrderStatusPostUpdate($params)
     {
-        $order = $params['order'];
+        $order = new Order((int) $params['id_order']);
         if (! $this->active || ($order->module != $this->name)) {
             return;
         }
 
-        $orderIdDetail = (int) $params['id_order_detail'];
-        $orderDetail = new OrderDetail($orderIdDetail);
+        // If it is manual update of order state to refunded, update order total paid real to 0.
+        if (isset($this->context->cookie->payzenManualUpdateRefundStatus)
+            && ($this->context->cookie->payzenManualUpdateRefundStatus === 'True')) {
+            unset($this->context->cookie->payzenManualUpdateRefundStatus);
+            $order->total_paid_real = 0;
+            $order->update();
+        }
 
-        $qtyList = Tools::getValue('cancelQuantity');
-        $amount = $orderDetail->unit_price_tax_incl * (int) $qtyList[$orderIdDetail];
-
-        return $this->refund($order, $amount);
+        return true;
     }
 
     /**
-     * After order slip add in backend.
+     * Before order slip add in backend.
      *
-     * @param array $params
+     * @param OrderSlip $orderSlip
      */
-    public function hookActionOrderSlipAdd($params)
+    public function hookActionObjectOrderSlipAddBefore($orderSlip)
     {
-        $order = $params['order'];
+        $orderSlipObject = $orderSlip['object'];
+        $order_id = (int) $orderSlipObject->id_order;
+        $order = new Order($order_id);
+
         if (! $this->active || ($order->module != $this->name)) {
             return;
         }
 
-        $amount = 0;
-        foreach ($params['productList'] as $product) {
-            $amount += $product['amount'];
+        // Stop the refund if the merchant want to generate a discount.
+        if (Tools::isSubmit('generateDiscount')) {
+            return;
         }
 
-        // Include shipping costs, if any.
-        if (Tools::getValue('partialRefundShippingCost')) {
-            $amount += Tools::getValue('partialRefundShippingCost');
+        // Get amount from OrderSlip, for now it's a workaround instead of use OrderSlip->amount for a bug in prestashop calculation.
+        $amount = ! Tools::getValue('TaxMethod') ? $orderSlipObject->total_products_tax_excl : $orderSlipObject->total_products_tax_incl;
+
+        // Add shipping cost amount.
+        $amount += $orderSlipObject->shipping_cost_amount;
+
+        // If any error during WS refund redirect to order details to avoid creation of a credit and displaying success message.
+        if (! $this->refund($order, $amount)) {
+            // No refund, so get back refunded products quantities, and available products stock quantities.
+            $id_order_details = Tools::isSubmit('generateCreditSlip') ? Tools::getValue('cancelQuantity')
+                : Tools::getValue('partialRefundProductQuantity');
+            foreach ($id_order_details as $id_order_detail => $quantity ) {
+                // Update order detail.
+                $order_detail = new OrderDetail($id_order_detail);
+                $order_detail->product_quantity_refunded -= $quantity;
+                $order_detail->update();
+
+                // Update product available quantity.
+                StockAvailable::updateQuantity($order_detail->product_id, $order_detail->product_attribute_id, -$quantity, $order->id_shop);
+            }
+
+            Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order_id . '&vieworder&token=' . Tools::getValue('token'));
         }
 
-        return $this->refund($order, $amount);
+        return true;
     }
 
     /**
@@ -1458,11 +1470,19 @@ class Payzen extends PaymentModule
         );
 
         try {
-            // Get UUID from Order.
-            $uuidArray = $this->getUuidFromOrder($order->id_cart);
-            $uuid = $uuidArray[1];
+            // Get payment details.
+            $getPaymentDetails = $this->getPaymentDetails($order);
+            $transStatus = $getPaymentDetails['detailedStatus'];
 
-            $requestData = array('uuid' => $uuid);
+            if (! in_array($transStatus, $successStatuses)) {
+                $msg = sprintf($this->l('Unexpected transaction status (%1$s).'), $transStatus);
+                throw new Exception($msg);
+            }
+
+            $uuid = $getPaymentDetails['uuid'];
+            $amountInCents = $currency->convertAmountToInteger($amount);
+
+            $commentText = $this->getUserInfo();
 
             /** @var PayzenRest $client */
             $client = new PayzenRest(
@@ -1471,35 +1491,30 @@ class Payzen extends PaymentModule
                 $this->getPrivateKey()
             );
 
-            // Perform our request.
-            $getPaymentDetails = $client->post('V4/Transaction/Get', json_encode($requestData));
-            PayzenTools::checkRestResult($getPaymentDetails);
-
-            $transStatus = $getPaymentDetails['answer']['detailedStatus'];
-
-            if (! in_array($transStatus, $successStatuses)) {
-                $msg = "Error occurred when refunding payment for order #{$order->id}."
-                    . " Unexpected transaction status: $transStatus.";
-                throw new Exception($msg);
-            }
-
-            $amountInCents = $currency->convertAmountToInteger($amount);
-
-            $commentText = $this->getUserInfo();
-
             if ($transStatus === 'CAPTURED') { // Transaction captured, we can do refund.
+                // No refund for captured transactions if order currency different than transaction currency.
+                if ($orderCurrency->iso_code !== $getPaymentDetails['currency']) {
+                    $msg = $this->l('Refund is not supported on captured transactions with currency conversion.');
+                    throw new Exception($msg);
+                }
+
                 // Get already refunded amount.
-                $refundedAmount = $getPaymentDetails['answer']['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
+                $refundedAmount = $getPaymentDetails['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
 
                 if (empty($refundedAmount)) {
                     $refundedAmount = 0;
                 }
 
-                $remainingAmount = $getPaymentDetails['answer']['amount'] - $refundedAmount; // Calculate remaing amount.
+                $remainingAmount = $getPaymentDetails['amount'] - $refundedAmount; // Calculate remaing amount.
 
                 if ($remainingAmount < $amountInCents) {
-                    $msg = "Cannot refund payment for order #{$order->id}. Remaining amount" .
-                        " is less than requested refund amount ({$amount} {$orderCurrency->sign}).";
+                    $remainingAmountFloat = $currency->convertAmountToFloat($remainingAmount);
+                    $msg = sprintf(
+                        $this->l('Remaining amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'),
+                        $remainingAmountFloat,
+                        $orderCurrency->sign,
+                        $amount
+                    );
                     throw new Exception($msg);
                 }
 
@@ -1520,8 +1535,8 @@ class Payzen extends PaymentModule
                 // Check operation type.
                 $transType = $refundPaymentResponse['answer']['operationType'];
 
-                if ($transType != 'CREDIT') {
-                    throw new Exception("Unexpected transaction type returned: $transType.");
+                if ($transType !== 'CREDIT') {
+                    throw new Exception(sprintf($this->l('Unexpected transaction type received (%1$s).'), $transType));
                 }
 
                 $responseData = PayzenTools::convertRestResult($refundPaymentResponse['answer'], true);
@@ -1530,18 +1545,33 @@ class Payzen extends PaymentModule
                 // Save refund transaction in PrestaShop.
                 $refundedAmount += $amountInCents;
 
-                if ($refundedAmount == $getPaymentDetails['answer']['amount']) { // Total refund, update order status as well.
-                    $this->setOrderState($order, (int) Configuration::get('PS_OS_REFUND'), $response);
-                } else {
-                    $this->createMessage($order, $response);
-                    $this->savePayment($order, $response);
+                // Create payment
+                $this->createMessage($order, $response);
+                $this->savePayment($order, $response);
+
+                // Update order status if it is not a call from hookActionOrderStatusUpdate to avoid double status update.
+                if (($refundedAmount == $getPaymentDetails['amount'])
+                    && (! isset($this->context->cookie->payzenManualUpdateRefundStatus)
+                        || ($this->context->cookie->payzenManualUpdateRefundStatus !== 'True'))) {
+                    $order->setCurrentState((int) Configuration::get('PS_OS_REFUND'));
                 }
 
                 $this->logger->logInfo("Online money refund for order #{$order->id} is successful.");
             } else {
-                $transAmount = $getPaymentDetails['answer']['amount'];
+                $transAmount = $getPaymentDetails['amount'];
 
-                if ($amountInCents >= $transAmount) { // Transaction cancel.
+                // If order currency different than transaction currency we use transaction effective amount.
+                if ($orderCurrency->iso_code != $getPaymentDetails['currency']) {
+                    $transAmount = $getPaymentDetails['transactionDetails']['effectiveAmount'];
+                }
+
+                if ($amountInCents > $transAmount) {
+                    $transAmountFloat = $currency->convertAmountToFloat($transAmount);
+                    $msg = sprintf($this->l('Transaction amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'), $transAmountFloat, $orderCurrency->sign, $amount);
+                    throw new Exception($msg);
+                }
+
+                if ($amountInCents == $transAmount) { // Transaction cancel in gateway.
                     $requestData = array(
                         'uuid' => $uuid,
                         'resolutionMode' => 'CANCELLATION_ONLY',
@@ -1551,14 +1581,26 @@ class Payzen extends PaymentModule
                     $cancelPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
                     PayzenTools::checkRestResult($cancelPaymentResponse, array('CANCELLED'));
 
+                    // Total refund, update order status as well.
+                    $responseData = PayzenTools::convertRestResult($cancelPaymentResponse['answer'], true);
+                    $response = new PayzenResponse($responseData, null, null, null);
+
+                    // Save refund transaction in PrestaShop.
+                    $this->savePayment($order, $response, true);
+
+                    if (! isset($this->context->cookie->payzenManualUpdateRefundStatus)
+                        || ($this->context->cookie->payzenManualUpdateRefundStatus !== 'True')) {
+                        $order->setCurrentState((int) Configuration::get('PS_OS_REFUND'));
+                    }
+
                     $this->logger->logInfo("Online payment cancel for order #{$order->id} is successful.");
                 } else {
                     // Partial transaction cancel, call update WS.
-
+                    $new_transaction_amount = $transAmount - $amountInCents;
                     $requestData = array(
                         'uuid' => $uuid,
                         'cardUpdate' => array(
-                            'amount' => $amountInCents,
+                            'amount' => $new_transaction_amount,
                             'currency' => $currency->getAlpha3()
                         ),
                         'comment' => $commentText
@@ -1589,45 +1631,81 @@ class Payzen extends PaymentModule
 
             return true;
         } catch (Exception $e) {
-            $this->logger->logError("{$e->getMessage()}" . ($e->getCode() ? ' (' . $e->getCode() . ').' : ''));
+            $this->logger->logError("{$e->getMessage()}" . ($e->getCode() > 0 ? ' (' . $e->getCode() . ').' : ''));
 
             if ($e->getCode() === 'PSP_100') {
                 // Merchant don't have offer allowing REST WS.
                 return true;
             }
 
-            $message = $this->l('Refund error') . ': ' . $e->getMessage();
+            if ($e->getCode() <= -1) { // Manage cUrl errors.
+                $message = sprintf($this->l('Error occurred when refunding payment for order #%1$s. Please consult the payment module log for more details.'), $order->reference);
+            } elseif (! $e->getCode()) {
+                $message = sprintf($this->l('Cannot refund payment for order #%1$s.'), $order->reference)
+                    . ' ' . $e->getMessage();
+            } else {
+                $message = $this->l('Refund error') . ': ' . $e->getMessage();
+            }
+
             $this->context->cookie->payzenRefundWarn = $message;
+            if (isset($this->context->cookie->payzenManualUpdateRefundStatus)
+                && ($this->context->cookie->payzenManualUpdateRefundStatus === 'True')) {
+                unset($this->context->cookie->payzenManualUpdateRefundStatus);
+            }
+
             return false;
         }
     }
 
     /**
-     * Get transaction UUID for Order.
+     * Get payment details for Order $order.
      *
-     * @param int $id_cart
+     * @param Order $order
      * @return array
      */
-    private function getUuidFromOrder($id_cart)
+    private function getPaymentDetails($order)
     {
+        /** @var PayzenRest $client */
         $client = new PayzenRest(
             PayzenTools::getDefault('REST_URL'),
             Configuration::get('PAYZEN_SITE_ID'),
             $this->getPrivateKey()
         );
 
-        $requestData = array('orderId' => $id_cart);
+        $requestData = array(
+            'orderId' => $order->id_cart,
+            'operationType' => 'DEBIT'
+        );
 
         $getOrderResponse = $client->post('V4/Order/Get', json_encode($requestData));
         PayzenTools::checkRestResult($getOrderResponse);
 
-        $uuidArray = array();
+        // Order transactions organized by sequence numbers.
+        $transBySequence = array();
         foreach ($getOrderResponse['answer']['transactions'] as $transaction) {
             $sequenceNumber = $transaction['transactionDetails']['sequenceNumber'];
-            $uuidArray[$sequenceNumber] = $transaction['uuid'];
+            $transBySequence[$sequenceNumber] = $transaction;
         }
 
-        return $uuidArray;
+        // Get transaction Id from PrestaShop.
+        $orderPaymentArray = OrderPayment::getByOrderReference($order->reference);
+        $transactions = array();
+
+        foreach ($orderPaymentArray as $orderPayment) {
+            if ($orderPayment->amount <= 0) { // Do not treat REFUND transactions.
+                continue;
+            }
+
+            $transactionId = $orderPayment->transaction_id;
+
+            // Get the correct sequence number.
+            $sequenceNumber = $transactionId ? strstr($transactionId, '-', true) : 1;
+            $transactions[$sequenceNumber] = $transBySequence[$sequenceNumber];
+        }
+
+        // For the moment, return only the first transaction.
+        // TODO return the whole array when refunding multiple payment.
+        return reset($transactions);
     }
 
     private function getPrivateKey()
@@ -1856,7 +1934,7 @@ class Payzen extends PaymentModule
      * @param Order $order
      * @param PayzenResponse $response
      */
-    public function savePayment($order, $response)
+    public function savePayment($order, $response, $force_stop_payment_creation = false)
     {
         $payments = $order->getOrderPayments();
 
@@ -1871,7 +1949,9 @@ class Payzen extends PaymentModule
             foreach ($payments as $payment) {
                 if (! $payment->transaction_id || (($payment->transaction_id == $trans_id) && $cancelled)) {
                     $order->total_paid_real -= $payment->amount;
-                    $payment->delete();
+
+                    // Delete payment and invoice reference.
+                    $this->deleteOrderPayment($payment);
 
                     $update = true;
                 }
@@ -1886,7 +1966,7 @@ class Payzen extends PaymentModule
             }
         }
 
-        if (! $this->isSuccessState($order) && ! $response->isAcceptedPayment()) {
+        if ((! $this->isSuccessState($order) && ! $response->isAcceptedPayment()) || $force_stop_payment_creation) {
             // No payment creation.
             return;
         }
@@ -1988,6 +2068,7 @@ class Payzen extends PaymentModule
                             // To avoid rounding problems and pass PaymentModule::validateOrder() check.
                             $amount = $remaining;
                         }
+
                         break;
                     default: // Others.
                         $amount = $currency->convertAmountToFloat($installment_amount);
@@ -2044,6 +2125,28 @@ class Payzen extends PaymentModule
         $this->logger->logInfo(
             "Payment information with ID(s) {$payment_ids} saved successfully for cart #{$order->id_cart}."
         );
+    }
+
+    /**
+     * Delete payment and invoice reference.
+     *
+     * @param OrderPayment $payment
+     */
+    private function deleteOrderPayment($payment)
+    {
+        // Delete payment.
+        $payment->delete();
+
+        // Delete invoice reference.
+        $result = Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . 'order_invoice_payment` WHERE `id_order_payment` = ' . (int) $payment->id
+        );
+
+        if (! $result) {
+            $this->logger->logWarning(
+                "An error occurred when deleting invoice reference for payment #{$payment->id}:."
+            );
+        }
     }
 
     public function saveIdentifier($customer, $response)
@@ -2139,10 +2242,16 @@ class Payzen extends PaymentModule
                 return false;
             }
         } elseif (Validate::isLoadedObject($invoice)) {
-            Db::getInstance()->execute(
+            $result = Db::getInstance()->execute(
                 'REPLACE INTO `' . _DB_PREFIX_ . 'order_invoice_payment`
                  VALUES(' . (int) $invoice->id . ', ' . (int) $pcc->id . ', ' . (int) $order->id . ')'
             );
+
+            if (! $result) {
+                $this->logger->logWarning(
+                    "An error has occurred during updating invoice reference for payment #{$pcc->id}."
+                );
+            }
         }
 
         // Set card info.
@@ -2151,10 +2260,13 @@ class Payzen extends PaymentModule
         if ($data['expiry_month'] && $data['expiry_year']) {
             $pcc->card_expiration = str_pad($data['expiry_month'], 2, '0', STR_PAD_LEFT) . '/' . $data['expiry_year'];
         }
+
         $pcc->card_holder = null;
 
         // Update transaction info if payment is modified in gateway Back Office.
+        $diff = 0;
         if ($pcc->amount != $amount) {
+            $diff = $pcc->amount - $amount;
             $pcc->amount = $amount;
 
             $this->logger->logInfo("Transaction amount is modified for cart #{$order->id_cart}. New amount is $amount.");
@@ -2167,6 +2279,11 @@ class Payzen extends PaymentModule
         }
 
         if ($pcc->update()) {
+            if ($diff > 0) {
+                $order->total_paid_real -= $diff;
+                $order->update();
+            }
+
             return $pcc->id;
         } else {
             $this->logger->logWarning("Problem: payment mean information for cart #{$order->id_cart} cannot be saved.");
