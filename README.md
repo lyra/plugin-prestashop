@@ -1,6 +1,6 @@
 # PayZen for PrestaShop
 
-PayZen for PrestaShop is an open source plugin that links e-commerce websites based on PrestaShop to PayZen secure payment gateway developed by [Lyra Network](https://www.lyra-network.com/).
+PayZen for PrestaShop is an open source plugin that links e-commerce websites based on PrestaShop to PayZen secure payment gateway developed by [Lyra Network](https://www.lyra.com/).
 
 ## Installation & Upgrade
 

@@ -301,14 +301,17 @@ abstract class AbstractPayzenPayment
         $cust_title = new Gender((int) $cust->id_gender);
         $request->set('cust_title', $cust_title->name[Context::getContext()->language->id]);
 
+        $phone = $billing_address->phone ? $billing_address->phone : $billing_address->phone_mobile;
+        $cell_phone = $billing_address->phone_mobile ? $billing_address->phone_mobile : $billing_address->phone;
+
         $request->set('cust_first_name', $billing_address->firstname);
         $request->set('cust_last_name', $billing_address->lastname);
         $request->set('cust_legal_name', $billing_address->company ? $billing_address->company : null);
         $request->set('cust_address', $billing_address->address1 . ' ' . $billing_address->address2);
         $request->set('cust_zip', $billing_address->postcode);
         $request->set('cust_city', $billing_address->city);
-        $request->set('cust_phone', $billing_address->phone);
-        $request->set('cust_cell_phone', $billing_address->phone_mobile);
+        $request->set('cust_phone', $phone);
+        $request->set('cust_cell_phone', $cell_phone);
         $request->set('cust_country', $billing_country->iso_code);
         if ($billing_address->id_state) {
             $state = new State((int) $billing_address->id_state);
@@ -323,7 +326,7 @@ abstract class AbstractPayzenPayment
             $request->set('ship_to_street2', $delivery_address->address2);
             $request->set('ship_to_zip', $delivery_address->postcode);
             $request->set('ship_to_city', $delivery_address->city);
-            $request->set('ship_to_phone_num', $delivery_address->phone);
+            $request->set('ship_to_phone_num', $delivery_address->phone_mobile ? $delivery_address->phone_mobile : $delivery_address->phone);
             $request->set('ship_to_country', $delivery_country->iso_code);
             if ($delivery_address->id_state) {
                 $state = new State((int) $delivery_address->id_state);
