@@ -23,7 +23,7 @@
   <td>
     <select id="PAYZEN_OTHER_PAYMENT_MEANS_{$key|escape:'html':'UTF-8'}_code" name="PAYZEN_OTHER_PAYMENT_MEANS[{$key|escape:'html':'UTF-8'}][code]" style="width: 200px;">
        {foreach from=$payment_means_cards key="card_key" item="card_name"}
-         {if $card_key != ''}<option value="{$card_key|escape:'html':'UTF-8'}" {if $option.code === $card_key} selected="selected"{/if}>{$card_name|escape:'html':'UTF-8'}</option>{/if}
+         {if $card_key != ''}<option value="{$card_key|escape:'html':'UTF-8'}" {if $option.code === $card_key} selected="selected"{/if}>{$card_key|escape:'html':'UTF-8'} - {$card_name|escape:'html':'UTF-8'}</option>{/if}
        {/foreach}
     </select>
   </td>

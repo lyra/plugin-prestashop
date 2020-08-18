@@ -1,3 +1,9 @@
+1.13.4, 2020-08-18:
+- [embedded] Bug fix: Error due to strongAuthenticationState field renaming in REST token creation.
+- [embedded] Minor code improve: use KR.openPopin() and KR.submit().
+- [embedded] Improve payment with embedded fields button display in PrestaShop 1.6.x versions.
+- Update payment means logos.
+
 1.13.3, 2020-06-19:
 - [embedded] Bug fix: Compatibility of payment with embedded fields with Internet Explorer 11.
 - Bug fix: Possibility to make refunds for a payment with many attempts.

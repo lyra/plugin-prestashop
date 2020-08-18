@@ -16,7 +16,11 @@
     {if $payzen_saved_identifier}
         title="{l s='Choose pay with registred means of payment or enter payment information and click « Pay » button' mod='payzen'}"
     {else}
-        title="{l s='Enter payment information and click « Pay » button' mod='payzen'}"
+        {if $payzen_rest_popin}
+            title="{l s='Click on « Pay » button to enter payment information in a popin mode' mod='payzen'}"
+        {else}
+            title="{l s='Enter payment information and click « Pay » button' mod='payzen'}"
+        {/if}
     {/if}
   >
     <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
@@ -26,21 +30,7 @@
         <div class="kr-pan"></div>
         <div class="kr-expiry"></div>
         <div class="kr-security-code"></div>
-
-        {if !$payzen_rest_popin}
-          <div style="display: none;">
-        {/if}
-        <button type="button" id="payzen_hidden_button" class="kr-payment-button"></button>
-        {if !$payzen_rest_popin}
-          </div>
-        {/if}
-
-        <div class="kr-field processing" style="display: none; border: none !important;">
-          <div style="background-image: url('{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/loading_big.gif');
-                      margin: 0 auto; display: block; height: 35px; background-position: center;
-                      background-repeat: no-repeat; background-size: 35px;">
-          </div>
-        </div>
+        <button type="button" class="kr-payment-button"></button>
 
         <div class="kr-form-error"></div>
       </div>
@@ -49,29 +39,22 @@
     {if $payzen_saved_identifier}
       {include file="./payment_std_oneclick.tpl"}
       <input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" />
-    {else}
-        {if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}
-          <input id="payzen_standard_link" value="{l s='Pay' mod='payzen'}" class="button" />
-        {else}
-          <button id="payzen_standard_link" class="button btn btn-default standard-checkout button-medium" >
-            <span>{l s='Pay' mod='payzen'}</span>
-          </button>
-        {/if}
     {/if}
 
-    <script type="text/javascript">
-        $('#payzen_standard_link').click(function() {
-          var isPopin = document.getElementsByClassName('kr-popin-button');
-
-          if (isPopin.length > 0) {
-            $('.kr-popin-button').click();
-          } else {
-            $('#payzen_oneclick_payment_description').hide();
-            $('.payzen .processing').css('display', 'block');
-            $('#payzen_hidden_button').click();
-          }
-        });
-   </script>
+    {if $payzen_rest_popin}
+        {if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}
+            <input id="payzen_standard_link" value="{l s='Pay' mod='payzen'}" class="button" />
+        {else}
+            <button id="payzen_standard_link" class="button btn btn-default standard-checkout button-medium">
+              <span>{l s='Pay' mod='payzen'}</span>
+            </button>
+        {/if}
+        <script type="text/javascript">
+            $('#payzen_standard_link').click(function() {
+                KR.openPopin();
+            });
+        </script>
+    {/if}
   </a>
 </div>
 

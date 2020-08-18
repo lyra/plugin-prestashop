@@ -438,3 +438,4 @@ $_MODULE['<{payzen}prestashop>payzen_b94a87a3068b75252a32883d9562c1e2'] = 'Tipo 
 $_MODULE['<{payzen}prestashop>payzen_dd367f5fbbdba105ab71cdcf4f7cf366'] = 'El monto de la transacción (%1$s %2$s) es menor al monto de reembolso solicitado (%3$s %2$s).';
 $_MODULE['<{payzen}prestashop>payzen_d67793cb999383fca646b7954ab67137'] = 'Un error ocurrió al reembolsar del pedido #%1$s. Consulte los registros de PayZen para obtener más detalles.';
 $_MODULE['<{payzen}prestashop>payzen_0ad207a47022c5ba4d99d915d39a06a7'] = 'No se puede reembolsar el pago del pedido #%1$s.';
+$_MODULE['<{payzen}prestashop>payment_std_rest_4c561c57168fbd2c6a31ad79170183cf'] = 'Haga clic en el botón « Pagar » para ingresar la información de pago en modo popin';
