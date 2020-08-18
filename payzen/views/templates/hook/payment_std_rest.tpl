@@ -15,15 +15,7 @@
      <div class="kr-pan"></div>
      <div class="kr-expiry"></div>
      <div class="kr-security-code"></div>
-
-     {if !$payzen_rest_popin}
-       <div style="display: none;">
-     {/if}
-     <button type="button" id="payzen_hidden_button" class="kr-payment-button"></button>
-     {if !$payzen_rest_popin}
-       </div>
-     {/if}
-
+     <button type="button" class="kr-payment-button" {if !$payzen_rest_popin}style="display:none;"{/if}></button>
      <div class="kr-field processing" style="display: none; border: none !important;">
        <div style="background-image: url('{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/loading_big.gif');
                   margin: 0 auto; display: block; height: 35px; background-color: #ffffff; background-position: center;
@@ -49,12 +41,12 @@
       {/if}
 
       if (isPopin.length > 0) {
-        $('.kr-popin-button').click();
+        KR.openPopin();
       } else {
         $('#payzen_standard').data('submitted', true);
         $('.payzen .processing').css('display', 'block');
         $('#payment-confirmation button').attr('disabled', 'disabled');
-        $('#payzen_hidden_button').click();
+        KR.submit();
       }
     }
 
