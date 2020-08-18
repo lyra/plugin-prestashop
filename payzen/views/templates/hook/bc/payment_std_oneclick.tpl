@@ -76,12 +76,13 @@
     </script>
 {/if}
 
-{if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}
-  <input id="payzen_standard_link" value="{l s='Pay' mod='payzen'}" class="button" />
-{else}
-  <button id="payzen_standard_link" class="button btn btn-default standard-checkout button-medium" >
-    <span>{l s='Pay' mod='payzen'}</span>
-  </button>
+{if ($payzen_std_card_data_mode != '5')}
+    {if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}
+      <input id="payzen_standard_link" value="{l s='Pay' mod='payzen'}" class="button" />
+    {else}
+      <button id="payzen_standard_link" class="button btn btn-default standard-checkout button-medium">
+        <span>{l s='Pay' mod='payzen'}</span>
+      </button>
+    {/if}
 {/if}
-
 </div>

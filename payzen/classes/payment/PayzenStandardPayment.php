@@ -277,7 +277,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                 )
             ),
             'contrib' => $this->getEscapedVar($request, 'contrib'),
-            'strongAuthenticationState' => $strong_auth,
+            'strongAuthentication' => $strong_auth,
             'currency' => $currency->getAlpha3(),
             'amount' => $this->getEscapedVar($request, 'amount'),
             'metadata' => array(

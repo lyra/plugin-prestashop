@@ -644,7 +644,7 @@
         <div class="margin-form">
           <select id="PAYZEN_STD_PAYMENT_CARDS" name="PAYZEN_STD_PAYMENT_CARDS[]" multiple="multiple" size="7">
             {foreach from=$payzen_payment_cards_options key="key" item="option"}
-              <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_STD_PAYMENT_CARDS)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_STD_PAYMENT_CARDS)} selected="selected"{/if}>{if $key !== ""} {$key|escape:'html':'UTF-8'} - {/if}{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
           <p>{l s='The card type(s) that can be used for the payment. Select none to use gateway configuration.' mod='payzen'}</p>
@@ -888,7 +888,7 @@
           <div class="margin-form">
             <select id="PAYZEN_MULTI_PAYMENT_CARDS" name="PAYZEN_MULTI_PAYMENT_CARDS[]" multiple="multiple" size="7">
               {foreach from=$payzen_multi_payment_cards_options key="key" item="option"}
-                <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_MULTI_PAYMENT_CARDS)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_MULTI_PAYMENT_CARDS)} selected="selected"{/if}>{if $key !== ""} {$key|escape:'html':'UTF-8'} - {/if}{$option|escape:'html':'UTF-8'}</option>
               {/foreach}
             </select>
             <p>{l s='The card type(s) that can be used for the payment. Select none to use gateway configuration.' mod='payzen'}</p>
