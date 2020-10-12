@@ -1,3 +1,9 @@
+1.13.5, 2020-10-05:
+- Bug fix: Fix IPN management in multistore environment.
+- Bug fix: Fix Order->total_real_paid value on payment cancellation.
+- Bug fix: Possibility to refund orders offline if merchant did not configure REST API keys.
+- [oney] Do not display payment installments for buyer (to avoid inconsistencies).
+
 1.13.4, 2020-08-18:
 - [embedded] Bug fix: Error due to strongAuthenticationState field renaming in REST token creation.
 - [embedded] Minor code improve: use KR.openPopin() and KR.submit().

@@ -980,6 +980,165 @@
       </div>
     {/if}
 
+    {if $payzen_plugin_features['choozeo']}
+      <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
+        <a href="#">{l s='CHOOZEO PAYMENT' mod='payzen'}</a>
+      </h4>
+      <div>
+        <fieldset>
+          <legend>{l s='MODULE OPTIONS' mod='payzen'}</legend>
+
+          <label for="PAYZEN_CHOOZEO_ENABLED">{l s='Activation' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_CHOOZEO_ENABLED" name="PAYZEN_CHOOZEO_ENABLED">
+              {foreach from=$payzen_enable_disable_options key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_CHOOZEO_ENABLED === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p>{l s='Enables / disables this payment method.' mod='payzen'}</p>
+          </div>
+
+          <label>{l s='Payment method title' mod='payzen'}</label>
+          <div class="margin-form">
+            {include file="./input_text_lang.tpl"
+              languages=$prestashop_languages
+              current_lang=$prestashop_lang
+              input_name="PAYZEN_CHOOZEO_TITLE"
+              input_value=$PAYZEN_CHOOZEO_TITLE
+              style="width: 330px;"
+            }
+            <p>{l s='Method title to display on payment means page.' mod='payzen'}</p>
+          </div>
+        </fieldset>
+        <div class="clear">&nbsp;</div>
+
+        <fieldset>
+          <legend>{l s='RESTRICTIONS' mod='payzen'}</legend>
+
+          {if isset ($payzen_countries_list['CHOOZEO'])}
+            <label for="PAYZEN_CHOOZEO_COUNTRY">{l s='Restrict to some countries' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_CHOOZEO_COUNTRY" name="PAYZEN_CHOOZEO_COUNTRY" onchange="javascript: payzenCountriesRestrictMenuDisplay('PAYZEN_CHOOZEO_COUNTRY')">
+                {foreach from=$payzen_countries_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_CHOOZEO_COUNTRY === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Buyer\'s billing countries in which this payment method is available.' mod='payzen'}</p>
+            </div>
+
+            <div id="PAYZEN_CHOOZEO_COUNTRY_MENU" {if $PAYZEN_CHOOZEO_COUNTRY === '1'} style="display: none;"{/if}>
+              <label for="PAYZEN_CHOOZEO_COUNTRY_LST">{l s='Authorized countries' mod='payzen'}</label>
+              <div class="margin-form">
+                <select id="PAYZEN_CHOOZEO_COUNTRY_LST" name="PAYZEN_CHOOZEO_COUNTRY_LST[]" multiple="multiple" size="7">
+                  {if isset ($payzen_countries_list['CHOOZEO'])}
+                      {foreach from=$payzen_countries_list['CHOOZEO'] key="key" item="option"}
+                          <option value="{$key|escape:'html':'UTF-8'}"{if in_array($key, $PAYZEN_CHOOZEO_COUNTRY_LST)} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                      {/foreach}
+                  {/if}
+                </select>
+              </div>
+            </div>
+          {else}
+            <input type="hidden" name ="PAYZEN_CHOOZEO_COUNTRY" value="1" ></input>
+            <input type="hidden" name ="PAYZEN_CHOOZEO_COUNTRY_LST[]" value ="">
+            <p style="background: none repeat scroll 0 0 #FFFFE0; border: 1px solid #E6DB55; font-size: 13px; margin: 0 0 20px; padding: 10px;">
+                {l s='Payment method unavailable for the list of countries defined on your PrestaShop store.' mod='payzen'}
+            </p>
+          {/if}
+
+          <label>{l s='Customer group amount restriction' mod='payzen'}</label>
+          <div class="margin-form">
+            {include file="./table_amount_group.tpl"
+              groups=$prestashop_groups
+              input_name="PAYZEN_CHOOZEO_AMOUNTS"
+              input_value=$PAYZEN_CHOOZEO_AMOUNTS
+            }
+            <p>{l s='Define amount restriction for each customer group.' mod='payzen'}</p>
+          </div>
+        </fieldset>
+        <div class="clear">&nbsp;</div>
+
+        <fieldset>
+          <legend>{l s='PAYMENT PAGE' mod='payzen'}</legend>
+
+          <label for="PAYZEN_CHOOZEO_DELAY">{l s='Capture delay' mod='payzen'}</label>
+          <div class="margin-form">
+            <input id="PAYZEN_CHOOZEO_DELAY" name="PAYZEN_CHOOZEO_DELAY" value="{$PAYZEN_CHOOZEO_DELAY|escape:'html':'UTF-8'}" type="text">
+            <p>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}</p>
+          </div>
+        </fieldset>
+        <div class="clear">&nbsp;</div>
+
+        <fieldset>
+          <legend>{l s='PAYMENT OPTIONS' mod='payzen'}</legend>
+
+          <label>{l s='Payment options' mod='payzen'}</label>
+          <div class="margin-form">
+            <table class="table" cellpadding="10" cellspacing="0">
+              <thead>
+                <tr>
+                  <th>{l s='Activation' mod='payzen'}</th>
+                  <th>{l s='Label' mod='payzen'}</th>
+                  <th>{l s='Min amount' mod='payzen'}</th>
+                  <th>{l s='Max amount' mod='payzen'}</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>
+                    <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_3X][enabled]"
+                      style="width: 100%;"
+                      type="checkbox"
+                      value="True"
+                      {if !isset($PAYZEN_CHOOZEO_OPTIONS.EPNF_3X.enabled) || ($PAYZEN_CHOOZEO_OPTIONS.EPNF_3X.enabled ==='True')}checked{/if}>
+                  </td>
+                  <td>Choozeo 3X CB</td>
+                  <td>
+                    <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_3X][min_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_3X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_3X']['min_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                  </td>
+                  <td>
+                    <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_3X][max_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_3X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_3X']['max_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_4X][enabled]"
+                      style="width: 100%;"
+                      type="checkbox"
+                      value="True"
+                      {if !isset($PAYZEN_CHOOZEO_OPTIONS.EPNF_4X.enabled) || ($PAYZEN_CHOOZEO_OPTIONS.EPNF_4X.enabled ==='True')}checked{/if}>
+                  </td>
+                  <td>Choozeo 4X CB</td>
+                  <td>
+                    <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_4X][min_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_4X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_4X']['min_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                  </td>
+                  <td>
+                    <input name="PAYZEN_CHOOZEO_OPTIONS[EPNF_4X][max_amount]"
+                      value="{if isset($PAYZEN_CHOOZEO_OPTIONS['EPNF_4X'])}{$PAYZEN_CHOOZEO_OPTIONS['EPNF_4X']['max_amount']|escape:'html':'UTF-8'}{/if}"
+                      style="width: 200px;"
+                      type="text">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>{l s='Define amount restriction for each card.' mod='payzen'}</p>
+          </div>
+        </fieldset>
+        <div class="clear">&nbsp;</div>
+      </div>
+    {/if}
+
     {if $payzen_plugin_features['oney']}
       <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
         <a href="#">{l s='PAYMENT IN 3 OR 4 TIMES ONEY' mod='payzen'}</a>
@@ -1131,8 +1290,8 @@
             </table>
             <p>
               {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
-              <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend.' mod='payzen'}<br />
-              <b>{l s='Code' mod='payzen'} : </b>{l s='The option code as defined in your FacilyPay Oney contract.' mod='payzen'}<br />
+              <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend (the %c and %r patterns will be respectively replaced by payments count and option rate).' mod='payzen'}<br />
+              <b>{l s='Code' mod='payzen'} : </b>{l s='The option code as defined in your Oney contract.' mod='payzen'}<br />
               <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of payments.' mod='payzen'}<br />
@@ -1307,7 +1466,7 @@
               </table>
               <p>
                 {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
-                <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend.' mod='payzen'}<br />
+                <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend (the %c and %r patterns will be respectively replaced by payments count and option rate).' mod='payzen'}<br />
                 <b>{l s='Code' mod='payzen'} : </b>{l s='The option code as defined in your FacilyPay Oney contract.' mod='payzen'}<br />
                 <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the payment option.' mod='payzen'}<br />
                 <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />

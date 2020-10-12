@@ -27,6 +27,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         'sepa',
         'sofort',
         'paypal',
+        'choozeo',
         'other',
         'grouped_other'
     );
@@ -196,6 +197,11 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
             case 'paypal':
                 $payment = new PayzenPaypalPayment();
+                break;
+
+            case 'choozeo':
+                $payment = new PayzenChoozeoPayment();
+                $data['card_type'] = Tools::getValue('payzen_card_type');
                 break;
 
             case 'other':
