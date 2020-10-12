@@ -29,7 +29,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.13.4';
+    private static $PLUGIN_VERSION = '1.13.5';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -46,7 +46,7 @@ class PayzenTools
     public static $multi_lang_fields = array(
         'PAYZEN_REDIRECT_SUCCESS_M', 'PAYZEN_REDIRECT_ERROR_M',
         'PAYZEN_STD_TITLE', 'PAYZEN_MULTI_TITLE', 'PAYZEN_ONEY_TITLE', 'PAYZEN_ONEY34_TITLE', 'PAYZEN_ANCV_TITLE',
-        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_THEME_CONFIG',
+        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_CHOOZEO_TITLE', 'PAYZEN_THEME_CONFIG',
         'PAYZEN_FULLCB_TITLE', 'PAYZEN_OTHER_TITLE'
     );
 
@@ -55,8 +55,8 @@ class PayzenTools
     public static $group_amount_fields = array(
         'PAYZEN_STD_AMOUNTS', 'PAYZEN_MULTI_AMOUNTS', 'PAYZEN_ANCV_AMOUNTS',
         'PAYZEN_ONEY_AMOUNTS', 'PAYZEN_ONEY34_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS',
-        'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_FULLCB_AMOUNTS',
-        'PAYZEN_3DS_MIN_AMOUNT', 'PAYZEN_OTHER_AMOUNTS'
+        'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_CHOOZEO_AMOUNTS',
+        'PAYZEN_CHOOZEO_OPTIONS', 'PAYZEN_FULLCB_AMOUNTS', 'PAYZEN_3DS_MIN_AMOUNT', 'PAYZEN_OTHER_AMOUNTS'
     );
 
     public static $address_regex = array(
@@ -94,6 +94,7 @@ class PayzenTools
         'embedded' => true,
 
         'multi' => true,
+        'choozeo' => false,
         'oney' => true,
         'ancv' => true,
         'sepa' => true,
@@ -106,6 +107,7 @@ class PayzenTools
     public static $submodules = array(
         'STD' => 'Standard',
         'MULTI' => 'Multi',
+        'CHOOZEO' => 'Choozeo',
         'ONEY' => 'Oney',
         'ONEY34' => 'Oney34',
         'FULLCB' => 'Fullcb',
@@ -457,6 +459,34 @@ class PayzenTools
             array('key' => 'PAYZEN_PAYPAL_DELAY', 'default' => '', 'label' => 'Capture delay'),
             array('key' => 'PAYZEN_PAYPAL_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_PAYPAL_AMOUNTS', 'default' => array(), 'label' => 'PayPal payment - Customer group amount restriction'),
+
+            array('key' => 'PAYZEN_CHOOZEO_TITLE',
+                'default' => array(
+                    'en' => 'Payment with Choozeo without fees',
+                    'fr' => 'Paiement avec Choozeo sans frais',
+                    'de' => 'Zahlung mit Choozeo ohne zusätzliche',
+                    'es' => 'Pago con Choozeo sin gastos'
+                ),
+                'label' => 'Method title'),
+            array('key' => 'PAYZEN_CHOOZEO_ENABLED', 'default' => 'False', 'label' => 'Activation'),
+            array('key' => 'PAYZEN_CHOOZEO_DELAY', 'default' => '', 'label' => 'Capture delay'),
+            array('key' => 'PAYZEN_CHOOZEO_AMOUNTS',
+                'default' => array(
+                    array('min_amount' => '135', 'max_amount' => '2000')
+                ),
+                'label' => 'Choozeo payment - Customer group amount restriction'),
+            array('key' => 'PAYZEN_CHOOZEO_OPTIONS', 'default' => array(
+                'EPNF_3X' => array(
+                    'enabled' => 'True',
+                    'min_amount' => '',
+                    'max_amount' => ''
+                ),
+                'EPNF_4X' => array(
+                    'enabled' => 'True',
+                    'min_amount' => '',
+                    'max_amount' => ''
+                )
+            ), 'label' => 'Choozeo payment - Payment options'),
 
             array('key' => 'PAYZEN_OTHER_GROUPED_VIEW', 'default' => 'False', 'label' => 'Regroup payment means'),
             array('key' => 'PAYZEN_OTHER_ENABLED', 'default' => 'True', 'label' => 'Activation'),
@@ -851,6 +881,36 @@ class PayzenTools
 
         // Return true if calculated hash and sent hash are the same.
         return ($hash == $data['kr-hash']);
+    }
+
+    public static function rebuildContext($cart) {
+        // Cart errors.
+        if (! Validate::isLoadedObject($cart)) {
+            throw new Exception('Shopping cart not found.');
+        } elseif ($cart->nbProducts() <= 0) {
+            throw new Exception('Empty cart detected before order processing.');
+        }
+
+        // Rebuild context.
+        if (isset($cart->id_shop)) {
+            $_GET['id_shop'] = $cart->id_shop;
+            Context::getContext()->shop = Shop::initialize();
+        }
+
+        $controller = new FrontController();
+        $controller->init();
+        Context::getContext()->controller = $controller;
+
+        Context::getContext()->customer = new Customer((int) $cart->id_customer);
+        Context::getContext()->customer->logged = 1;
+
+        Context::getContext()->cart = $cart = new Cart((int) $cart->id); // Reload cart to take into nto account customer group.
+
+        $address = new Address((int) $cart->id_address_invoice);
+        Context::getContext()->country = new Country((int) $address->id_country);
+        Context::getContext()->language = new Language((int) $cart->id_lang);
+        Context::getContext()->currency = new Currency((int) $cart->id_currency);
+        Context::getContext()->link = new Link();
     }
 
     public static function ucClassName($name)
