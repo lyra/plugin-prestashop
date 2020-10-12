@@ -80,7 +80,7 @@ class PayzenHelperForm
         }
 
         $enabledCountries = Country::getCountries((int) $context->language->id, true);
-        $all_countries = Country::getCountries((int) $context->language->id, false);
+        $all_countries =    Country::getCountries((int) $context->language->id, false);
         $countryList = array();
         foreach ($enabledCountries as $value) {
             $countryList['ps_countries'][$value['iso_code']] = $value['name'];
@@ -347,6 +347,12 @@ class PayzenHelperForm
             'PAYZEN_PAYPAL_AMOUNTS' => self::getArrayConfig('PAYZEN_PAYPAL_AMOUNTS'),
             'PAYZEN_PAYPAL_DELAY' => Configuration::get('PAYZEN_PAYPAL_DELAY'),
             'PAYZEN_PAYPAL_VALIDATION' => Configuration::get('PAYZEN_PAYPAL_VALIDATION'),
+
+            'PAYZEN_CHOOZEO_TITLE' => self::getLangConfig('PAYZEN_CHOOZEO_TITLE'),
+            'PAYZEN_CHOOZEO_ENABLED' => Configuration::get('PAYZEN_CHOOZEO_ENABLED'),
+            'PAYZEN_CHOOZEO_AMOUNTS' => self::getArrayConfig('PAYZEN_CHOOZEO_AMOUNTS'),
+            'PAYZEN_CHOOZEO_DELAY' => Configuration::get('PAYZEN_CHOOZEO_DELAY'),
+            'PAYZEN_CHOOZEO_OPTIONS' => self::getArrayConfig('PAYZEN_CHOOZEO_OPTIONS'),
 
             'PAYZEN_OTHER_GROUPED_VIEW' => Configuration::get('PAYZEN_OTHER_GROUPED_VIEW'),
             'PAYZEN_OTHER_ENABLED' => Configuration::get('PAYZEN_OTHER_ENABLED'),

@@ -14,15 +14,12 @@ if (! defined('_PS_VERSION_')) {
 
 class PayzenOney34Payment extends AbstractPayzenPayment
 {
-    const ONEY34_THREE_TIMES_MAX_FEES = 10;
-    const ONEY34_FOUR_TIMES_MAX_FEES = 20;
-
     protected $prefix = 'PAYZEN_ONEY34_';
-    protected $tpl_name = 'payment_oney.tpl';
+    protected $tpl_name = 'payment_oney34.tpl';
     protected $logo = 'oney_3x_4x.png';
     protected $name = 'oney34';
 
-    protected $label = "3 or 4 times Oney";
+    protected $label = '3 or 4 times Oney';
 
     protected $currencies = array('EUR');
     protected $countries = array('FR', 'GP', 'MQ', 'GF', 'RE', 'YT');
@@ -125,41 +122,15 @@ class PayzenOney34Payment extends AbstractPayzenPayment
                 $option_label = is_array($option['label']) && isset($option['label'][$cart->id_lang]) ?
                 $option['label'][$cart->id_lang] : $default;
 
+                $c = is_numeric($option['count']) ? $option['count'] : 1;
+                $r = is_numeric($option['rate']) ? $option['rate'] : 0;
+
+                // Get final option description.
+                $search = array('%c', '%r');
+                $replace = array($c, $r . ' %');
+                $option_label = str_replace($search, $replace, $option['label'][$cart->id_lang]); // Label to display on payment page.
+
                 $option['localized_label'] = $option_label;
-
-                // Compute some fields.
-                $count = (int) $option['count'];
-                $rate = (float) $option['rate'];
-
-                $max_fees = null;
-                switch ($count) {
-                    case 3:
-                        $max_fees = self::ONEY34_THREE_TIMES_MAX_FEES;
-                        break;
-                    case 4:
-                        $max_fees = self::ONEY34_FOUR_TIMES_MAX_FEES;
-                        break;
-                    default:
-                        $max_fees = null;
-                        break;
-                }
-
-                $payment = round($amount / $count, 2);
-
-                $fees = round($amount * $rate / 100, 2);
-                if ($max_fees) {
-                    $fees = min($fees, $max_fees);
-                }
-
-                $first = $amount - ($payment * ($count - 1)) + $fees;
-
-                $option['order_total'] = Tools::displayPrice($amount);
-                $option['first_payment'] = Tools::displayPrice($first);
-                $option['funding_count'] = $count - 1; // Real number of payments concerned by funding.
-                $option['monthly_payment'] = Tools::displayPrice($payment);
-                $option['funding_total'] = Tools::displayPrice(($count - 1) * $payment - $fees);
-                $option['funding_fees'] = Tools::displayPrice($fees);
-                $option['taeg'] = ''; // TODO calculate TAEG.
 
                 $enabled_options[$key] = $option;
             }

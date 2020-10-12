@@ -21,17 +21,8 @@ $logger = PayzenTools::getLogger();
 $save_on_failure = true;
 
 if (PayzenTools::checkRestIpnValidity()) {
-    $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
-    $sha_key = $test_mode ? Configuration::get('PAYZEN_PRIVKEY_TEST') : Configuration::get('PAYZEN_PRIVKEY_PROD');
-
     // Use direct post content to avoid stipslashes from json data.
     $data = $_POST;
-
-    if (! PayzenTools::checkHash($data, $sha_key)) {
-        $ip = Tools::getRemoteAddr();
-        $logger->logError("{$ip} tries to access validation.php page without valid signature with data: " . print_r($data, true));
-        die('<span style="display:none">KO-An error occurred while computing the signature.' . "\n" . '</span>');
-    }
 
     $answer = json_decode($data['kr-answer'], true);
     if (! is_array($answer)) {
@@ -46,8 +37,27 @@ if (PayzenTools::checkRestIpnValidity()) {
 
     $cart_id = (int) $data['vads_order_id'];
 
+    $logger->logInfo("Server call process starts for cart #$cart_id.");
+
     // Shopping cart object.
     $cart = new Cart($cart_id);
+
+    // Rebuild context.
+    try {
+        PayzenTools::rebuildContext($cart);
+    } catch (Exception $e) {
+        $logger->logError($e->getMessage() . ' Cart ID: #' . $cart->id);
+        die('<span style="display:none">KO-' . $e->getMessage(). "\n" . '</span>');
+    }
+
+    $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
+    $sha_key = $test_mode ? Configuration::get('PAYZEN_PRIVKEY_TEST') : Configuration::get('PAYZEN_PRIVKEY_PROD');
+
+    if (! PayzenTools::checkHash($_POST, $sha_key)) {
+        $ip = Tools::getRemoteAddr();
+        $logger->logError("{$ip} tries to access validation.php page without valid signature with data: " . print_r($_POST, true));
+        die('<span style="display:none">KO-An error occurred while computing the signature.' . "\n" . '</span>');
+    }
 
     require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
 
@@ -56,8 +66,18 @@ if (PayzenTools::checkRestIpnValidity()) {
 } elseif (PayzenTools::checkFormIpnValidity()) {
     $cart_id = (int) Tools::getValue('vads_order_id');
 
+    $logger->logInfo("Server call process starts for cart #$cart_id.");
+
     // Shopping cart object.
     $cart = new Cart($cart_id);
+
+    // Rebuild context.
+    try {
+        PayzenTools::rebuildContext($cart);
+    } catch (Exception $e) {
+        $logger->logError($e->getMessage() . " Cart ID: #{$cart->id}.");
+        die('<span style="display:none">KO-' . $e->getMessage(). "\n" . '</span>');
+    }
 
     require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
 
@@ -82,39 +102,6 @@ if (PayzenTools::checkRestIpnValidity()) {
     $logger->logError('Invalid IPN request received. Content: ' . print_r($_POST, true));
     die('<span style="display:none">KO-Invalid IPN request received.' . "\n" . '</span>');
 }
-
-$logger->logInfo("Server call process starts for cart #$cart_id.");
-
-// Cart errors.
-if (! Validate::isLoadedObject($cart)) {
-    $logger->logError("Cart #$cart_id not found in database.");
-    die('<span style="display:none">KO-Order not found.' . "\n" . '</span>');
-} elseif ($cart->nbProducts() <= 0) {
-    $logger->logError("Cart #$cart_id was emptied before redirection.");
-    die('<span style="display:none">KO-Empty cart detected before order processing.' . "\n" . '</span>');
-}
-
-// Rebuild context.
-$controller = new FrontController();
-$controller->init();
-
-Context::getContext()->controller = $controller;
-
-if (isset($cart->id_shop)) {
-    $_GET['id_shop'] = $cart->id_shop;
-    Context::getContext()->shop = Shop::initialize();
-}
-
-Context::getContext()->customer = new Customer((int) $cart->id_customer);
-Context::getContext()->customer->logged = 1;
-
-Context::getContext()->cart = $cart = new Cart((int) $cart_id); // Reload cart to take into nto account customer group.
-
-$address = new Address((int) $cart->id_address_invoice);
-Context::getContext()->country = new Country((int) $address->id_country);
-Context::getContext()->language = new Language((int) $cart->id_lang);
-Context::getContext()->currency = new Currency((int) $cart->id_currency);
-Context::getContext()->link = new Link();
 
 // Module main object.
 $payzen = new Payzen();
