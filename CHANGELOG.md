@@ -1,3 +1,7 @@
+1.13.6, 2020-10-27:
+- [embedded] Bug fix: Display 3DS result for REST API payments.
+- Display warning message when only offline refund is possible.
+
 1.13.5, 2020-10-05:
 - Bug fix: Fix IPN management in multistore environment.
 - Bug fix: Fix Order->total_real_paid value on payment cancellation.
