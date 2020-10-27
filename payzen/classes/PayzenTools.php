@@ -29,7 +29,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.13.5';
+    private static $PLUGIN_VERSION = '1.13.6';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -800,10 +800,18 @@ class PayzenTools
                     $response['vads_auth_result'] = self::getProperty($authorizationResponse, 'authorizationResult');
                 }
 
-                if (($threeDSResponse = self::getProperty($cardDetails, 'threeDSResponse'))
+                if (($authenticationResponse = self::getProperty($cardDetails, 'authenticationResponse'))
+                    && ($value = self::getProperty($authenticationResponse, 'value'))) {
+                    $response['vads_threeds_status'] = self::getProperty($value, 'status');
+                    $response['vads_threeds_auth_type'] = self::getProperty($value, 'authenticationType');
+                    if ($authenticationValue = self::getProperty($value, 'authenticationValue')) {
+                        $response['vads_threeds_cavv'] = self::getProperty($authenticationValue, 'value');
+                    }
+                } elseif (($threeDSResponse = self::getProperty($cardDetails, 'threeDSResponse'))
                     && ($authenticationResultData = self::getProperty($threeDSResponse, 'authenticationResultData'))) {
                     $response['vads_threeds_cavv'] = self::getProperty($authenticationResultData, 'cavv');
                     $response['vads_threeds_status'] = self::getProperty($authenticationResultData, 'status');
+                    $response['vads_threeds_auth_type'] = self::getProperty($authenticationResultData, 'threeds_auth_type');
                 }
             }
 
