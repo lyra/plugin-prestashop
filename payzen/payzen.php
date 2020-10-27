@@ -52,7 +52,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.13.5';
+        $this->version = '1.13.6';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -180,7 +180,7 @@ class Payzen extends PaymentModule
             $tvp_state->invoice = false;
             $tvp_state->send_email = false;
             $tvp_state->module_name = $this->name;
-            $tvp_state->color = '#41664D';
+            $tvp_state->color = '#FF8C00';
             $tvp_state->unremovable = true;
             $tvp_state->hidden = false;
             $tvp_state->logable = false;
@@ -1484,6 +1484,8 @@ class Payzen extends PaymentModule
         if (! $this->getPrivateKey()) {
             $this->logger->logWarning("Impossible to make online refund for order #{$order->id}: private key is not configured." .
                 ' Let PrestaShop do offline refund.');
+            // Allow offline refund and display warning message.
+            $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
             return true;
         }
 
@@ -1666,14 +1668,15 @@ class Payzen extends PaymentModule
 
             if ($e->getCode() === 'PSP_100') {
                 // Merchant don't have offer allowing REST WS.
+                // Allow offline refund and display warning message.
+                $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
                 return true;
             }
 
             if ($e->getCode() <= -1) { // Manage cUrl errors.
                 $message = sprintf($this->l('Error occurred when refunding payment for order #%1$s. Please consult the payment module log for more details.'), $order->reference);
             } elseif (! $e->getCode()) {
-                $message = sprintf($this->l('Cannot refund payment for order #%1$s.'), $order->reference)
-                    . ' ' . $e->getMessage();
+                $message = sprintf($this->l('Cannot refund payment for order #%1$s.'), $order->reference) . ' ' . $e->getMessage();
             } else {
                 $message = $this->l('Refund error') . ': ' . $e->getMessage();
             }
@@ -1911,15 +1914,16 @@ class Payzen extends PaymentModule
 
         // 3DS extra message.
         $msg_3ds = "\n" . $this->l('3DS authentication : ');
-        if (in_array($response->get('threeds_status'), array('Y', 'YES'))) {
-            $msg_3ds .= $this->l('YES');
-            $msg_3ds .= "\n" . $this->l('3DS certificate : ') . $response->get('threeds_cavv');
+        if ($status = $response->get('threeds_status')) {
+            $msg_3ds .= $this->getThreedsStatus($status);
+            $msg_3ds .= ($threeds_cavv = $response->get('threeds_cavv')) ? "\n" . $this->l('3DS certificate : ') . $threeds_cavv : '';
+            $msg_3ds .= ($threeds_auth_type = $response->get('threeds_auth_type')) ? "\n" . $this->l('Authentication type : ') . $threeds_auth_type : '';
         } else {
-            $msg_3ds .= $this->l('NO');
+            $msg_3ds .= 'UNAVAILABLE';
         }
 
         // IPN call source.
-        $msg_src = "\n" . $this->l('IPN source : ') . $response->get('url_check_src');
+        $msg_src = ($url_check_src = $response->get('url_check_src')) ? "\n" . $this->l('IPN source : ') . $url_check_src : "";
 
         // Transaction UUID.
         $msg_trans_uuid = "\n" . $this->l('Transaction UUID : ') . $response->get('trans_uuid');
@@ -1945,6 +1949,26 @@ class Payzen extends PaymentModule
 
         // Mark message as read to archive it.
         Message::markAsReaded($msg->id, 0);
+    }
+
+    private function getThreedsStatus($status)
+    {
+        switch ($status) {
+            case 'Y':
+                return 'SUCCESS';
+
+            case 'N':
+                return 'FAILED';
+
+            case 'U':
+                return 'UNAVAILABLE';
+
+            case 'A':
+                return 'ATTEMPT';
+
+            default :
+                return $status;
+        }
     }
 
     private function createCustomerThread($id_order)

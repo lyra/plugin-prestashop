@@ -35,9 +35,8 @@ $_MODULE['<{payzen}prestashop>payzen_5aa54fd75476b003b325dfa5465d6e92'] = 'Warni
 $_MODULE['<{payzen}prestashop>payzen_9339edbdbed965d1b4d77834747ec411'] = 'Card brand chosen by buyer.';
 $_MODULE['<{payzen}prestashop>payzen_4e78d859310273cc53c19b16221b874f'] = 'Default card brand used.';
 $_MODULE['<{payzen}prestashop>payzen_13aa1c47157818ce4d54f337a17084af'] = '3DS authentication: ';
-$_MODULE['<{payzen}prestashop>payzen_7469a286259799e5b37e5db9296f00b3'] = 'YES';
+$_MODULE['<{payzen}prestashop>payzen_2714fdde3eee03e0dbd63f60e825a133'] = 'Authentication type: ';
 $_MODULE['<{payzen}prestashop>payzen_68a065494f1612ae29b1cde04c936339'] = '3DS certificate: ';
-$_MODULE['<{payzen}prestashop>payzen_c2f3f489a00553e7a01d369c103c7251'] = 'NO';
 $_MODULE['<{payzen}prestashop>payzen_27dc90b59dc70589b7eb1eb3d4de7320'] = 'IPN source: ';
 $_MODULE['<{payzen}prestashop>payzen_00d49da5199f821b7c130c41db5f9d84'] = 'Transaction UUID: ';
 $_MODULE['<{payzen}prestashop>payzen_b2a14ab02a2c49f4a1f3ea7367289652'] = '%s payment';
@@ -448,4 +447,4 @@ $_MODULE['<{payzen}prestashop>payzen_dd367f5fbbdba105ab71cdcf4f7cf366'] = 'Trans
 $_MODULE['<{payzen}prestashop>payzen_d67793cb999383fca646b7954ab67137'] = 'Error occurred when refunding payment for order #%1$s. Please consult the PayZen logs for more details.';
 $_MODULE['<{payzen}prestashop>payzen_0ad207a47022c5ba4d99d915d39a06a7'] = 'Cannot refund payment for order #%1$s.';
 $_MODULE['<{payzen}prestashop>payment_std_rest_4c561c57168fbd2c6a31ad79170183cf'] = 'Click on « Pay » button to enter payment information in a popin mode';
-
+$_MODULE['<{payzen}prestashop>payzen_731199203d03a5643c70e00cfc25d8d9'] = 'Payment is refunded only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.';
