@@ -50,6 +50,11 @@
   </ul>
 
   <script type="text/javascript">
+    $(document).ready(function() {
+       sessionStorage.setItem('payzenIdentifierToken', "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}");
+       sessionStorage.setItem('payzenToken', "{$payzen_rest_form_token|escape:'html':'UTF-8'}");
+    });
+
     function payzenOneclickPaymentSelect(paymentByIdentifier) {
       if (paymentByIdentifier) {
         $('#payzen_oneclick_payment_description_1').show();
@@ -64,13 +69,14 @@
       {if ($payzen_std_card_data_mode == '5')}
         $('.payzen .kr-form-error').html('');
 
+        var token;
         if ($('#payzen_payment_by_identifier').val() == '1') {
-          var token = "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}";
+          token = sessionStorage.getItem('payzenIdentifierToken');
         } else {
-          var token = "{$payzen_rest_form_token|escape:'html':'UTF-8'}";
+          token = sessionStorage.getItem('payzenToken');
         }
 
-        KR.setFormConfig({ formToken: token });
+        KR.setFormConfig({ formToken: token, language: PAYZEN_LANGUAGE });
       {/if}
     }
     </script>

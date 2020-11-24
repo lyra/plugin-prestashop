@@ -30,10 +30,8 @@
 
 <!--[if IE]>
   <script type="text/javascript">
-  // <![CDATA[
     $('#payzen_choozeo label.payzen_card_click img').on('click', function(e) {
       $(this).parent().click();
     });
-  // ]]>
   </script>
 <![endif]-->

@@ -21,11 +21,42 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         $this->logger = PayzenTools::getLogger();
     }
 
+    public function getToken()
+    {
+        $cart = $this->context->cart;
+
+        $payment = new PayzenStandardPayment();
+        $token = $payment->getFormToken($cart);
+
+        if ($token) {
+            $json = array('token' => $token);
+
+            if (Tools::getValue('refreshIdentifierToken')) {
+                $identifierToken = $payment->getFormToken($cart, true);
+                $json['identifierToken'] = $identifierToken;
+            }
+        } else {
+           $json = array(
+               'status' => 'error',
+               'message' => $this->l('Error when creating token.')
+            );
+        }
+
+        die(Tools::jsonEncode($json));
+    }
+
     /**
      * @see FrontController::postProcess()
      */
     public function postProcess()
     {
+        if (Tools::getValue('refreshToken')) {
+            $this->logger->logInfo('Cart has been updated, let\'s refresh form token.');
+            $this->getToken();
+
+            return;
+        }
+
         $this->logger->logInfo("User return to shop process starts.");
 
         if (! $this->checkRestReturnValidity()) {

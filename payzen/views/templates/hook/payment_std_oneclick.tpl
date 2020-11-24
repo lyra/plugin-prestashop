@@ -76,7 +76,7 @@
           var token = "{$payzen_rest_form_token|escape:'html':'UTF-8'}";
         }
 
-        KR.setFormConfig({ formToken: token });
+        KR.setFormConfig({ formToken: token, language: PAYZEN_LANGUAGE });
       {/if}
     }
   </script>

@@ -39,21 +39,17 @@
   </div>
 
   <script type="text/javascript">
-  // <![CDATA[
     $('div.payment_module.payzen_choozeo a img').on('click', function(e) {
-      $(this).parent().find('input').prop("checked", true); 
+      $(this).parent().find('input').prop('checked', true);
       $('#payzen_choozeo').submit();
     });
-  // ]]>
   </script>
 
   {if {$payzen_choozeo_options|@count} == 1}
     <script type="text/javascript">
-    // <![CDATA[
       $('div.payment_module.payzen_choozeo a').on('hover', function(e) {
         $('div.payment_module.payzen_choozeo a form .payzen_card_click img').toggleClass('hover');
       });
-    // ]]>
     </script>
   {/if}
 
