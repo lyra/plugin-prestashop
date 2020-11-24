@@ -12,6 +12,44 @@
  */
 
 $(function() {
+    $('#total_price').on('DOMSubtreeModified', function() {
+        // If it's one-page checkout, do nothing.
+        if (payzen.pageType === 'order-opc') {
+            return;
+        }
+
+        var refreshData = 'refreshToken=1';
+        if (typeof $('#payzen_payment_by_identifier') !== 'undefined') {
+            refreshData += '&refreshIdentifierToken=1';
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: decodeURIComponent(payzen.restUrl),
+            async: false,
+            cache: false,
+            data: refreshData,
+            success: function(json) {
+                var response = JSON.parse(json);
+
+                if (response.token) {
+                    var token = response.token;
+                    sessionStorage.setItem('payzenToken', response.token);
+
+                    if (response.identifierToken) {
+                        sessionStorage.setItem('payzenIdentifierToken', response.identifierToken);
+
+                        if ($('#payzen_payment_by_identifier').val() == '1') {
+                            token = response.identifierToken;
+                        }
+                    }
+
+                    KR.setFormConfig({ formToken: token,  language: PAYZEN_LANGUAGE });
+                }
+            }
+        });
+    });
+
     setTimeout(function() {
         if ($('#cgv').length) {
             if ($('#cgv').is(':checked')) {

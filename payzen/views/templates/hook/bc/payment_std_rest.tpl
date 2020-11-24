@@ -26,7 +26,7 @@
     <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
 
     <div id="payzen_standard_rest_wrapper" style="padding-top: 10px; padding-left: 40px;">
-      <div class="kr-embedded"{if $payzen_rest_popin} kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
+      <div class="kr-embedded"{if $payzen_rest_popin} kr-popin{/if}>
         <div class="kr-pan"></div>
         <div class="kr-expiry"></div>
         <div class="kr-security-code"></div>
@@ -35,6 +35,13 @@
         <div class="kr-form-error"></div>
       </div>
     </div>
+
+    <script type="text/javascript">
+      $('#payzen_standard_rest_wrapper').ready(function() {
+        KR.removeForms();
+        KR.setFormConfig({ formToken: "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}", language: PAYZEN_LANGUAGE });
+      });
+    </script>
 
     {if $payzen_saved_identifier}
       {include file="./payment_std_oneclick.tpl"}

@@ -1,3 +1,8 @@
+1.13.7, 2020-11-24:
+- [embedded] Bug fix: Embedded payment fields not correctly displayed since the last gateway JS library delivery on PrestaShop 1.6.
+- [embedded] Bug fix: Update token on minicart change on PrestaShop 1.6.
+- Minor fix.
+
 1.13.6, 2020-10-27:
 - [embedded] Bug fix: Display 3DS result for REST API payments.
 - Display warning message when only offline refund is possible.

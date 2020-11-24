@@ -52,7 +52,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.13.6';
+        $this->version = '1.13.7';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -893,6 +893,9 @@ class Payzen extends PaymentModule
 
                     $this->context->smarty->assign('payzen_rest_theme', $rest_theme);
 
+                    $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
+
+                    Media::addJsDef(array('payzen' => array('restUrl' => $return_url, 'pageType' => $page)));
                     $this->addJS('rest.js');
                 }
             }

@@ -15,11 +15,11 @@
      <div class="kr-pan"></div>
      <div class="kr-expiry"></div>
      <div class="kr-security-code"></div>
-     <button type="button" class="kr-payment-button" {if !$payzen_rest_popin}style="display:none;"{/if}></button>
+     <button type="button" class="kr-payment-button" {if !$payzen_rest_popin}style="display: none;"{/if}></button>
      <div class="kr-field processing" style="display: none; border: none !important;">
        <div style="background-image: url('{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/loading_big.gif');
-                  margin: 0 auto; display: block; height: 35px; background-color: #ffffff; background-position: center;
-                  background-repeat: no-repeat; background-size: 35px;">
+                   margin: 0 auto; display: block; height: 35px; background-color: #ffffff; background-position: center;
+                   background-repeat: no-repeat; background-size: 35px;">
        </div>
      </div>
 
