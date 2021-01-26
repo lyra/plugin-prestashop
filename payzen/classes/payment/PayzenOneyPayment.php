@@ -152,12 +152,14 @@ class PayzenOneyPayment extends AbstractPayzenPayment
 
                 $first = $amount - ($payment * ($count - 1)) + $fees;
 
-                $option['order_total'] = Tools::displayPrice($amount);
-                $option['first_payment'] = Tools::displayPrice($first);
+                $context = Context::getContext();
+
+                $option['order_total'] = PayzenTools::formatPrice($amount, $cart->id_currency, $context);
+                $option['first_payment'] = PayzenTools::formatPrice($first, $cart->id_currency, $context);
                 $option['funding_count'] = $count - 1; // Real number of payments concerned by funding.
-                $option['monthly_payment'] = Tools::displayPrice($payment);
-                $option['funding_total'] = Tools::displayPrice(($count - 1) * $payment - $fees);
-                $option['funding_fees'] = Tools::displayPrice($fees);
+                $option['monthly_payment'] = PayzenTools::formatPrice($payment, $cart->id_currency, $context);
+                $option['funding_total'] = PayzenTools::formatPrice(($count - 1) * $payment - $fees, $cart->id_currency, $context);
+                $option['funding_fees'] = PayzenTools::formatPrice($fees, $cart->id_currency, $context);
                 $option['taeg'] = ''; // TODO calculate TAEG.
 
                 $enabled_options[$key] = $option;

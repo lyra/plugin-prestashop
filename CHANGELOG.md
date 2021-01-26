@@ -1,3 +1,9 @@
+1.13.8, 2020-12-10:
+- Bug fix: Incorrectly formatted amount in order confirmation page.
+- Bug fix: Error 500 due to obsolete function (get_magic_quotes_gpc) in PHP 7.4.
+- Consider case of chargedbacks when refunding.
+- Display warning message on payment in iframe mode enabling.
+
 1.13.7, 2020-11-24:
 - [embedded] Bug fix: Embedded payment fields not correctly displayed since the last gateway JS library delivery on PrestaShop 1.6.
 - [embedded] Bug fix: Update token on minicart change on PrestaShop 1.6.

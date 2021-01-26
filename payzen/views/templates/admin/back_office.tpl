@@ -20,6 +20,33 @@
   });
 </script>
 
+<script type="text/javascript">
+    function payzenCardEntryChanged() {
+        var cardDataMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
+
+        switch (cardDataMode) {
+            case '4':
+                if (! confirm('{l s='Warning, some payment means are not compatible with an integration by iframe. Please consult the documentation for more details.' mod='payzen'}')) {
+                    var oldCardDataMode = $('#PAYZEN_STD_CARD_DATA_MODE_OLD').val();
+                    $('select#PAYZEN_STD_CARD_DATA_MODE').val(oldCardDataMode).change()
+                } else {
+                    $('#PAYZEN_REST_SETTINGS').hide();
+                    $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
+                }
+
+                break;
+            case '5':
+            case '6':
+                $('#PAYZEN_REST_SETTINGS').show();
+                $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+                break;
+            default:
+                $('#PAYZEN_REST_SETTINGS').hide();
+                $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+        }
+    }
+</script>
+
 <form method="POST" action="{$payzen_request_uri|escape:'html':'UTF-8'}" class="defaultForm form-horizontal">
   <div style="width: 100%;">
     <fieldset>
@@ -674,6 +701,7 @@
               <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_CARD_DATA_MODE === (string)$key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
             {/foreach}
           </select>
+          <input type="hidden" id="PAYZEN_STD_CARD_DATA_MODE_OLD" name="PAYZEN_STD_CARD_DATA_MODE_OLD" value="{$PAYZEN_STD_CARD_DATA_MODE|escape:'html':'UTF-8'}"/>
           <p>{l s='Select how the card data will be entered. Attention, to use bank data acquisition on the merchant site, you must ensure that you have subscribed to this option with your bank.' mod='payzen'}</p>
         </div>
 
