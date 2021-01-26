@@ -52,7 +52,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.13.7';
+        $this->version = '1.13.8';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1339,10 +1339,10 @@ class Payzen extends PaymentModule
         );
 
         if (! $error) {
-            $array['total_to_pay'] = Tools::displayPrice(
-                number_format($order->total_paid_real, 2),
-                new Currency($order->id_currency),
-                false
+            $array['total_to_pay'] = PayzenTools::formatPrice(
+                $order->total_paid_real,
+                $order->id_currency,
+                $this->context
             );
 
             $array['id_order'] = $order->id;
@@ -1669,19 +1669,29 @@ class Payzen extends PaymentModule
         } catch (Exception $e) {
             $this->logger->logError("{$e->getMessage()}" . ($e->getCode() > 0 ? ' (' . $e->getCode() . ').' : ''));
 
-            if ($e->getCode() === 'PSP_100') {
-                // Merchant don't have offer allowing REST WS.
-                // Allow offline refund and display warning message.
-                $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
-                return true;
-            }
+            $errorCode = $e->getCode() <= -1 ? -1 : $e->getCode();
+            switch ($errorCode) {
+                case 'PSP_100':
+                    // Merchant don't have offer allowing REST WS.
+                    // Allow offline refund and display warning message.
+                    $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
+                    return true;
 
-            if ($e->getCode() <= -1) { // Manage cUrl errors.
-                $message = sprintf($this->l('Error occurred when refunding payment for order #%1$s. Please consult the payment module log for more details.'), $order->reference);
-            } elseif (! $e->getCode()) {
-                $message = sprintf($this->l('Cannot refund payment for order #%1$s.'), $order->reference) . ' ' . $e->getMessage();
-            } else {
-                $message = $this->l('Refund error') . ': ' . $e->getMessage();
+                case 'PSP_083':
+                    $message = $this->l('Chargebacks cannot be refunded.');
+                    break;
+
+                case -1: // Manage cUrl errors.
+                    $message = sprintf($this->l('Error occurred when refunding payment for order #%1$s. Please consult the payment module log for more details.'), $order->reference);
+                    break;
+
+                case 0:
+                    $message = sprintf($this->l('Cannot refund payment for order #%1$s.'), $order->reference) . ' ' . $e->getMessage();
+                    break;
+
+                default:
+                    $message = $this->l('Refund error') . ': ' . $e->getMessage();
+                    break;
             }
 
             $this->context->cookie->payzenRefundWarn = $message;

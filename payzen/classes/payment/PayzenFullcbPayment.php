@@ -144,11 +144,13 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
 
                 $first = $amount - ($payment * ($count - 1)) + $fees;
 
-                $option['order_amount'] = Tools::displayPrice($amount);
-                $option['first_payment'] = Tools::displayPrice($first);
-                $option['monthly_payment'] = Tools::displayPrice($payment);
-                $option['total_amount'] = Tools::displayPrice($amount + $fees);
-                $option['fees'] = Tools::displayPrice($fees);
+                $context = Context::getContext();
+
+                $option['order_amount'] = PayzenTools::formatPrice($amount, $cart->id_currency, $context);
+                $option['first_payment'] = PayzenTools::formatPrice($first, $cart->id_currency, $context);
+                $option['monthly_payment'] = PayzenTools::formatPrice($payment, $cart->id_currency, $context);
+                $option['total_amount'] = PayzenTools::formatPrice($amount + $fees, $cart->id_currency, $context);
+                $option['fees'] = PayzenTools::formatPrice($fees, $cart->id_currency, $context);
 
                 $enabled_options[$key] = $option;
             }
