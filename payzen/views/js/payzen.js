@@ -164,24 +164,6 @@ function payzenHideOtherLanguage(id, name) {
     }
 }
 
-function payzenCardEntryChanged() {
-    var cardDataMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
-
-    switch (cardDataMode) {
-        case '4':
-            $('#PAYZEN_REST_SETTINGS').hide();
-            $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
-            break;
-        case '5':
-            $('#PAYZEN_REST_SETTINGS').show();
-            $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
-            break;
-        default:
-            $('#PAYZEN_REST_SETTINGS').hide();
-            $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
-    }
-}
-
 function payzenAddOtherPaymentMeansOption(first) {
     if (first) {
         $('#payzen_other_payment_means_options_btn').hide();
