@@ -14,7 +14,7 @@
 {if {$payzen_oney_options|@count} == 0}
   <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
     <a href="javascript: $('#payzen_oney{$suffix|escape:'html':'UTF-8'}').submit();" title={$title|escape:'html':'UTF-8'}>
-      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
       <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_oney{$suffix|escape:'html':'UTF-8'}">
         <input type="hidden" name="payzen_payment_type" value="oney{$suffix|escape:'html':'UTF-8'}" />
@@ -24,7 +24,7 @@
 {else}
   <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
     <a class="unclickable" title="{l s='Choose a payment option and click « Pay » button' mod='payzen'}" href="javascript: void(0);">
-      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
       <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_oney{$suffix|escape:'html':'UTF-8'}">
         <input type="hidden" name="payzen_payment_type" value="oney{$suffix|escape:'html':'UTF-8'}" />

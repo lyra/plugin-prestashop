@@ -12,26 +12,7 @@ if (! defined('_PS_VERSION_')) {
     exit;
 }
 
-require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenApi.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenFileLogger.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenWsException.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenTools.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenRest.php';
-
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/AbstractPayzenPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenAncvPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenChoozeoPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenFullcbPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenMultiPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenOneyPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenOney34Payment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenPaypalPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenSepaPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenSofortPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenStandardPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenOtherPayment.php';
-require_once _PS_MODULE_DIR_ . 'payzen/classes/payment/PayzenGroupedOtherPayment.php';
+require_once(_PS_MODULE_DIR_ . 'payzen/autoload.php');
 
 /**
  * Payment module main class.
@@ -52,12 +33,12 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.13.8';
+        $this->version = '1.14.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
         $this->is_eu_compatible = 1;
-        $this->need_instance = 0;
+        $this->need_instance = 1;
 
         $this->logger = PayzenTools::getLogger();
 
@@ -96,39 +77,93 @@ class Payzen extends PaymentModule
             return false;
         }
 
+        $installError = false;
+        if (! defined('PAYZEN_MODULE_UPGRADE')) {
+            $parentInstallResult = parent::install();
+
+            // Error in PrestaShop install function, do not interrupt installation.
+            if (is_string($parentInstallResult)) {
+                $this->logger->logWarning('PaymentModule::install returned an error: ' . $parentInstallResult);
+                $this->_errors[] = $parentInstallResult;
+
+                $installError = true;
+            } elseif (! $parentInstallResult) {
+                $this->logger->logWarning('PaymentModule::install returned an unknown error. Installation of the module will continue.');
+                $installError = true;
+            }
+        }
+
         // Install hooks.
-        if (! parent::install() || ! $this->registerHook('header') || ! $this->registerHook('paymentReturn')
+        if (! $this->registerHook('header') || ! $this->registerHook('paymentReturn')
             || ! $this->registerHook('adminOrder') || ! $this->registerHook('actionObjectOrderSlipAddBefore')
             || ! $this->registerHook('actionProductCancel')
             || ! $this->registerHook('actionOrderStatusUpdate')
             || ! $this->registerHook('actionOrderStatusPostUpdate')
             || ! $this->registerHook('actionAdminCarrierWizardControllerSaveBefore')
             || ! $this->registerHook('actionAdminCarriersOptionsModifier')) {
-            return false;
+
+            $this->logger->logWarning('One or more hooks necessary for the module could not be saved.');
+            $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
+
+            $installError = true;
         }
 
         if (version_compare(_PS_VERSION_, '1.7', '<')) {
             if (! $this->registerHook('payment') || ! $this->registerHook('displayPaymentEU')) {
-                return false;
+                $this->logger->logWarning('Hook « displayPaymentEU » could not be saved.');
+                $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
+
+                $installError = true;
             }
         } else {
             if (! $this->registerHook('paymentOptions')) {
-                return false;
+                $this->logger->logWarning('Hook « paymentOptions » could not be saved.');
+                $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
+
+                $installError = true;
             }
         }
 
-        // Set default values.
-        foreach (PayzenTools::getAdminParameters() as $param) {
-            if (in_array($param['key'], PayzenTools::$multi_lang_fields)) {
-                $default = PayzenTools::convertIsoArrayToIdArray($param['default']);
-            } elseif (is_array($param['default'])) {
-                $default = serialize($param['default']);
-            } else {
-                $default = $param['default'];
-            }
+        $admin_config_params = PayzenTools::getAdminParameters();
 
-            if (! Configuration::updateValue($param['key'], $default, false, false, false)) {
-                return false;
+        if (defined('PAYZEN_MODULE_UPGRADE')) {
+            $results = Db::getInstance()->executeS(
+                'SELECT `name` FROM `' . _DB_PREFIX_ . "configuration` WHERE `name` LIKE 'PAYZEN_%' AND `name` NOT LIKE 'PAYZEN_OS_%'"
+            );
+
+            $already_installed_params = array_map(function($ar) { return $ar['name']; }, $results);
+        }
+
+        // Set default values.
+        foreach ($admin_config_params as $param) {
+            if (! defined('PAYZEN_MODULE_UPGRADE') || ! in_array($param['key'], $already_installed_params)) {
+                if (in_array($param['key'], PayzenTools::$multi_lang_fields)) {
+                    $default = PayzenTools::convertIsoArrayToIdArray($param['default']);
+                } elseif (is_array($param['default'])) {
+                    $default = serialize($param['default']);
+                } else {
+                    $default = $param['default'];
+                }
+
+                if (! Configuration::updateValue($param['key'], $default, false, false, false)) {
+                    $this->logger->logWarning("Error while saving default value for field {$param['key']}.");
+                    $this->_errors[] = sprintf($this->l('Error while saving default value for field « %s ».'), $param['key']);
+
+                    $installError = true;
+                }
+            }
+        }
+
+        // Delete already saved and not used params.
+        if (defined('PAYZEN_MODULE_UPGRADE') && ! empty($already_installed_params)) {
+            $params_to_be_installed = array_map(function($ar) { return $ar['key']; }, $admin_config_params);
+            foreach ($already_installed_params as $param) {
+                if (! in_array($param, $params_to_be_installed)) {
+                    if (! Configuration::deleteByName($param)) {
+                        $this->logger->logWarning("Error while deleting already saved and not used configuration parameter $param.");
+                        $installError = true;
+                    }
+                }
             }
         }
 
@@ -156,7 +191,10 @@ class Payzen extends PaymentModule
             $oney_state->paid = false;
 
             if (! $oney_state->save() || ! Configuration::updateValue('PAYZEN_OS_ONEY_PENDING', $oney_state->id)) {
-                return false;
+                $this->logger->logWarning('Error while creating customized order status «Funding request in progress».');
+
+                $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('Funding request in progress'));
+                $installError = true;
             }
 
             // Add small icon to state.
@@ -189,7 +227,10 @@ class Payzen extends PaymentModule
             $tvp_state->paid = false;
 
             if (! $tvp_state->save() || ! Configuration::updateValue('PAYZEN_OS_TO_VALIDATE', $tvp_state->id)) {
-                return false;
+                $this->logger->logWarning('Error while creating customized order status «To validate payment».');
+
+                $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('To validate payment'));
+                $installError = true;
             }
 
             // Add small icon to state.
@@ -205,7 +246,7 @@ class Payzen extends PaymentModule
                 'en' => 'On backorder (payment accepted)',
                 'fr' => 'En attente de réapprovisionnement (paiement accepté)',
                 'de' => 'Artikel nicht auf Lager (Zahlung eingegangen)',
-                'es' => 'Pedido pendiente por falta de stock (pagado) '
+                'es' => 'Pedido pendiente por falta de stock (pagado)'
             );
 
             $oos_state = new OrderState();
@@ -223,7 +264,10 @@ class Payzen extends PaymentModule
             $oos_state->template = 'outofstock';
 
             if (! $oos_state->save() || ! Configuration::updateValue('PAYZEN_OS_PAYMENT_OUTOFSTOCK', $oos_state->id)) {
-                return false;
+                $this->logger->logWarning('Error while creating customized order status «On backorder (payment accepted)».');
+
+                $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('On backorder (payment accepted)'));
+                $installError = true;
             }
 
             // Add small icon to state.
@@ -256,7 +300,10 @@ class Payzen extends PaymentModule
             $auth_state->paid = false;
 
             if (! $auth_state->save() || ! Configuration::updateValue('PAYZEN_OS_AUTH_PENDING', $auth_state->id)) {
-                return false;
+                $this->logger->logWarning('Error while creating customized order status «Pending authorization».');
+
+                $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('Pending authorization'));
+                $installError = true;
             }
 
             // Add small icon to state.
@@ -290,7 +337,10 @@ class Payzen extends PaymentModule
             $sofort_state->paid = false;
 
             if (! $sofort_state->save() || ! Configuration::updateValue('PAYZEN_OS_TRANS_PENDING', $sofort_state->id)) {
-                return false;
+                $this->logger->logWarning('Error while creating customized order status «Pending funds transfer».');
+
+                $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('Pending funds transfer'));
+                $installError = true;
             }
 
             // Add small icon to state.
@@ -307,16 +357,16 @@ class Payzen extends PaymentModule
 
             'bc/payment_ancv', 'bc/payment_choozeo', 'bc/payment_fullcb', 'bc/payment_multi', 'bc/payment_oney',
             'bc/payment_oney34','bc/payment_paypal', 'bc/payment_sepa', 'bc/payment_sofort', 'bc/payment_std_eu',
-            'bc/payment_std_iframe', 'bc/payment_std', 'bc/payment_std_rest',
+            'bc/payment_std_iframe', 'bc/payment_std', 'bc/payment_std_rest', 'bc/payment_franfinance',
 
             'payment_choozeo', 'payment_fullcb', 'payment_multi', 'payment_oney', 'payment_oney34',
-            'payment_return', 'payment_std_iframe', 'payment_std', 'payment_std_rest'
+            'payment_return', 'payment_std_iframe', 'payment_std', 'payment_std_rest', 'payment_franfinance'
         );
         foreach ($tpls as $tpl) {
             $this->context->smarty->clearCompiledTemplate($this->getTemplatePath($tpl . '.tpl'));
         }
 
-        return true;
+        return ! $installError;
     }
 
     /**
@@ -345,6 +395,11 @@ class Payzen extends PaymentModule
     {
         $msg = '';
 
+        if (isset($this->context->cookie->payzenEmailSendMsg)) {
+            $msg = $this->context->cookie->payzenEmailSendMsg;
+            unset($this->context->cookie->payzenEmailSendMsg);
+        }
+
         if (Tools::isSubmit('payzen_submit_admin_form')) {
             $this->postProcess();
 
@@ -357,9 +412,50 @@ class Payzen extends PaymentModule
             }
 
             $msg .= '<br />';
+        } else if (Tools::getValue('submitter') === 'payzen_send_support') {
+            if (Tools::getValue('sender') && Tools::getValue('subject') && Tools::getValue('message')) {
+                $email = array(
+                    'sender' => Tools::getValue('sender'),
+                    'subject' => Tools::getValue('subject'),
+                    'message' => Tools::getValue('message')
+                );
+
+                if ($this->sendEmail($email)) {
+                    $msg .= $this->displayConfirmation($this->l('Thank you for contacting us. Your email has been successfully sent.'));
+                } else {
+                    $msg .= $this->displayError($this->l('An error has occurred. Your email was not sent.'));
+                }
+
+                $this->context->cookie->payzenEmailSendMsg = $msg;
+            } else {
+                $this->context->cookie->payzenEmailSendMsg = $this->displayError($this->l('Please make sure to configure all required fields.'));
+            }
         }
 
         return $msg . $this->renderForm();
+    }
+
+    /**
+     * Send support email.
+     */
+    private function sendEmail($email)
+    {
+        return Mail::Send(
+            (int) $this->context->language->id,
+            'payzen', // Email template file to be use.
+            $email['subject'], // Email subject.
+            array(
+                '{email}' => $email['sender'], // Sender email address.
+                '{message}' => $email['message'] // Email content.
+            ),
+            PayzenTools::getDefault('SUPPORT_EMAIL'), // Receiver email address.
+            NULL, // Receiver name.
+            $email['sender'], // From email address.
+            NULL,  // From name.
+            NULL, // File attachment.
+            NULL, // Mode smtp.
+            _PS_MODULE_DIR_ . $this->name . '/mails/' // Custom template path.
+        );
     }
 
     /**
@@ -367,7 +463,6 @@ class Payzen extends PaymentModule
      */
     private function postProcess()
     {
-        require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenRequest.php';
         $request = new PayzenRequest(); // New instance of PayzenRequest for parameters validation.
 
         // Load and validate from request.
@@ -606,6 +701,42 @@ class Payzen extends PaymentModule
                 }
 
                 $value = serialize($value);
+            } elseif ($key === 'PAYZEN_FFIN_OPTIONS') {
+                if (! is_array($value) || empty($value)) {
+                    $value = array();
+                } else {
+                    $error = false;
+                    foreach ($value as $id => $option) {
+                        if ($option['min_amount'] && ! is_numeric($option['min_amount']) || $option['min_amount'] < 0) {
+                            $value[$id]['min_amount'] = ''; // Error, reset incorrect value.
+                            $error = true;
+                        }
+
+                        if ($option['max_amount'] && ! is_numeric($option['max_amount']) || $option['max_amount'] < 0) {
+                            $value[$id]['max_amount'] = ''; // Error, reset incorrect value.
+                            $error = true;
+                        }
+
+                        $default = is_string($option['label']) && $option['label'] ?
+                        $option['label'] : $option['count'] . ' x';
+                        $option_label = is_array($option['label']) ? $option['label'] : array();
+
+                        foreach (Language::getLanguages(false) as $language) {
+                            $lang = $language['id_lang'];
+                            if (! isset($option_label[$lang]) || empty($option_label[$lang])) {
+                                $option_label[$lang] = $default;
+                            }
+                        }
+
+                        $value[$id]['label'] = $option_label;
+                    }
+
+                    if ($error) {
+                        $this->_errors[] = sprintf($this->l('One or more values are invalid for field « %s ». Only valid entries are saved.'), $label);
+                    }
+                }
+
+                $value = serialize($value);
             } elseif (($key === 'PAYZEN_FULLCB_OPTIONS') && (Tools::getValue('PAYZEN_FULLCB_ENABLE_OPTS', 'False') === 'True')) {
                 if (! is_array($value) || empty($value)) {
                     $value = array();
@@ -658,6 +789,14 @@ class Payzen extends PaymentModule
 
                     $cards = PayzenApi::getSupportedCardTypes();
 
+                    // Add extra means of payment to supported payment means.
+                    $extra_cards = @unserialize(Configuration::get('PAYZEN_EXTRA_PAYMENT_MEANS'));
+                    foreach ($extra_cards as $option_card) {
+                        if (! isset($cards[$option_card['code']])) {
+                            $cards[$option_card['code']] = $option_card['title'];
+                        }
+                    }
+
                     foreach ($value as $id => $option) {
                         if (in_array($option['code'], $used_cards)) {
                             unset($value[$id]);
@@ -675,7 +814,7 @@ class Payzen extends PaymentModule
                             unset($value[$id]); // Error, do not save this option.
                             $error = true;
                         } else {
-                            $selected_card = $cards[$option['code']];
+                            $selected_card = isset($cards[$option['code']]) ? $cards[$option['code']] : $option['code'];
                             $option_title = is_array($option['title']) ? $option['title'] : array();
 
                             foreach (Language::getLanguages(false) as $language) {
@@ -699,11 +838,62 @@ class Payzen extends PaymentModule
                 }
 
                 $value = serialize($value);
+            } elseif ($key === 'PAYZEN_EXTRA_PAYMENT_MEANS') {
+
+                $used_cards = array_keys(PayzenApi::getSupportedCardTypes());
+                if (! is_array($value) || empty($value)) {
+                    $value = array();
+                } else {
+                    $error = false;
+                    foreach ($value as $id => $option) {
+                        $code = trim($option['code']);
+                        $title = $option['title'];
+                        if (empty($code)
+                            || ! preg_match('#^[A-Za-z0-9\-_]+$#', $code)
+                            || empty($title)
+                            || ! preg_match('#^[^<>]*$#', $title)
+                            || in_array($code, $used_cards)) {
+                            // Invalid format of code or title, or code already exists: delete this means of payment and display error.
+                            unset($value[$id]);
+                            $error = true;
+                        } else {
+                            $used_cards[] = $code;
+                            // Update payment means code (to apply trim).
+                            $value[$id]['code'] = $code;
+                        }
+                    }
+
+                    if ($error) {
+                        $this->_errors[] = sprintf($this->l('One or more values are invalid for field « %s ». Only valid entries are saved.'), $label);
+                    }
+                }
+
+                // Update PAYZEN_OTHER_PAYMENT_MEANS (options containing deleted payment means should not appear).
+                $other_payment_means = @unserialize(Configuration::get('PAYZEN_OTHER_PAYMENT_MEANS'));
+                foreach ($other_payment_means as $key_payment_mean => $option_payment_mean) {
+                    if (! in_array($option_payment_mean['code'], $used_cards)) {
+                        unset($other_payment_means[$key_payment_mean]);
+                    }
+                }
+
+                Configuration::updateValue('PAYZEN_OTHER_PAYMENT_MEANS', serialize($other_payment_means));
+
+                $value = serialize($value);
             } elseif ($key === 'PAYZEN_STD_REST_PLACEHLDR') {
                 $value = serialize($value);
             } elseif ($key === 'PAYZEN_STD_REST_ATTEMPTS') {
                 if ($value && (! is_numeric($value) || $value < 0 || $value > 10)) {
                     $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $value, $label);
+                    continue;
+                }
+            } elseif ($key === 'PAYZEN_REST_SERVER_URL' || $key === 'PAYZEN_REST_JS_CLIENT_URL') {
+                if (! preg_match('#^https?://([^/]+/)+$#u', $value)) {
+                    if (empty($value)) {
+                        $this->_errors[] = sprintf($this->l('The field « %s » is mandatory.'), $label);
+                    } else {
+                        $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $value, $label);
+                    }
+
                     continue;
                 }
             }
@@ -796,8 +986,6 @@ class Payzen extends PaymentModule
             $html .= "\n";
         }
 
-        require_once _PS_MODULE_DIR_ . 'payzen/classes/admin/PayzenHelperForm.php';
-
         $this->context->smarty->assign(PayzenHelperForm::getAdminFormContext());
         $form = $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'payzen/views/templates/admin/back_office.tpl');
 
@@ -846,7 +1034,7 @@ class Payzen extends PaymentModule
 
             $standard = new PayzenStandardPayment();
             if ($standard->isAvailable($this->context->cart)) {
-                if ($standard->getEntryMode() === '5') {
+                if ($standard->isEmbedded()) {
                     $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
                     $pub_key = $test_mode ? Configuration::get('PAYZEN_PUBKEY_TEST') :
                         Configuration::get('PAYZEN_PUBKEY_PROD');
@@ -865,11 +1053,12 @@ class Payzen extends PaymentModule
                                 var PAYZEN_LANGUAGE = "' . $language_iso_code . '";
                               </script>';
 
-                    $html .= '<script src="' . PayzenTools::getDefault('STATIC_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js"
+                    $html .= '<script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js"
                                       kr-public-key="' . $pub_key . '"
                                       kr-post-url-success="' . $return_url . '"
                                       kr-post-url-refused="' . $return_url . '"
-                                      kr-language="' . $language_iso_code . '"';
+                                      kr-language="' . $language_iso_code . '"
+                                      kr-label-do-register="' . Configuration::get('PAYZEN_STD_REST_LBL_REGIST', $language['id_lang']) . '"';
 
                     $rest_placeholders = @unserialize(Configuration::get('PAYZEN_STD_REST_PLACEHLDR'));
                     if ($pan_label = $rest_placeholders['pan'][$language['id_lang']]) {
@@ -888,8 +1077,8 @@ class Payzen extends PaymentModule
 
                     // Theme and plugins, should be loaded after the javascript library.
                     $rest_theme = Configuration::get('PAYZEN_STD_REST_THEME') ? Configuration::get('PAYZEN_STD_REST_THEME') : 'material';
-                    $html .= '<link rel="stylesheet" href="' . PayzenTools::getDefault('STATIC_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '-reset.css">
-                              <script src="' . PayzenTools::getDefault('STATIC_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '.js"></script>';
+                    $html .= '<link rel="stylesheet" href="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '-reset.css">
+                              <script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '.js"></script>';
 
                     $this->context->smarty->assign('payzen_rest_theme', $rest_theme);
 
@@ -1015,6 +1204,8 @@ class Payzen extends PaymentModule
         }
 
         $cart = $this->context->cart;
+        $customer = new Customer((int) $cart->id_customer);
+        $customersConfig = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
 
         // Version tag for specific styles.
         $tag = version_compare(_PS_VERSION_, '1.6', '<') ? 'payzen15' : 'payzen16';
@@ -1024,6 +1215,12 @@ class Payzen extends PaymentModule
 
         $standard = new PayzenStandardPayment();
         if ($standard->isAvailable($cart)) {
+            if ($standard->isOneClickActive()) {
+                $savedStdIdentifier = isset($customersConfig[$cart->id_customer]['standard']['n']) ? $customersConfig[$cart->id_customer]['standard']['n'] : '';
+                // Check std saved alias.
+                $standard->setCookieValidPaymentByAlias($savedStdIdentifier, $customer);
+            }
+
             $this->context->smarty->assign($standard->getTplVars($cart));
             $html .= $this->display(__FILE__, 'bc/' . $standard->getTplName());
         }
@@ -1052,6 +1249,12 @@ class Payzen extends PaymentModule
             $html .= $this->display(__FILE__, 'bc/' . $oney34->getTplName());
         }
 
+        $franfinance = new PayzenFranfinancePayment();
+        if ($franfinance->isAvailable($cart)) {
+            $this->context->smarty->assign($franfinance->getTplVars($cart));
+            $html .= $this->display(__FILE__, 'bc/' . $franfinance->getTplName());
+        }
+
         $fullcb = new PayzenFullcbPayment();
         if ($fullcb->isAvailable($cart)) {
             $this->context->smarty->assign($fullcb->getTplVars($cart));
@@ -1066,6 +1269,12 @@ class Payzen extends PaymentModule
 
         $sepa = new PayzenSepaPayment();
         if ($sepa->isAvailable($cart)) {
+            if ($sepa->isOneClickActive()) {
+                $savedSepaIdentifier = isset($customersConfig[$cart->id_customer]['sepa']['n']) ? $customersConfig[$cart->id_customer]['sepa']['n'] : '';
+                // Check sepa saved alias.
+                $sepa->setCookieValidPaymentByAlias($savedSepaIdentifier, $customer);
+            }
+
             $this->context->smarty->assign($sepa->getTplVars($cart));
             $html .= $this->display(__FILE__, 'bc/' . $sepa->getTplName());
         }
@@ -1123,6 +1332,8 @@ class Payzen extends PaymentModule
         }
 
         $cart = $this->context->cart;
+        $customer = new Customer((int) $cart->id_customer);
+        $customersConfig = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
 
         /**
          * @var array[\PrestaShop\PrestaShop\Core\Payment\PaymentOption]
@@ -1142,15 +1353,17 @@ class Payzen extends PaymentModule
             $option = $standard->getPaymentOption($cart);
 
             // Payment by identifier.
-            $customersConfig = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
-            $savedIdentifier = isset($customersConfig[$cart->id_customer]['standard']['n']) ? $customersConfig[$cart->id_customer]['standard']['n'] : '';
-
             $additionalForm = '';
-            $oneClickPayment = (Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True' && $savedIdentifier) ;
-            if ($oneClickPayment) {
-                $this->context->smarty->assign($standard->getTplVars($cart));
-                $additionalForm = $this->fetch('module:payzen/views/templates/hook/payment_std_oneclick.tpl');
-                $option->setAdditionalInformation($additionalForm);
+            $oneClickPayment = false;
+            if ($standard->isOneClickActive()) {
+                $savedStdIdentifier = isset($customersConfig[$cart->id_customer]['standard']['n']) ? $customersConfig[$cart->id_customer]['standard']['n'] : '';
+                $isStandardValidAlias = $standard->setCookieValidPaymentByAlias($savedStdIdentifier, $customer);
+                if ($isStandardValidAlias) {
+                    $oneClickPayment = true;
+                    $this->context->smarty->assign($standard->getTplVars($cart));
+                    $additionalForm = $this->fetch('module:payzen/views/templates/hook/payment_std_oneclick.tpl');
+                    $option->setAdditionalInformation($additionalForm);
+                }
             }
 
             if ($standard->hasForm() || $oneClickPayment) {
@@ -1160,10 +1373,10 @@ class Payzen extends PaymentModule
 
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $standard->getTplName());
                 $isRestPayment = strpos($standard->getTplName(), 'rest'); // Check if it's really a payment by embedded fields.
+                $isIframePayment = strpos($standard->getTplName(), 'iframe');
 
-                if ($standard->getEntryMode() === '4' ||
-                    (($standard->getEntryMode() === '5') && $isRestPayment)) {
-                    // IFrame or REST mode.
+                if ($isIframePayment || ($standard->isEmbedded() && $isRestPayment)) {
+                    // Iframe or REST mode.
                     $option->setAdditionalInformation($form . $additionalForm);
                     if ($oneClickPayment) {
                         $option->setForm('<form id="payzen_standard" onsubmit="javascript: payzenSubmit(event);"><input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" /></form>');
@@ -1230,6 +1443,19 @@ class Payzen extends PaymentModule
             $options[] = $option;
         }
 
+        $franfinance = new PayzenFranfinancePayment();
+        if ($franfinance->isAvailable($cart)) {
+            $option = $franfinance->getPaymentOption($cart);
+
+            if ($franfinance->hasForm()) {
+                $this->context->smarty->assign($franfinance->getTplVars($cart));
+                $form = $this->fetch('module:payzen/views/templates/hook/' . $franfinance->getTplName());
+                $option->setForm($form);
+            }
+
+            $options[] = $option;
+        }
+
         $fullcb = new PayzenFullcbPayment();
         if ($fullcb->isAvailable($cart)) {
             $option = $fullcb->getPaymentOption($cart);
@@ -1250,7 +1476,25 @@ class Payzen extends PaymentModule
 
         $sepa = new PayzenSepaPayment();
         if ($sepa->isAvailable($cart)) {
-            $options[] = $sepa->getPaymentOption($cart);
+            $option = $sepa->getPaymentOption($cart);
+
+            if ($sepa->isOneClickActive()) {
+                $savedSepaIdentifier = isset($customersConfig[$cart->id_customer]['sepa']['n']) ? $customersConfig[$cart->id_customer]['sepa']['n'] : '';
+                $isSepaValidAlias = $sepa->setCookieValidPaymentByAlias($savedSepaIdentifier, $customer);
+                if ($isSepaValidAlias) {
+                    $this->context->smarty->assign($sepa->getTplVars($cart));
+                    $additionalForm = $this->fetch('module:payzen/views/templates/hook/payment_sepa_oneclick.tpl');
+                    $option->setAdditionalInformation($additionalForm);
+                    $option->setForm(
+                        '<form action="' . $this->context->link->getModuleLink('payzen', 'redirect', array(), true) . '" method="post">
+                          <input type="hidden" name="payzen_payment_type" value="sepa" />
+                          <input id="payzen_sepa_payment_by_identifier" type="hidden" name="payzen_sepa_payment_by_identifier" value="1" />
+                         </form>'
+                    );
+                }
+            }
+
+            $options[] = $option;
         }
 
         $paypal = new PayzenPaypalPayment();
@@ -1379,12 +1623,18 @@ class Payzen extends PaymentModule
      */
     public function hookActionOrderStatusUpdate($params)
     {
+        // It is an IPN, no online refund.
+        if (PayzenTools::checkFormIpnValidity() || PayzenTools::checkRestIpnValidity()) {
+            return;
+        }
+
         $order = new Order((int) $params['id_order']);
         if (! $this->active || ($order->module != $this->name)) {
             return;
         }
 
-        if ($params['newOrderStatus']->id !== (int) Configuration::get('PS_OS_REFUND')) {
+        $managedRefundStatuses = array((int) Configuration::get('PS_OS_REFUND'), (int) Configuration::get('PS_OS_CANCELED'));
+        if (! in_array($params['newOrderStatus']->id, $managedRefundStatuses)) {
             return;
         }
 
@@ -1394,10 +1644,10 @@ class Payzen extends PaymentModule
             return;
         }
 
-        // Update order status is manually changed to "Refunded" (not by refund function).
-        $this->context->cookie->payzenManualUpdateRefundStatus = 'True';
+        // Update order status is manually changed to "Refunded or Canceled" (not by refund function).
+        $this->context->cookie->payzenManualUpdateToManagedRefundStatuses = 'True';
 
-        // If any error during WS refund redirect to order details to avoid display success message.
+        // If any error during WS refund/cancel redirect to order details to avoid display success message.
         if (! $this->refund($order, $order->total_paid_real)) {
             Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . Tools::getValue('token'));
         }
@@ -1418,9 +1668,9 @@ class Payzen extends PaymentModule
         }
 
         // If it is manual update of order state to refunded, update order total paid real to 0.
-        if (isset($this->context->cookie->payzenManualUpdateRefundStatus)
-            && ($this->context->cookie->payzenManualUpdateRefundStatus === 'True')) {
-            unset($this->context->cookie->payzenManualUpdateRefundStatus);
+        if (isset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses)
+            && ($this->context->cookie->payzenManualUpdateToManagedRefundStatuses === 'True')) {
+            unset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses);
             $order->total_paid_real = 0;
             $order->update();
         }
@@ -1459,7 +1709,7 @@ class Payzen extends PaymentModule
             // No refund, so get back refunded products quantities, and available products stock quantities.
             $id_order_details = Tools::isSubmit('generateCreditSlip') ? Tools::getValue('cancelQuantity')
                 : Tools::getValue('partialRefundProductQuantity');
-            foreach ($id_order_details as $id_order_detail => $quantity ) {
+            foreach ($id_order_details as $id_order_detail => $quantity) {
                 // Update order detail.
                 $order_detail = new OrderDetail($id_order_detail);
                 $order_detail->product_quantity_refunded -= $quantity;
@@ -1488,7 +1738,7 @@ class Payzen extends PaymentModule
             $this->logger->logWarning("Impossible to make online refund for order #{$order->id}: private key is not configured." .
                 ' Let PrestaShop do offline refund.');
             // Allow offline refund and display warning message.
-            $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
+            $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded/canceled only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
             return true;
         }
 
@@ -1496,173 +1746,54 @@ class Payzen extends PaymentModule
         $orderCurrency = new Currency((int) $order->id_currency);
         $currency = PayzenApi::findCurrencyByAlphaCode($orderCurrency->iso_code);
         $amount = Tools::ps_round($amount, $currency->getDecimals());
+        $amountInCents = $currency->convertAmountToInteger($amount);
 
         $this->logger->logInfo("Start refund of {$amount} {$orderCurrency->sign} for order " .
             "#{$order->id} with PayZen payment method.");
 
-        $successStatuses = array_merge(
-            PayzenApi::getSuccessStatuses(),
-            PayzenApi::getPendingStatuses()
-        );
-
         try {
             // Get payment details.
             $getPaymentDetails = $this->getPaymentDetails($order);
-            $transStatus = $getPaymentDetails['detailedStatus'];
-
-            if (! in_array($transStatus, $successStatuses)) {
-                $msg = sprintf($this->l('Unexpected transaction status (%1$s).'), $transStatus);
-                throw new Exception($msg);
-            }
-
-            $uuid = $getPaymentDetails['uuid'];
-            $amountInCents = $currency->convertAmountToInteger($amount);
-
-            $commentText = $this->getUserInfo();
-
-            /** @var PayzenRest $client */
-            $client = new PayzenRest(
-                PayzenTools::getDefault('REST_URL'),
-                Configuration::get('PAYZEN_SITE_ID'),
-                $this->getPrivateKey()
-            );
-
-            if ($transStatus === 'CAPTURED') { // Transaction captured, we can do refund.
-                // No refund for captured transactions if order currency different than transaction currency.
-                if ($orderCurrency->iso_code !== $getPaymentDetails['currency']) {
-                    $msg = $this->l('Refund is not supported on captured transactions with currency conversion.');
-                    throw new Exception($msg);
+            if (count($getPaymentDetails) > 1) {
+                // Payment in installements, refund the desired amount from last installement to first one.
+                // Check if we can refund $amount.
+                $refundableAmount = 0;
+                foreach ($getPaymentDetails as $key => $transaction) {
+                    // Get the refundable amount of each transaction.
+                    $transactionRefundableAmount = $this->getTransactionRefundableAmount($transaction, $orderCurrency, $order->reference);
+                    $getPaymentDetails[$key]['transactionRefundableAmount'] = $transactionRefundableAmount;
+                    $refundableAmount += $transactionRefundableAmount;
                 }
 
-                // Get already refunded amount.
-                $refundedAmount = $getPaymentDetails['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
-
-                if (empty($refundedAmount)) {
-                    $refundedAmount = 0;
-                }
-
-                $remainingAmount = $getPaymentDetails['amount'] - $refundedAmount; // Calculate remaing amount.
-
-                if ($remainingAmount < $amountInCents) {
-                    $remainingAmountFloat = $currency->convertAmountToFloat($remainingAmount);
+                if ($amountInCents > $refundableAmount) {
+                    // Unable to refund more than the sum of the refundable amount of each installement.
                     $msg = sprintf(
                         $this->l('Remaining amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'),
-                        $remainingAmountFloat,
+                        $currency->convertAmountToFloat($refundableAmount),
                         $orderCurrency->sign,
                         $amount
                     );
                     throw new Exception($msg);
-                }
-
-                $requestData = array(
-                    'uuid' => $uuid,
-                    'amount' => $amountInCents,
-                    'resolutionMode' => 'REFUND_ONLY',
-                    'comment' => $commentText
-                );
-
-                $refundPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
-
-                PayzenTools::checkRestResult(
-                    $refundPaymentResponse,
-                    $successStatuses
-                );
-
-                // Check operation type.
-                $transType = $refundPaymentResponse['answer']['operationType'];
-
-                if ($transType !== 'CREDIT') {
-                    throw new Exception(sprintf($this->l('Unexpected transaction type received (%1$s).'), $transType));
-                }
-
-                $responseData = PayzenTools::convertRestResult($refundPaymentResponse['answer'], true);
-                $response = new PayzenResponse($responseData, null, null, null);
-
-                // Save refund transaction in PrestaShop.
-                $refundedAmount += $amountInCents;
-
-                // Create payment
-                $this->createMessage($order, $response);
-                $this->savePayment($order, $response);
-
-                // Update order status if it is not a call from hookActionOrderStatusUpdate to avoid double status update.
-                if (($refundedAmount == $getPaymentDetails['amount'])
-                    && (! isset($this->context->cookie->payzenManualUpdateRefundStatus)
-                        || ($this->context->cookie->payzenManualUpdateRefundStatus !== 'True'))) {
-                    $order->setCurrentState((int) Configuration::get('PS_OS_REFUND'));
-                }
-
-                $this->logger->logInfo("Online money refund for order #{$order->id} is successful.");
-            } else {
-                $transAmount = $getPaymentDetails['amount'];
-
-                // If order currency different than transaction currency we use transaction effective amount.
-                if ($orderCurrency->iso_code != $getPaymentDetails['currency']) {
-                    $transAmount = $getPaymentDetails['transactionDetails']['effectiveAmount'];
-                }
-
-                if ($amountInCents > $transAmount) {
-                    $transAmountFloat = $currency->convertAmountToFloat($transAmount);
-                    $msg = sprintf($this->l('Transaction amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'), $transAmountFloat, $orderCurrency->sign, $amount);
-                    throw new Exception($msg);
-                }
-
-                if ($amountInCents == $transAmount) { // Transaction cancel in gateway.
-                    $requestData = array(
-                        'uuid' => $uuid,
-                        'resolutionMode' => 'CANCELLATION_ONLY',
-                        'comment' => $commentText
-                    );
-
-                    $cancelPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
-                    PayzenTools::checkRestResult($cancelPaymentResponse, array('CANCELLED'));
-
-                    // Total refund, update order status as well.
-                    $responseData = PayzenTools::convertRestResult($cancelPaymentResponse['answer'], true);
-                    $response = new PayzenResponse($responseData, null, null, null);
-
-                    // Save refund transaction in PrestaShop.
-                    $this->savePayment($order, $response, true);
-
-                    if (! isset($this->context->cookie->payzenManualUpdateRefundStatus)
-                        || ($this->context->cookie->payzenManualUpdateRefundStatus !== 'True')) {
-                        $order->setCurrentState((int) Configuration::get('PS_OS_REFUND'));
-                    }
-
-                    $this->logger->logInfo("Online payment cancel for order #{$order->id} is successful.");
                 } else {
-                    // Partial transaction cancel, call update WS.
-                    $new_transaction_amount = $transAmount - $amountInCents;
-                    $requestData = array(
-                        'uuid' => $uuid,
-                        'cardUpdate' => array(
-                            'amount' => $new_transaction_amount,
-                            'currency' => $currency->getAlpha3()
-                        ),
-                        'comment' => $commentText
-                    );
+                    $AmountStillToRefund = $amountInCents;
+                    foreach ($getPaymentDetails as $transaction) {
+                        if ($transaction['transactionRefundableAmount'] > 0) {
+                            $transactionAmounRefund = min($transaction['transactionRefundableAmount'], $AmountStillToRefund);
+                            $AmountStillToRefund -= $transactionAmounRefund;
 
-                    $updatePaymentResponse = $client->post('V4/Transaction/Update', json_encode($requestData));
+                            // Do not update order status till we refund all the amount.
+                            $forceUpdateOrderStatus = (($amountInCents == $refundableAmount) && ($AmountStillToRefund == 0));
+                            $this->refundFromOneTransaction($order, $transactionAmounRefund, $transaction, $currency, $orderCurrency, $forceUpdateOrderStatus);
 
-                    PayzenTools::checkRestResult(
-                        $updatePaymentResponse,
-                        array(
-                            'AUTHORISED',
-                            'AUTHORISED_TO_VALIDATE',
-                            'WAITING_AUTHORISATION',
-                            'WAITING_AUTHORISATION_TO_VALIDATE'
-                        )
-                    );
-
-                    $responseData = PayzenTools::convertRestResult($updatePaymentResponse['answer'], true);
-                    $response = new PayzenResponse($responseData, null, null, null);
-
-                    // Save refund transaction in PrestaShop.
-                    $this->createMessage($order, $response);
-                    $this->savePayment($order, $response);
-
-                    $this->logger->logInfo("Online payment update for order #{$order->id} is successful.");
+                            if ($AmountStillToRefund == 0) {
+                                break;
+                            }
+                        }
+                    }
                 }
+            } else {
+                // Standard payment, refund on the only transaction.
+                $this->refundFromOneTransaction($order, $amountInCents, reset($getPaymentDetails), $currency, $orderCurrency);
             }
 
             return true;
@@ -1670,22 +1801,22 @@ class Payzen extends PaymentModule
             $this->logger->logError("{$e->getMessage()}" . ($e->getCode() > 0 ? ' (' . $e->getCode() . ').' : ''));
 
             $errorCode = $e->getCode() <= -1 ? -1 : $e->getCode();
-            switch ($errorCode) {
+            switch ((string)$errorCode) {
                 case 'PSP_100':
                     // Merchant don't have offer allowing REST WS.
                     // Allow offline refund and display warning message.
-                    $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
+                    $this->context->cookie->payzenRefundWarn = $this->l('Payment is refunded/canceled only in PrestaShop. Please, consider making necessary changes in PayZen Back Office.');
                     return true;
 
                 case 'PSP_083':
                     $message = $this->l('Chargebacks cannot be refunded.');
                     break;
 
-                case -1: // Manage cUrl errors.
+                case '-1': // Manage cUrl errors.
                     $message = sprintf($this->l('Error occurred when refunding payment for order #%1$s. Please consult the payment module log for more details.'), $order->reference);
                     break;
 
-                case 0:
+                case '0':
                     $message = sprintf($this->l('Cannot refund payment for order #%1$s.'), $order->reference) . ' ' . $e->getMessage();
                     break;
 
@@ -1695,13 +1826,197 @@ class Payzen extends PaymentModule
             }
 
             $this->context->cookie->payzenRefundWarn = $message;
-            if (isset($this->context->cookie->payzenManualUpdateRefundStatus)
-                && ($this->context->cookie->payzenManualUpdateRefundStatus === 'True')) {
-                unset($this->context->cookie->payzenManualUpdateRefundStatus);
+            if (isset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses)
+                && ($this->context->cookie->payzenManualUpdateToManagedRefundStatuses === 'True')) {
+                unset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses);
             }
 
             return false;
         }
+    }
+
+    private function refundFromOneTransaction($order, $amountInCents, $transaction, $currency, $orderCurrency, $forceUpdateOrderStatus = null)
+    {
+        $amount = $currency->convertAmountToFloat($amountInCents, $currency->getDecimals());
+        $successStatuses = array_merge(
+            PayzenApi::getSuccessStatuses(),
+            PayzenApi::getPendingStatuses()
+        );
+
+        $transStatus = $transaction['detailedStatus'];
+        $uuid = $transaction['uuid'];
+        $commentText = $this->getUserInfo();
+
+        /** @var PayzenRest $client */
+        $client = new PayzenRest(
+            Configuration::get('PAYZEN_REST_SERVER_URL'),
+            Configuration::get('PAYZEN_SITE_ID'),
+            $this->getPrivateKey()
+        );
+
+        if ($transStatus === 'CAPTURED') { // Transaction captured, we can do refund.
+            // No refund for captured transactions if order currency different than transaction currency.
+            if ($orderCurrency->iso_code !== $transaction['currency']) {
+                $msg = $this->l('Refund is not supported on captured transactions with currency conversion.');
+                throw new Exception($msg);
+            }
+
+            // Get already refunded amount.
+            $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
+
+            if (empty($refundedAmount)) {
+                $refundedAmount = 0;
+            }
+
+            $remainingAmount = $transaction['amount'] - $refundedAmount; // Calculate remaing amount.
+
+            if ($remainingAmount < $amountInCents) {
+                $remainingAmountFloat = $currency->convertAmountToFloat($remainingAmount);
+                $msg = sprintf(
+                    $this->l('Remaining amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'),
+                    $remainingAmountFloat,
+                    $orderCurrency->sign,
+                    $amount
+                );
+                throw new Exception($msg);
+            }
+
+            $requestData = array(
+                'uuid' => $uuid,
+                'amount' => $amountInCents,
+                'resolutionMode' => 'REFUND_ONLY',
+                'comment' => $commentText
+            );
+
+            $refundPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
+
+            PayzenTools::checkRestResult(
+                $refundPaymentResponse,
+                $successStatuses
+            );
+
+            // Check operation type.
+            $transType = $refundPaymentResponse['answer']['operationType'];
+
+            if ($transType !== 'CREDIT') {
+                throw new Exception(sprintf($this->l('Unexpected transaction type received (%1$s).'), $transType));
+            }
+
+            $responseData = PayzenTools::convertRestResult($refundPaymentResponse['answer'], true);
+            $response = new PayzenResponse($responseData, null, null, null);
+
+            // Save refund transaction in PrestaShop.
+            $refundedAmount += $amountInCents;
+
+            // Create payment.
+            $this->createMessage($order, $response);
+            $this->savePayment($order, $response);
+
+            // Update order status if it is not a call from hookActionOrderStatusUpdate to avoid double status update.
+            $isManualUpdateRefundStatus = isset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses) && ($this->context->cookie->payzenManualUpdateToManagedRefundStatuses === 'True');
+            if (! $isManualUpdateRefundStatus &&
+                ((($forceUpdateOrderStatus !== null) && $forceUpdateOrderStatus) || ($forceUpdateOrderStatus === null) && ($refundedAmount == $transaction['amount']))) {
+
+                $order->setCurrentState((int) Configuration::get('PS_OS_REFUND'));
+            }
+
+            $this->logger->logInfo("Online refund $amount {$orderCurrency->sign} for transaction with uuid #$uuid for order #{$order->id} is successful.");
+        } else {
+            $transAmount = $transaction['amount'];
+
+            // If order currency different than transaction currency we use transaction effective amount.
+            if ($orderCurrency->iso_code != $transaction['currency']) {
+                $transAmount = $transaction['transactionDetails']['effectiveAmount'];
+            }
+
+            if ($amountInCents > $transAmount) {
+                $transAmountFloat = $currency->convertAmountToFloat($transAmount);
+                $msg = sprintf($this->l('Transaction amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'), $transAmountFloat, $orderCurrency->sign, $amount);
+                throw new Exception($msg);
+            }
+
+            if ($amountInCents == $transAmount) { // Transaction cancel in gateway.
+                $requestData = array(
+                    'uuid' => $uuid,
+                    'resolutionMode' => 'CANCELLATION_ONLY',
+                    'comment' => $commentText
+                );
+
+                $cancelPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
+                PayzenTools::checkRestResult($cancelPaymentResponse, array('CANCELLED'));
+
+                // Total refund, update order status as well.
+                $responseData = PayzenTools::convertRestResult($cancelPaymentResponse['answer'], true);
+                $response = new PayzenResponse($responseData, null, null, null);
+
+                // Save refund transaction in PrestaShop.
+                $this->savePayment($order, $response, true);
+
+                $isManualUpdateRefundStatus = isset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses) && ($this->context->cookie->payzenManualUpdateToManagedRefundStatuses === 'True');
+                if (! $isManualUpdateRefundStatus
+                    && ((($forceUpdateOrderStatus !== null) && $forceUpdateOrderStatus)|| ($forceUpdateOrderStatus === null))) {
+                    $order->setCurrentState((int) Configuration::get('PS_OS_REFUND'));
+                }
+
+                $this->logger->logInfo("Online transaction with uuid #$uuid cancel for order #{$order->id} is successful.");
+            } else {
+                // Partial transaction cancel, call update WS.
+                $new_transaction_amount = $transAmount - $amountInCents;
+                $requestData = array(
+                    'uuid' => $uuid,
+                    'cardUpdate' => array(
+                        'amount' => $new_transaction_amount,
+                        'currency' => $currency->getAlpha3()
+                    ),
+                    'comment' => $commentText
+                );
+
+                $updatePaymentResponse = $client->post('V4/Transaction/Update', json_encode($requestData));
+
+                PayzenTools::checkRestResult(
+                    $updatePaymentResponse,
+                    array(
+                        'AUTHORISED',
+                        'AUTHORISED_TO_VALIDATE',
+                        'WAITING_AUTHORISATION',
+                        'WAITING_AUTHORISATION_TO_VALIDATE'
+                    )
+                );
+
+                $responseData = PayzenTools::convertRestResult($updatePaymentResponse['answer'], true);
+                $response = new PayzenResponse($responseData, null, null, null);
+
+                // Save refund transaction in PrestaShop.
+                $this->createMessage($order, $response);
+                $this->savePayment($order, $response);
+
+                $this->logger->logInfo("Online transaction with uuid #$uuid update for order #{$order->id} is successful.");
+            }
+        }
+    }
+
+    private function getTransactionRefundableAmount($transaction, $orderCurrency, $orderReference)
+    {
+        if ($transaction['detailedStatus'] === 'CAPTURED') {
+            if ($orderCurrency->iso_code !== $transaction['currency']) {
+                $this->logger->logWarning("Online transaction with uuid #{$transaction['uuid']} refund for order #$orderReference is failed: Refund is not supported on captured transactions with currency conversion.");
+                return 0;
+            }
+
+            // Get already refunded amount.
+            $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
+
+            if (empty($refundedAmount)) {
+                $refundedAmount = 0;
+            }
+
+            $refundedableAmount = $transaction['amount'] - $refundedAmount;
+        } else {
+            $refundedableAmount = ($orderCurrency->iso_code !== $transaction['currency']) ?
+                $transaction['transactionDetails']['effectiveAmount'] : $transaction['amount'];
+        }
+
+        return $refundedableAmount;
     }
 
     /**
@@ -1714,7 +2029,7 @@ class Payzen extends PaymentModule
     {
         /** @var PayzenRest $client */
         $client = new PayzenRest(
-            PayzenTools::getDefault('REST_URL'),
+            Configuration::get('PAYZEN_REST_SERVER_URL'),
             Configuration::get('PAYZEN_SITE_ID'),
             $this->getPrivateKey()
         );
@@ -1731,28 +2046,14 @@ class Payzen extends PaymentModule
         $transBySequence = array();
         foreach ($getOrderResponse['answer']['transactions'] as $transaction) {
             $sequenceNumber = $transaction['transactionDetails']['sequenceNumber'];
-            $transBySequence[$sequenceNumber] = $transaction;
-        }
-
-        // Get transaction Id from PrestaShop.
-        $orderPaymentArray = OrderPayment::getByOrderReference($order->reference);
-        $transactions = array();
-
-        foreach ($orderPaymentArray as $orderPayment) {
-            if ($orderPayment->amount <= 0) { // Do not treat REFUND transactions.
-                continue;
+            // Unpaid transactions are not considered.
+            if ($transaction['status'] !== 'UNPAID') {
+                $transBySequence[$sequenceNumber] = $transaction;
             }
-
-            $transactionId = $orderPayment->transaction_id;
-
-            // Get the correct sequence number.
-            $sequenceNumber = $transactionId ? strstr($transactionId, '-', true) : 1;
-            $transactions[$sequenceNumber] = $transBySequence[$sequenceNumber];
         }
 
-        // For the moment, return only the first transaction.
-        // TODO return the whole array when refunding multiple payment.
-        return reset($transactions);
+        ksort($transBySequence);
+        return array_reverse($transBySequence);
     }
 
     private function getPrivateKey()
@@ -1825,9 +2126,8 @@ class Payzen extends PaymentModule
             $paid_total = $cart->getOrderTotal();
         }
 
-        // Parse order_info parameter.
-        $parts = explode('&', $response->get('order_info'));
-        $module_id = Tools::substr($parts[0], Tools::strlen('module_id='));
+        // Get extra parameters.
+        $module_id = $response->getExtInfo('module_id');
 
         // Recover used payment method.
         $class_name = 'Payzen' . PayzenTools::ucClassName($module_id) . 'Payment';
@@ -1848,10 +2148,8 @@ class Payzen extends PaymentModule
 
         $title = $payment->getTitle((int) $cart->id_lang);
 
-        if (isset($parts[1])) {
+        if ($option_id = $response->getExtInfo('option_id')) {
             // This is multiple payment submodule.
-            $option_id = Tools::substr($parts[1], Tools::strlen('option_id='));
-
             $multi_options = $payment::getAvailableOptions();
             $option = $multi_options[$option_id];
             $title .= $option ? ' (' . $option['count'] . ' x)' : '';
@@ -2055,14 +2353,8 @@ class Payzen extends PaymentModule
 
         $payment_ids = array();
 
-        // Parse order_info parameter.
-        $parts = explode('&', $response->get('order_info'));
-
         // Recover option_id if any.
-        $option_id ='';
-        if (isset($parts[1])) {
-            $option_id = Tools::substr($parts[1], Tools::strlen('option_id='));
-        }
+        $option_id = ($response->getExtInfo('option_id') ? $response->getExtInfo('option_id') : '');
 
         if ($response->get('card_brand') === 'MULTI') {
             $sequences = Tools::jsonDecode($response->get('payment_seq'));
@@ -2123,8 +2415,9 @@ class Payzen extends PaymentModule
             );
 
             $total_paid_real = 0;
+            $first_seq_num = $response->get('sequence_number') ? (int) $response->get('sequence_number') : 1;
             for ($i = 1; $i <= $option['count']; $i++) {
-                $trans_id = $i . '-' . $response->get('trans_id');
+                $trans_id = ($first_seq_num + $i - 1) . '-' . $response->get('trans_id');
 
                 $delay = (int) $option['period'] * ($i - 1);
                 $timestamp = strtotime("+$delay days", $first_timestamp);
@@ -2263,11 +2556,8 @@ class Payzen extends PaymentModule
                 $customers_config = array();
             }
 
-            // Parse order_info parameter.
-            $parts = explode('&', $response->get('order_info'));
-
             // Recover module_id.
-            $module_id = Tools::substr($parts[0], Tools::strlen('module_id='));
+            $module_id = $response->getExtInfo('module_id');
             if (! $module_id) {
                 $module_id = 'standard';
             }
@@ -2281,6 +2571,47 @@ class Payzen extends PaymentModule
             $this->logger->logInfo(
                 "Identifier for customer #{$customer->id} and masked PAN #{$masked} successfully saved."
             );
+        }
+    }
+
+    public function checkIdentifier($identifier, $customerEmail)
+    {
+        try {
+            $requestData = array(
+                'paymentMethodToken' => $identifier
+            );
+
+            // Perform REST request to check identifier.
+            $client = new PayzenRest(
+                Configuration::get('PAYZEN_REST_SERVER_URL'),
+                Configuration::get('PAYZEN_SITE_ID'),
+                $this->getPrivateKey()
+            );
+
+            $checkIdentifierResponse = $client->post('V4/Token/Get', json_encode($requestData));
+            PayzenTools::checkRestResult($checkIdentifierResponse);
+
+            $cancellationDate = PayzenTools::getProperty($checkIdentifierResponse['answer'], 'cancellationDate');
+            if ($cancellationDate && (strtotime($cancellationDate) <= time())) {
+                $this->logger->logWarning(
+                    "Saved identifier for customer {$customerEmail} is expired on payment gateway in date of: {$cancellationDate}."
+                );
+                return false;
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            $invalidIdentCodes = array('PSP_030', 'PSP_031', 'PSP_561', 'PSP_607');
+
+            if (in_array($e->getCode(), $invalidIdentCodes, true)) {
+                // The identifier is invalid or doesn't exist.
+                $this->logger->logWarning(
+                    "Identifier for customer {$customerEmail} is invalid or doesn't exist: {$e->getMessage()}."
+                );
+                return false;
+            } else {
+                throw $e;
+            }
         }
     }
 
@@ -2304,7 +2635,6 @@ class Payzen extends PaymentModule
 
         if (! ($pcc = $this->findOrderPayment($order->reference, $trans_id))) {
             // Order payment not created yet, let's create it.
-
             $method = sprintf($this->l('%s payment'), $data['card_brand']);
             if (! $order->addOrderPayment($amount, $method, $trans_id, null, $date, $invoice)
                 || ! ($pcc = $this->findOrderPayment($order->reference, $trans_id))) {
@@ -2397,7 +2727,6 @@ class Payzen extends PaymentModule
                     break;
                 default:
                     // Payment successful.
-
                     if (($response->get('operation_type') === 'CREDIT') && $total_refund) {
                         $new_state = 'PS_OS_REFUND';
                     } elseif (self::isSofort($response) || self::isSepa($response)) {
@@ -2553,5 +2882,36 @@ class Payzen extends PaymentModule
     public static function isSepa($response)
     {
         return $response->get('card_brand') === 'SDD';
+    }
+
+    public static function isFirstSequenceInOrderPayments($order, $transaction_id, $sequence_number)
+    {
+        $payments = $order->getOrderPayments();
+
+        // No payments created yet.
+        if (! is_array($payments) || empty($payments)) {
+            return true;
+        }
+
+        $sequence_numbers = array();
+        foreach ($payments as $payment) {
+            if (! $payment->transaction_id || ! strpos($payment->transaction_id, '-')) {
+                continue;
+            }
+
+            $pos = strpos($payment->transaction_id, '-');
+            if (substr($payment->transaction_id, $pos + 1) !== $transaction_id) {
+                continue;
+            }
+
+            $sequence_numbers[] = (int) substr($payment->transaction_id, 0, $pos);
+        }
+
+        if (empty($sequence_numbers)) {
+            // No gateway payment created, there are only payments created by PrestaShop.
+            return true;
+        }
+
+        return min($sequence_numbers) === (int) $sequence_number;
     }
 }

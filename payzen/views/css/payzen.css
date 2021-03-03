@@ -40,22 +40,20 @@
     display: inline;
 }
 
-.payzen_card {
+.payzen-pm {
+    display: inline-block;
+    margin-right: 15px;
+    padding-bottom: 15px;
+}
+
+.payzen-pm label {
     display: inline !important;
 }
 
-.payzen_card img, .payzen_card span {
+.payzen-pm label img {
     vertical-align: middle;
-    margin-right: 10px;
-}
-
-.payzen_card img {
     max-width: 90px;
     max-height: 30px;
-}
-
-.payzen_card span {
-    height: 30px;
 }
 
 .payzen_card_click {

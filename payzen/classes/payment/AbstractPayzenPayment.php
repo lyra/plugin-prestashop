@@ -25,10 +25,32 @@ abstract class AbstractPayzenPayment
     protected $countries = array();
     protected $needs_cart_data = false;
     protected $force_local_cart_data = false;
+    protected $allow_backend_payment = false;
+
+    protected $module;
+    protected $context;
+
+    /**
+     * Constructor.
+     */
+    public function __construct()
+    {
+        $this->module = Module::getInstanceByName('payzen');
+        $this->context = Context::getContext();
+    }
 
     public function isAvailable($cart)
     {
         if (! $this->checkActive()) {
+            return false;
+        }
+
+        if ($this->isFromBackend() && ! $this->allow_backend_payment) {
+            return false;
+        }
+
+        // Cart errors.
+        if (! Validate::isLoadedObject($cart) || ($cart->nbProducts() <= 0)) {
             return false;
         }
 
@@ -151,6 +173,14 @@ abstract class AbstractPayzenPayment
     public function validate($cart, $data = array())
     {
         $errors = array();
+
+        // Cart errors.
+        if (! Validate::isLoadedObject($cart)) {
+            $errors[] = $this->l('Shopping cart not found.');
+        } elseif ($cart->nbProducts() <= 0) {
+            $errors[] = $this->l('Empty cart detected before order processing.');
+        }
+
         return $errors;
     }
 
@@ -161,14 +191,14 @@ abstract class AbstractPayzenPayment
 
     public function getLogo()
     {
-        return $this->logo;
+        return _MODULE_DIR_ . 'payzen/views/img/' . $this->logo;
     }
 
     public function getTplVars($cart)
     {
         return array(
             'payzen_title' => $this->getTitle((int) $cart->id_lang),
-            'payzen_logo' => _MODULE_DIR_ . 'payzen/views/img/' . $this->getLogo()
+            'payzen_logo' => $this->getLogo()
         );
     }
 
@@ -177,11 +207,15 @@ abstract class AbstractPayzenPayment
         $class_name = '\PrestaShop\PrestaShop\Core\Payment\PaymentOption';
         $option = new $class_name();
         $option->setCallToActionText($this->getTitle((int) $cart->id_lang))
-                ->setModuleName('payzen')
-                ->setLogo(_MODULE_DIR_ . 'payzen/views/img/' . $this->getLogo());
+               ->setModuleName('payzen');
+
+        if (file_exists(_PS_MODULE_DIR_ . 'payzen/views/img/' . $this->logo)) {
+            $option->setLogo($this->getLogo());
+        }
+
 
         if (! $this->hasForm()) {
-            $option->setAction(Context::getContext()->link->getModuleLink('payzen', 'redirect', array(), true));
+            $option->setAction($this->context->link->getModuleLink('payzen', 'redirect', array(), true));
 
             $inputs = array(
                 array('type' => 'hidden', 'name' => 'payzen_payment_type', 'value' => $this->name)
@@ -219,7 +253,7 @@ abstract class AbstractPayzenPayment
     public function prepareRequest($cart, $data = array())
     {
         // Update shop info in cart to avoid errors when shopping cart is shared.
-        $shop = Context::getContext()->shop;
+        $shop = $this->context->shop;
         if ($shop->getGroup()->share_order && ($cart->id_shop != $shop->id)) {
             $cart->id_shop = $shop->id;
             $cart->id_shop_group = $shop->id_shop_group;
@@ -242,11 +276,10 @@ abstract class AbstractPayzenPayment
 
         PayzenTools::getLogger()->logInfo("Form data generation for cart #{$cart->id} with {$this->name} submodule.");
 
-        require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenRequest.php';
         /* @var $request PayzenRequest */
         $request = new PayzenRequest();
 
-        $contrib = PayzenTools::getDefault('CMS_IDENTIFIER') . '_' . PayzenTools::getDefault('PLUGIN_VERSION') . '/' . _PS_VERSION_ . '/' . PHP_VERSION;
+        $contrib = PayzenTools::getContrib();
         if (defined('_PS_HOST_MODE_')) {
             $contrib = str_replace('PrestaShop', 'PrestaShop_Cloud', $contrib);
         }
@@ -299,7 +332,7 @@ abstract class AbstractPayzenPayment
         $request->set('cust_id', $cust->id);
 
         $cust_title = new Gender((int) $cust->id_gender);
-        $request->set('cust_title', $cust_title->name[Context::getContext()->language->id]);
+        $request->set('cust_title', $cust_title->name[$this->context->language->id]);
 
         $phone = $billing_address->phone ? $billing_address->phone : $billing_address->phone_mobile;
         $cell_phone = $billing_address->phone_mobile ? $billing_address->phone_mobile : $billing_address->phone;
@@ -408,7 +441,7 @@ abstract class AbstractPayzenPayment
             $request->set('validation_mode', Configuration::get($this->prefix . 'VALIDATION'));
         }
 
-        $request->set('order_info', 'module_id=' . $this->name);
+        $request->addExtInfo('module_id', $this->name);
 
         // Activate 3DS?
         $threeds_mpi = null;
@@ -442,9 +475,26 @@ abstract class AbstractPayzenPayment
         $request->set('threeds_mpi', $threeds_mpi);
 
         // Return URL.
-        $request->set('url_return', Context::getContext()->link->getModuleLink('payzen', 'submit', array(), true));
+        $request->set('url_return', $this->context->link->getModuleLink('payzen', 'submit', array(), true));
 
         return $request;
+    }
+
+    public function isFromBackend()
+    {
+        if (isset($this->context->cookie->payzenBackendPayment)) {
+            return $this->context->cookie->payzenBackendPayment;
+        }
+
+        $return = false;
+
+        $adminCookie = new Cookie('psAdmin');
+        if (isset($adminCookie->id_employee) && ! empty($adminCookie->id_employee) && Tools::getIsset('recover_cart')) {
+            $this->context->cookie->payzenBackendPayment = true;
+            $return = true;
+        }
+
+        return $return;
     }
 
     private function setAdditionalData($cart, $delivery_address, &$payzen_request, $use_oney = false, $isOney34 = false)
@@ -473,7 +523,6 @@ abstract class AbstractPayzenPayment
         $relay_point_name = null;
 
         // Set shipping params.
-
         if ($cart->isVirtualCart() || ! isset($carrier_id) || ! is_array($shipping_options) || empty($shipping_options)) {
             // No shipping options or virtual cart.
             $payzen_request->set('ship_to_type', 'ETICKET');
@@ -583,7 +632,7 @@ abstract class AbstractPayzenPayment
             $delivery_company = preg_replace($not_allowed_chars, ' ', $address . ' ' . $zipcode . ' ' . $city);
             $payzen_request->set('ship_to_delivery_company_name', $delivery_company);
         } else {
-            // Other cases
+            // Other cases.
             $delivery_type = isset($shipping_options[$carrier_id]) ? $shipping_options[$carrier_id]['type'] : 'PACKAGE_DELIVERY_COMPANY';
             $delivery_speed = isset($shipping_options[$carrier_id]) ? $shipping_options[$carrier_id]['speed'] : 'STANDARD';
             $payzen_request->set('ship_to_type', $delivery_type);
@@ -623,7 +672,6 @@ abstract class AbstractPayzenPayment
 
         if ($use_oney) {
             // Modify address to send it to Oney.
-
             if ($payzen_request->get('ship_to_street')) { // If there is a delivery address.
                 $payzen_request->set('ship_to_status', 'PRIVATE'); // By default PrestaShop doesn't manage customer type.
 
@@ -715,5 +763,48 @@ abstract class AbstractPayzenPayment
         /* @var Payzen */
         $payzen = Module::getInstanceByName('payzen');
         return $payzen->l($string, Tools::strtolower(get_class($this)));
+    }
+
+    public function setCookieValidPaymentByAlias($identifier, $customer)
+    {
+        $isValidIdentifier = false;
+        if ($identifier && $customer->id) {
+            try {
+                $isValidIdentifier = $this->module->checkIdentifier($identifier, $customer->email);
+            } catch (\Exception $e) {
+                PayzenTools::getLogger()->logError(
+                    "Saved identifier for customer {$customer->email} couldn't be verified on gateway. Error occurred: {$e->getMessage()}"
+                );
+
+                // Unable to validate alias online, we cannot disable feature.
+                $isValidIdentifier = true;
+            }
+        }
+
+        $cookieName = $this->getValidAliasCookieName();
+        $this->context->cookie->$cookieName = $isValidIdentifier;
+
+        return $isValidIdentifier;
+    }
+
+    public function isValidSavedAlias()
+    {
+        $cookieName = $this->getValidAliasCookieName();
+        return $this->isOneClickActive() && isset($this->context->cookie->$cookieName) && $this->context->cookie->$cookieName;
+    }
+
+    public function isOneClickActive()
+    {
+        return false;
+    }
+
+    protected function getValidAliasCookieName()
+    {
+        return 'is' . ucfirst($this->name) . 'ValidAlias';
+    }
+
+	protected static function getCcTypeImageSrc($card)
+    {
+        return PayzenTools::getDefault('LOGO_URL') . strtolower($card) . '.png';
     }
 }

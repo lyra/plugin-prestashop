@@ -50,7 +50,12 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
         foreach ($this->other_payments as $payment) {
             $title = is_array($payment['title']) ? $payment['title'][(int) $cart->id_lang] : $payment['title'];
 
-            $options[$payment['code']] = $title;
+            $option = array(
+                'label' => $title,
+                'logo' => self::getCcTypeImageSrc($payment['code'])
+            );
+
+            $options[$payment['code']] = $option;
         }
 
         $vars['payzen_other_options'] = $options;

@@ -12,31 +12,31 @@
 {/if}
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
-  {if $payzen_std_card_data_mode == 1 && !$payzen_saved_identifier}
+  {if $payzen_std_card_data_mode == 1 && !$payzen_is_valid_std_identifier}
     <a href="javascript: $('#payzen_standard').submit();" title="{l s='Click here to pay by credit card' mod='payzen'}">
   {else}
     <a class="unclickable"
-      {if $payzen_saved_identifier}
+      {if $payzen_is_valid_std_identifier}
         title="{l s='Choose pay with registred means of payment or enter payment information and click « Pay » button' mod='payzen'}"
       {else}
         title="{l s='Enter payment information and click « Pay » button' mod='payzen'}"
       {/if}
     >
   {/if}
-    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
-    {if $payzen_saved_identifier}
+    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
+    {if $payzen_is_valid_std_identifier}
       <br /><br />
       {include file="./payment_std_oneclick.tpl"}
     {/if}
 
     <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}"
           method="post" id="payzen_standard"
-          {if $payzen_saved_identifier} style="display: none;"{/if}
+          {if $payzen_is_valid_std_identifier} style="display: none;"{/if}
     >
 
       <input type="hidden" name="payzen_payment_type" value="standard" />
 
-      {if $payzen_saved_identifier}
+      {if $payzen_is_valid_std_identifier}
         <input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" />
       {/if}
 
@@ -44,22 +44,16 @@
         <br />
 
         {assign var=first value=true}
-        {foreach from=$payzen_avail_cards key="key" item="label"}
-          <div style="display: inline-block;">
+        {foreach from=$payzen_avail_cards key="key" item="card"}
+          <div class="payzen-pm">
             {if $payzen_avail_cards|@count == 1}
               <input type="hidden" id="payzen_card_type_{$key|escape:'html':'UTF-8'}" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" >
             {else}
               <input type="radio" id="payzen_card_type_{$key|escape:'html':'UTF-8'}" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" style="vertical-align: middle;"{if $first == true} checked="checked"{/if} >
             {/if}
 
-            <label for="payzen_card_type_{$key|escape:'html':'UTF-8'}" class="payzen_card">
-              {assign var=img_file value=$smarty.const._PS_MODULE_DIR_|cat:'payzen/views/img/':{$key|lower|escape:'html':'UTF-8'}:'.png'}
-
-              {if file_exists($img_file)}
-                <img src="{$base_dir_ssl|escape:'html':'UTF-8'}modules/payzen/views/img/{$key|lower}.png" alt="{$label|escape:'html':'UTF-8'}" title="{$label|escape:'html':'UTF-8'}" >
-              {else}
-                <span>{$label|escape:'html':'UTF-8'}</span>
-              {/if}
+            <label for="payzen_card_type_{$key|escape:'html':'UTF-8'}">
+              <img src="{$card['logo']}" alt="{$card['label']|escape:'html':'UTF-8'}" title="{$card['label']|escape:'html':'UTF-8'}" >
             </label>
 
             {assign var=first value=false}
@@ -68,7 +62,7 @@
         <br />
         <div style="margin-bottom: 12px;"></div>
 
-        {if $payzen_saved_identifier}
+        {if $payzen_is_valid_std_identifier}
             <div>
                 <ul>
                     {if $payzen_std_card_data_mode == 2}
@@ -96,7 +90,7 @@
       {/if}
     </form>
 
-    {if $payzen_saved_identifier}
+    {if $payzen_is_valid_std_identifier}
       <script type="text/javascript">
         $('#payzen_standard_link').click(function(){
           {if ($payzen_std_card_data_mode == 2)}

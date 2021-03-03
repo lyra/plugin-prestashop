@@ -59,8 +59,6 @@ if (PayzenTools::checkRestIpnValidity()) {
         die('<span style="display:none">KO-An error occurred while computing the signature.' . "\n" . '</span>');
     }
 
-    require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
-
     /** @var PayzenResponse $response */
     $response = new PayzenResponse($data, null, null, null);
 } elseif (PayzenTools::checkFormIpnValidity()) {
@@ -78,8 +76,6 @@ if (PayzenTools::checkRestIpnValidity()) {
         $logger->logError($e->getMessage() . " Cart ID: #{$cart->id}.");
         die('<span style="display:none">KO-' . $e->getMessage(). "\n" . '</span>');
     }
-
-    require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
 
     /** @var PayzenResponse $response */
     $response = new PayzenResponse(
@@ -111,7 +107,6 @@ $order_id = Order::getOrderByCartId($cart_id);
 
 if ($order_id === false) {
     // Order has not been processed yet.
-
     $new_state = (int) Payzen::nextOrderState($response);
 
     if ($response->isAcceptedPayment()) {
@@ -182,7 +177,8 @@ if ($order_id === false) {
     );
 
     // If the payment is not the first in sequence, do not update order state.
-    $first_payment = ($response->get('sequence_number') === '1') || ! $response->get('sequence_number');
+    $first_payment = ($response->get('sequence_number') === '1')
+        || Payzen::isFirstSequenceInOrderPayments($order, $response->get('trans_id'), $response->get('sequence_number'));
 
     if (($old_state === $new_state) || ! $first_payment) {
         // No changes, just display a confirmation message.

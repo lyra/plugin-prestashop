@@ -42,7 +42,7 @@
      </script>
 {else}
     <ul id="payzen_oneclick_payment_description_2" style="display: none;">
-      {if ($payzen_std_card_data_mode != '5') || $payzen_rest_popin}
+      {if ($payzen_std_card_data_mode != '5') || $payzen_std_card_data_mode == '6'}
         <li>{l s='You will enter payment data after order confirmation.' mod='payzen'}</li>
       {/if}
 
@@ -67,13 +67,14 @@
         $('#payzen_payment_by_identifier').val('0');
       }
 
-      {if ($payzen_std_card_data_mode == '5')}
+      {if ($payzen_std_card_data_mode == '5' || $payzen_std_card_data_mode == '6')}
         $('.payzen .kr-form-error').html('');
 
+        var token;
         if ($('#payzen_payment_by_identifier').val() == '1') {
-          var token = "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}";
+          token = "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}";
         } else {
-          var token = "{$payzen_rest_form_token|escape:'html':'UTF-8'}";
+          token = "{$payzen_rest_form_token|escape:'html':'UTF-8'}";
         }
 
         KR.setFormConfig({ formToken: token, language: PAYZEN_LANGUAGE });
@@ -84,11 +85,14 @@
 </section>
 
 <script type="text/javascript">
-$(document).ready(function() {
-  $("input[data-module-name=payzen]").change(function() {
-    if ($(this).is(':checked')) {
-      payzenOneclickPaymentSelect(1);
-    }
-  });
-});
+  window.onload = function() {
+      $("input[data-module-name=payzen]").change(function() {
+        if ($(this).is(':checked')) {
+          payzenOneclickPaymentSelect(1);
+          if (typeof payzenSepaOneclickPaymentSelect == 'function') {
+            payzenSepaOneclickPaymentSelect(1);
+          }
+        }
+      });
+  };
 </script>

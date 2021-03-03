@@ -19,6 +19,8 @@ class PayzenStandardPayment extends AbstractPayzenPayment
     protected $logo = 'standard.png';
     protected $name = 'standard';
 
+    protected $allow_backend_payment = true;
+
     public function isAvailable($cart)
     {
         if (! parent::isAvailable($cart)) {
@@ -70,34 +72,34 @@ class PayzenStandardPayment extends AbstractPayzenPayment
     {
         $vars = parent::getTplVars($cart);
 
+        if ($this->isFromBackend()) {
+            $vars['payzen_std_card_data_mode'] = '1';
+            return $vars;
+        }
+
         $entry_mode = $this->getEntryMode();
         $vars['payzen_std_card_data_mode'] = $entry_mode;
 
         // Payment by identifier.
-        $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
-        $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
-
-        $vars['payzen_saved_identifier'] = false;
+        $vars['payzen_is_valid_std_identifier'] = false;
         $vars['payzen_saved_payment_mean'] = '';
 
         $vars['payzen_rest_form_token'] = '';
         $vars['payzen_rest_identifier_token'] = '';
-        $vars['payzen_rest_popin'] = false;
 
-        if ((Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True') && $saved_identifier) {
-            $vars['payzen_saved_identifier'] = true;
+        if ($this->isValidSavedAlias()) {
+            $vars['payzen_is_valid_std_identifier'] = true;
+            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
             $vars['payzen_saved_payment_mean'] = isset($customers_config[$cart->id_customer][$this->name]['m']) ?
-            $customers_config[$cart->id_customer][$this->name]['m'] : '';
+                $customers_config[$cart->id_customer][$this->name]['m'] : '';
         }
 
-        if ($entry_mode === '2' /* Card type on website. */) {
+        if ($entry_mode === PayzenTools::MODE_LOCAL_TYPE /* Card type on website. */) {
             $vars['payzen_avail_cards'] = $this->getPaymentCards();
-        } elseif ($this->getEntryMode() === '4' /* IFrame mode. */) {
+        } elseif ($this->getEntryMode() === PayzenTools::MODE_IFRAME /* Iframe mode. */) {
             $vars['payzen_can_cancel_iframe'] = (Configuration::get($this->prefix . 'CANCEL_IFRAME') === 'True');
             $this->tpl_name = 'payment_std_iframe.tpl';
-        } elseif ($entry_mode === '5' /* REST API. */) {
-            $vars['payzen_rest_popin'] = Configuration::get('PAYZEN_STD_REST_DISPLAY_MODE') === 'popin';
-
+        } elseif ($this->isEmbedded() /* REST API. */) {
             $form_token = $this->getFormToken($cart);
 
             if ($form_token) {
@@ -105,13 +107,10 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                 $vars['payzen_rest_form_token'] = $form_token;
                 $vars['payzen_rest_identifier_token'] = $form_token;
 
-                $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
-                $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
-                if (Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True' && $saved_identifier) {
-                    $identifier_token = $this->getFormToken($cart, true);
-                    if ($identifier_token) {
-                        $vars['payzen_rest_identifier_token'] = $identifier_token;
-                    }
+                // Customer has an identifier and it is valid.
+                $identifier_token = $this->getFormToken($cart, true);
+                if ($identifier_token) {
+                    $vars['payzen_rest_identifier_token'] = $identifier_token;
                 }
 
                 $this->tpl_name = 'payment_std_rest.tpl';
@@ -143,7 +142,12 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $avail_cards = array();
         foreach (PayzenApi::getSupportedCardTypes() as $code => $label) {
             if (in_array($code, $cards)) {
-                $avail_cards[$code] = $label;
+                $card = array(
+                    'label' => $label,
+                    'logo' => self::getCcTypeImageSrc($code)
+                );
+
+                $avail_cards[$code] = $card;
             }
         }
 
@@ -168,6 +172,16 @@ class PayzenStandardPayment extends AbstractPayzenPayment
     public function prepareRequest($cart, $data = array())
     {
         $request = parent::prepareRequest($cart, $data);
+
+        // Set payment_src to MOTO for backend payments.
+        if (isset($this->context->cookie->payzenBackendPayment)) {
+            $request->set('payment_src', 'MOTO');
+            unset($this->context->cookie->payzenBackendPayment);
+
+            $request->set('payment_cards', Configuration::get($this->prefix . 'PAYMENT_CARDS'));
+
+            return $request;
+        }
 
         if (isset($data['iframe_mode']) && $data['iframe_mode']) {
             $request->set('action_mode', 'IFRAME');
@@ -203,15 +217,16 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         }
 
         // Payment by alias.
-        if (Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True') {
-            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
-            $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
-            $use_identifier = isset($data['payment_by_identifier']) ? $data['payment_by_identifier'] === '1' : false;
+        $customer = new Customer((int) $cart->id_customer);
 
-            if ($saved_identifier) {
-                // Customer has an identifier.
+        if ($this->isOneClickActive() && $customer->id) {
+            if ((! isset($data['force_identifier']) || $data['force_identifier']) && $this->isValidSavedAlias()) {
+                // Customer has an identifier and it is valid.
+                $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+                $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
                 $request->set('identifier', $saved_identifier);
 
+                $use_identifier = isset($data['payment_by_identifier']) ? $data['payment_by_identifier'] === '1' : false;
                 if (! $use_identifier) {
                     // Customer choose to not use alias.
                     $request->set('page_action', 'REGISTER_UPDATE_PAY');
@@ -228,7 +243,10 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
     public function getFormToken($cart, $use_identifier = false)
     {
-        $request = $this->prepareRequest($cart, array());
+        $request = $this->prepareRequest($cart, array(
+            'force_identifier' => $use_identifier,
+            'payment_by_identifier' => $use_identifier ? '1' : '0'
+        ));
 
         $strong_auth = $this->getEscapedVar($request, 'threeds_mpi') === '2' ? 'DISABLED' : 'AUTO';
         $currency = PayzenApi::findCurrencyByNumCode($this->getEscapedVar($request, 'currency'));
@@ -281,7 +299,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             'currency' => $currency->getAlpha3(),
             'amount' => $this->getEscapedVar($request, 'amount'),
             'metadata' => array(
-                'orderInfo' => 'module_id=' . $this->name
+                'module_id' => $this->name
             )
         );
 
@@ -291,26 +309,24 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         }
 
         if ($use_identifier) {
-            PayzenTools::getLogger()->logInfo("Customer {$cust_mail} has an identifier. Use it for payment of cart #{$cart_id}.");
+            if ($saved_identifier = $this->getEscapedVar($request, 'identifier')) {
+                PayzenTools::getLogger()->logInfo("Customer {$cust_mail} has an identifier. Use it for payment of cart #{$cart_id}.");
 
-            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
-            $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
-            $params['paymentMethodToken'] = $saved_identifier;
-        } elseif (Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True' && $this->getEscapedVar($request, 'cust_id')) {
-            // 1-Click enabled and customer logged-in, let's ask customer for card data registration.
-            PayzenTools::getLogger()->logInfo("Customer {$cust_mail} will be asked for card data registration on payment page for order #{$cart_id}.");
-            $params['formAction'] = 'ASK_REGISTER_PAY';
+                $params['paymentMethodToken'] = $saved_identifier;
+            } else {
+                return false;
+            }
         }
+
+        $params['formAction'] = $this->getEscapedVar($request, 'page_action');
 
         $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
         $key = $test_mode ? Configuration::get('PAYZEN_PRIVKEY_TEST') : Configuration::get('PAYZEN_PRIVKEY_PROD');
         $site_id = Configuration::get('PAYZEN_SITE_ID');
 
-        require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenRest.php';
-
         $return = false;
         try {
-            $client = new PayzenRest(PayzenTools::getDefault('REST_URL'), $site_id, $key);
+            $client = new PayzenRest(Configuration::get('PAYZEN_REST_SERVER_URL'), $site_id, $key);
             $result = $client->post('V4/Charge/CreatePayment', json_encode($params));
 
             if ($result['status'] !== 'SUCCESS') {
@@ -346,7 +362,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
     public function hasForm()
     {
-        if ($this->getEntryMode() === '1') {
+        if ($this->getEntryMode() === PayzenTools::MODE_FORM) {
             return false;
         }
 
@@ -356,5 +372,33 @@ class PayzenStandardPayment extends AbstractPayzenPayment
     protected function getDefaultTitle()
     {
         return $this->l('Payment by credit card');
+    }
+
+    /**
+     * Check if the embedded payment fields option is choosen.
+     *
+     * @return boolean
+     */
+    public function isEmbedded()
+    {
+        if ($this->isFromBackend()) {
+            return false;
+        }
+
+        $embedded = array(
+            PayzenTools::MODE_EMBEDDED,
+            PayzenTools::MODE_POPIN
+        );
+
+        return in_array($this->getEntryMode(), $embedded);
+    }
+
+    public function isOneClickActive()
+    {
+        if ($this->isFromBackend()) {
+            return false;
+        }
+
+        return Configuration::get($this->prefix . '1_CLICK_PAYMENT') === 'True';
     }
 }

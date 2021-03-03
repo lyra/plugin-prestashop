@@ -17,14 +17,14 @@
 
   {assign var=first value=true}
   {foreach from=$payzen_other_options key="key" item="option"}
-    <label class="payzen_card" >
-      <input type="radio" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" {if $first == true} checked="checked"{/if} />
-      <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/{$key|lower|escape:'html':'UTF-8'}.png"
-           alt="{$option|escape:'html':'UTF-8'}"
-           title="{$option|escape:'html':'UTF-8'}" />
-
-      &nbsp;&nbsp;&nbsp;&nbsp;
-    </label>
+    <div class="payzen-pm">
+      <label>
+        <input type="radio" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" {if $first == true} checked="checked"{/if} />
+        <img src="{$option['logo']}"
+             alt="{$option['label']|escape:'html':'UTF-8'}"
+             title="{$option['label']|escape:'html':'UTF-8'}" />
+      </label>
+    </div>
 
     {assign var=first value=false}
   {/foreach}

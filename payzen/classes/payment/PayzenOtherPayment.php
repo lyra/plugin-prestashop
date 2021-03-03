@@ -30,7 +30,7 @@ class PayzenOtherPayment extends AbstractPayzenPayment
     {
         $this->payment_code = $payment_code;
         $this->payment_title = $payment_title;
-        $this->logo = Tools::strtolower($payment_code) . '.png';
+        $this->logo = $this->getLogo();
         $this->min_amount = $min_amount;
         $this->max_amount = $max_amount;
     }
@@ -61,9 +61,18 @@ class PayzenOtherPayment extends AbstractPayzenPayment
         return $vars;
     }
 
+    public function getLogo()
+    {
+        return self::getCcTypeImageSrc(Tools::strtolower($this->payment_code));
+    }
+
     public function getPaymentOption($cart)
     {
         $option = parent::getPaymentOption($cart);
+
+        if ($this->getLogo()) {
+            $option->setLogo($this->getLogo());
+        }
 
         $inputs = $option->getInputs();
         $inputs[] = array('type' => 'hidden', 'name' => 'payzen_payment_code', 'value' => $this->payment_code);

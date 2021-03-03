@@ -35,7 +35,7 @@ function payzenDeleteMultiOption(key) {
     }
 }
 
-function payzenAddOneyOption(first, suffix = '') {
+function payzenAddOneyOption(first, suffix) {
     if (first) {
         $('#payzen_oney' + suffix + '_options_btn').hide();
         $('#payzen_oney' + suffix + '_options_table').show();
@@ -49,13 +49,36 @@ function payzenAddOneyOption(first, suffix = '') {
     $(rowTpl).insertBefore('#payzen_oney' + suffix + '_option_add');
 }
 
-function payzenDeleteOneyOption(key, suffix = '') {
+function payzenDeleteOneyOption(key, suffix) {
     $('#payzen_oney' + suffix + '_option_' + key).remove();
 
     if ($('#payzen_oney' + suffix + '_options_table tbody tr').length === 1) {
         $('#payzen_oney' + suffix + '_options_btn').show();
         $('#payzen_oney' + suffix + '_options_table').hide();
         $('#payzen_oney' + suffix + '_options_table').append("<input type=\"hidden\" id=\"PAYZEN_ONEY" + suffix + "_OPTIONS\" name=\"PAYZEN_ONEY" + suffix + "_OPTIONS\" value=\"\">");
+    }
+}
+
+function payzenAddFranfinanceOption(first) {
+    if (first) {
+        $('#payzen_ffin_options_btn').hide();
+        $('#payzen_ffin_options_table').show();
+    }
+
+    var timestamp = new Date().getTime();
+    var rowTpl = $('#payzen_ffin_row_option').html();
+    rowTpl = rowTpl.replace(/PAYZEN_FFIN_KEY/g, '' + timestamp);
+
+    $(rowTpl).insertBefore('#payzen_ffin_option_add');
+}
+
+function payzenDeleteFranfinanceOption(key) {
+    $('#payzen_ffin_option_' + key).remove();
+
+    if ($('#payzen_ffin_options_table tbody tr').length === 1) {
+        $('#payzen_ffin_options_btn').show();
+        $('#payzen_ffin_options_table').hide();
+        $('#payzen_ffin_options_table').append("<input type=\"hidden\" id=\"PAYZEN_FFIN_OPTIONS\" name=\"PAYZEN_FFIN_OPTIONS\" value=\"\">");
     }
 }
 
@@ -189,6 +212,31 @@ function payzenDeleteOtherPaymentMeansOption(key) {
     }
 }
 
+function payzenAddExtraPaymentMeansOption(first) {
+    if (first) {
+        $('#payzen_extra_payment_means_options_btn').hide();
+        $('#payzen_extra_payment_means_options_table').show();
+        $('#PAYZEN_EXTRA_PAYMENT_MEANS').remove();
+    }
+
+    var timestamp = new Date().getTime();
+
+    var rowTpl = $('#payzen_add_payment_means_row_option').html();
+    rowTpl = rowTpl.replace(/PAYZEN_EXTRA_PAYMENT_MEANS_SCRIPT_KEY/g, '' + timestamp);
+
+    $(rowTpl).insertBefore('#payzen_extra_payment_means_option_add');
+}
+
+function payzenDeleteExtraPaymentMeansOption(key) {
+    $('#payzen_extra_payment_means_option_' + key).remove();
+
+    if ($('#payzen_extra_payment_means_options_table tbody tr').length === 1) {
+        $('#payzen_extra_payment_means_options_btn').show();
+        $('#payzen_extra_payment_means_options_table').hide();
+        $('#payzen_extra_payment_means_options_table').append("<input type=\"hidden\" id=\"PAYZEN_EXTRA_PAYMENT_MEANS\" name=\"PAYZEN_EXTRA_PAYMENT_MEANS\" value=\"\">");
+    }
+}
+
 function payzenCountriesRestrictMenuDisplay(retrictCountriesPaymentId) {
     var countryRestrict = $('#' + retrictCountriesPaymentId).val();
     if (countryRestrict === '2') {
@@ -237,4 +285,13 @@ function payzenGetLabelText(selectId, clickMessage) {
     }
 
     return labelText;
+}
+
+function payzenSepa1clickPaymentMenuDisplay(sepaMandateModeId) {
+    var sepaMandateMode = $('#' + sepaMandateModeId).val();
+    if (sepaMandateMode === 'REGISTER_PAY') {
+        $('#PAYZEN_SEPA_1_CLICK_PAYMNT_MENU').show();
+    } else {
+        $('#PAYZEN_SEPA_1_CLICK_PAYMNT_MENU').hide();
+    }
 }

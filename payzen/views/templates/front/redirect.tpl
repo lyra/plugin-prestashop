@@ -26,7 +26,7 @@
               {/foreach}
 
               <p>
-                <img src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" style="margin-bottom: 5px" />
+                <img src="{$payzen_logo|escape:'html':'UTF-8'}" style="margin-bottom: 5px" />
                 <br />
 
                 {l s='Please wait, you will be redirected to the payment gateway.' mod='payzen'}

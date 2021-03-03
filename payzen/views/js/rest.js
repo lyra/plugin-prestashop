@@ -111,7 +111,7 @@ var payzenInitRestEvents = function() {
         $('.payzen .kr-form-error').html('');
     });
 
-    KR.button.onClick( function() {
+    KR.button.onClick(function() {
         // Hide oneclick description if it is present and is not popin mode.
         if ($('#payzen_oneclick_payment_description').length && ! $('.payzen .kr-popin-button').length) {
             $('#payzen_oneclick_payment_description').hide();

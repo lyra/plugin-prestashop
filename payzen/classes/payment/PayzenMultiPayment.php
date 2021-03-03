@@ -19,6 +19,8 @@ class PayzenMultiPayment extends AbstractPayzenPayment
     protected $logo = 'multi.png';
     protected $name = 'multi';
 
+    protected $allow_backend_payment = true;
+
     public function isAvailable($cart)
     {
         if (! parent::isAvailable($cart)) {
@@ -72,10 +74,15 @@ class PayzenMultiPayment extends AbstractPayzenPayment
         $vars = parent::getTplVars($cart);
         $vars['payzen_multi_options'] = self::getAvailableOptions($cart);
 
+        if ($this->isFromBackend()) {
+            $vars['payzen_multi_card_mode'] = '1';
+            return $vars;
+        }
+
         $entry_mode = Configuration::get($this->prefix . 'CARD_MODE');
         $vars['payzen_multi_card_mode'] = $entry_mode;
 
-        if ($entry_mode === '2') {
+        if ($entry_mode === PayzenTools::MODE_LOCAL_TYPE) {
             $vars['payzen_avail_cards'] = $this->getPaymentCards();
         }
 
@@ -103,6 +110,15 @@ class PayzenMultiPayment extends AbstractPayzenPayment
             $avail_cards = $all_cards;
         }
 
+        foreach ($avail_cards as $code => $label) {
+            $card = array(
+                'label' => $label,
+                'logo' => self::getCcTypeImageSrc($code)
+            );
+
+            $avail_cards[$code] = $card;
+        }
+
         return $avail_cards;
     }
 
@@ -113,6 +129,12 @@ class PayzenMultiPayment extends AbstractPayzenPayment
     public function prepareRequest($cart, $data = array())
     {
         $request = parent::prepareRequest($cart, $data);
+
+        // Set payment_src to MOTO for backend payments.
+        if (isset($this->context->cookie->payzenBackendPayment)) {
+            $request->set('payment_src', 'MOTO');
+            unset($this->context->cookie->payzenBackendPayment);
+        }
 
         $multi_options = self::getAvailableOptions($cart);
         $option = $multi_options[$data['opt']];
@@ -135,7 +157,8 @@ class PayzenMultiPayment extends AbstractPayzenPayment
         }
 
         // Override title to append selected option.
-        $request->set('order_info', 'module_id=' . $this->name . '&option_id=' . $data['opt']);
+        $request->addExtInfo('module_id', $this->name);
+        $request->addExtInfo('option_id', $data['opt']);
 
         return $request;
     }

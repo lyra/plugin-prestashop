@@ -59,7 +59,12 @@ class PayzenChoozeoPayment extends AbstractPayzenPayment
 
 
             if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
-                $enabled_options[$key] = Tools::strtolower(Tools::substr($key, -2)) . ' CB';
+                $option = array(
+                    'label' => Tools::strtolower(Tools::substr($key, -2)) . ' CB',
+                    'logo' => self::getCcTypeImageSrc($key)
+                );
+
+                $enabled_options[$key] = $option;
             }
         }
 

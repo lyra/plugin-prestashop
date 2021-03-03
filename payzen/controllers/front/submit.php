@@ -54,7 +54,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
             $this->logger->logWarning("No address selected for customer or module disabled, redirect to first checkout step. Cart ID: $cart_id.");
 
             if (version_compare(_PS_VERSION_, '1.7', '<') && ! Configuration::get('PS_ORDER_PROCESS_TYPE')) {
-                $page .= '&step=1'; // Not one page checkout, goto first checkout step.
+              $page .= '&step=1'; // Not one page checkout, goto first checkout step.
             }
 
             $this->payzenRedirect('index.php?controller=' . $page);
@@ -65,8 +65,6 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
     private function processPaymentReturn()
     {
-        require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
-
         /** @var PayzenResponse $response */
         $response = new PayzenResponse(
             $_REQUEST,
@@ -92,7 +90,6 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
         if ($order_id == false) {
             // Order has not been processed yet.
-
             $new_state = (int) Payzen::nextOrderState($response);
 
             if ($response->isAcceptedPayment()) {
@@ -105,7 +102,6 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
                 $this->redirectSuccess($order, true);
             } else {
                 // Payment KO.
-
                 $save_on_failure = (Configuration::get('PAYZEN_FAILURE_MANAGEMENT') === PayzenTools::ON_FAILURE_SAVE);
                 if ($save_on_failure || Payzen::isOney($response)) {
                     // Save on failure option is selected or Oney payment: save order and go to history page.
@@ -136,6 +132,10 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
                         if (version_compare(_PS_VERSION_, '1.5.1', '<')) {
                             $page .= '&cgv=1&id_carrier=' . $this->currentCart->id_carrier;
                         }
+                    }
+
+                    if ($response->get('payment_src') === 'MOTO') {
+                        $page .= "&recover_cart=$cart_id&token_cart=" . md5(_COOKIE_KEY_ . 'recover_cart_' . $cart_id);
                     }
 
                     $this->payzenRedirect('index.php?controller=' . $page);

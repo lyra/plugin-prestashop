@@ -11,11 +11,11 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
 <section id="payzen_standard_rest_wrapper" style="margin-bottom: 2rem;">
-  <div class="payzen kr-embedded"{if $payzen_rest_popin} kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
+  <div class="payzen kr-embedded"{if $payzen_std_card_data_mode == '6'} kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
      <div class="kr-pan"></div>
      <div class="kr-expiry"></div>
      <div class="kr-security-code"></div>
-     <button type="button" class="kr-payment-button" {if !$payzen_rest_popin}style="display: none;"{/if}></button>
+     <button type="button" class="kr-payment-button" {if $payzen_std_card_data_mode != '6'}style="display: none;"{/if}></button>
      <div class="kr-field processing" style="display: none; border: none !important;">
        <div style="background-image: url('{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/loading_big.gif');
                    margin: 0 auto; display: block; height: 35px; background-color: #ffffff; background-position: center;
@@ -34,7 +34,7 @@
     if (!$('#payzen_standard').data('submitted')) {
       var isPopin = document.getElementsByClassName('kr-popin-button');
 
-      {if $payzen_saved_identifier}
+      {if $payzen_is_valid_std_identifier}
         if (isPopin.length === 0) {
           $('#payzen_oneclick_payment_description').hide();
         }
@@ -42,6 +42,7 @@
 
       if (isPopin.length > 0) {
         KR.openPopin();
+        $('#payment-confirmation button').removeAttr('disabled');
       } else {
         $('#payzen_standard').data('submitted', true);
         $('.payzen .processing').css('display', 'block');

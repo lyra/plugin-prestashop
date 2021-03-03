@@ -17,7 +17,7 @@
     {else}
       <a class="unclickable" title="{l s='Click on a payment option to pay with Choozeo' mod='payzen'}" href="javascript: void(0);">
     {/if}
-        <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+        <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
         <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_choozeo">
           <input type="hidden" name="payzen_payment_type" value="choozeo" />
@@ -29,9 +29,9 @@
                      name="payzen_card_type"
                      id="payzen_card_type_{$key|escape:'html':'UTF-8'}"
                      value="{$key|escape:'html':'UTF-8'}" />
-              <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/{$key|lower|escape:'html':'UTF-8'}.png"
-                   alt="{$option|escape:'html':'UTF-8'}"
-                   title="{$option|escape:'html':'UTF-8'}" />
+              <img src="{$option['logo']}"
+                   alt="{$option['label']|escape:'html':'UTF-8'}"
+                   title="{$option['label']|escape:'html':'UTF-8'}" />
             </label>
           {/foreach}
         </form>

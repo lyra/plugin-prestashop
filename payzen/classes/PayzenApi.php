@@ -12,9 +12,6 @@ if (! defined('_PS_VERSION_')) {
     exit();
 }
 
-require_once 'PayzenCurrency.php';
-require_once 'PayzenField.php';
-
 if (! class_exists('PayzenApi', false)) {
 
     /**
