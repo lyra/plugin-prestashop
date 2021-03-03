@@ -12,8 +12,6 @@ if (! defined('_PS_VERSION_')) {
     exit();
 }
 
-require_once 'PayzenApi.php';
-
 if (! class_exists('PayzenRequest', false)) {
 
     /**

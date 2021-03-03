@@ -16,7 +16,7 @@ class PayzenAncvPayment extends AbstractPayzenPayment
 {
     protected $prefix = 'PAYZEN_ANCV_';
     protected $tpl_name = 'payment_ancv.tpl';
-    protected $logo = 'e_cv.png';
+    protected $logo = 'cvco.png';
     protected $name = 'ancv';
 
     public function validate($cart, $data = array())
@@ -45,7 +45,7 @@ class PayzenAncvPayment extends AbstractPayzenPayment
         $request = parent::prepareRequest($cart, $data);
 
         // Override with ANCV card.
-        $request->set('payment_cards', 'E_CV');
+        $request->set('payment_cards', 'E_CV;CVCO');
 
         return $request;
     }

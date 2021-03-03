@@ -23,6 +23,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         'oney',
         'oney34',
         'fullcb',
+        'franfinance',
         'ancv',
         'sepa',
         'sofort',
@@ -134,9 +135,9 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
             case 'standard':
                 $payment = new PayzenStandardPayment();
 
-                if ($payment->getEntryMode() == 2) {
+                if ($payment->getEntryMode() === PayzenTools::MODE_LOCAL_TYPE) {
                     $data['card_type'] = Tools::getValue('payzen_card_type');
-                } elseif ($payment->getEntryMode() == 4) {
+                } elseif ($payment->getEntryMode() === PayzenTools::MODE_IFRAME) {
                     $data['iframe_mode'] = true;
                 }
 
@@ -183,12 +184,27 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
                 $option = ' (' . $options[$data['card_type']]['count'] . ' x)';
                 break;
 
+            case 'franfinance':
+                $payment = new PayzenFranfinancePayment();
+
+                $data['opt'] = Tools::getValue('payzen_ffin_option');
+
+                $options = PayzenFranfinancePayment::getAvailableOptions($cart);
+                $option = ' (' . $options[$data['opt']]['count'] . ' x)';
+                break;
+
             case 'ancv':
                 $payment = new PayzenAncvPayment();
                 break;
 
             case 'sepa':
                 $payment = new PayzenSepaPayment();
+
+                // Payment by alias.
+                if (Configuration::get('PAYZEN_SEPA_1_CLICK_PAYMNT') === 'True') {
+                    $data['sepa_payment_by_identifier'] = Tools::getValue('payzen_sepa_payment_by_identifier', '0');
+                }
+
                 break;
 
             case 'sofort':
@@ -250,7 +266,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
         $this->context->smarty->assign('payzen_params', $fields);
         $this->context->smarty->assign('payzen_url', $request->get('platform_url'));
-        $this->context->smarty->assign('payzen_logo', _MODULE_DIR_ . 'payzen/views/img/' . $payment->getLogo());
+        $this->context->smarty->assign('payzen_logo', $payment->getLogo());
 
         // Recover payment method title.
         $title = $payment->getTitle((int) $cart->id_lang) . $option;
@@ -270,7 +286,7 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
     private function payzenRedirect($url)
     {
         if ($this->iframe) {
-            // IFrame mode, use template to redirect to top window.
+            // Iframe mode, use template to redirect to top window.
             $this->context->smarty->assign('payzen_url', PayzenTools::getPageLink($url));
             $this->setTemplate(PayzenTools::getTemplatePath('iframe/response.tpl'));
         } else {

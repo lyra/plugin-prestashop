@@ -37,7 +37,7 @@
   </script>
 {else}
   <ul id="payzen_oneclick_payment_description_2" style="display: none;">
-    {if ($payzen_std_card_data_mode != '5') || $payzen_rest_popin}
+    {if ($payzen_std_card_data_mode != '5') || ($payzen_std_card_data_mode == '6')}
       <li>{l s='You will enter payment data after order confirmation.' mod='payzen'}</li>
     {/if}
 
@@ -66,7 +66,7 @@
         $('#payzen_payment_by_identifier').val('0');
       }
 
-      {if ($payzen_std_card_data_mode == '5')}
+      {if ($payzen_std_card_data_mode == '5' || $payzen_std_card_data_mode == '6')}
         $('.payzen .kr-form-error').html('');
 
         var token;
@@ -82,7 +82,7 @@
     </script>
 {/if}
 
-{if ($payzen_std_card_data_mode != '5')}
+{if ($payzen_std_card_data_mode != '5' && $payzen_std_card_data_mode != '6')}
     {if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}
       <input id="payzen_standard_link" value="{l s='Pay' mod='payzen'}" class="button" />
     {else}

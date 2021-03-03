@@ -13,7 +13,7 @@
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
     <a class="unclickable" href="javascript: void(0);">
-      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
       <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_grouped_other">
         <input type="hidden" name="payzen_payment_type" value="grouped_other" />
@@ -27,9 +27,9 @@
                    value="{$key|escape:'html':'UTF-8'}"
                    {if $first == true} checked="checked"{/if}
                    onclick="javascript: $('#payzen_grouped_other').submit();" />
-            <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/{$key|lower|escape:'html':'UTF-8'}.png"
-                 alt="{$option|escape:'html':'UTF-8'}"
-                 title="{$option|escape:'html':'UTF-8'}" />
+            <img src="{$option['logo']}"
+                 alt="{$option['label']|escape:'html':'UTF-8'}"
+                 title="{$option['label']|escape:'html':'UTF-8'}" />
           </label>
 
           {assign var=first value=false}

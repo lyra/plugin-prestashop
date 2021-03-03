@@ -20,7 +20,7 @@ class PayzenWsException extends Exception
      * @param message[optional]
      * @param code[optional]
      */
-    public function __construct ($message, $code = null)
+    public function __construct($message, $code = null)
     {
         parent::__construct($message, null);
         $this->code = $code;

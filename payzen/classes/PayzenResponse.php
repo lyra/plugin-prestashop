@@ -12,8 +12,6 @@ if (! defined('_PS_VERSION_')) {
     exit();
 }
 
-require_once 'PayzenApi.php';
-
 if (! class_exists('PayzenResponse', false)) {
 
     /**
@@ -229,12 +227,14 @@ if (! class_exists('PayzenResponse', false)) {
          * @param string $name
          * @return string
          */
-        public function get($name)
+        public function get($name, $hasPrefix = true)
         {
-            // Manage shortcut notations by adding 'vads_'.
-            $name = (Tools::substr($name, 0, 5) != 'vads_') ? 'vads_' . $name : $name;
+            if ($hasPrefix) {
+                // Manage shortcut notations by adding 'vads_' prefix.
+                $name = (Tools::substr($name, 0, 5) != 'vads_') ? 'vads_' . $name : $name;
+            }
 
-            return @$this->rawResponse[$name];
+            return array_key_exists($name, $this->rawResponse) ? $this->rawResponse[$name] : null;
         }
 
         /**
@@ -253,7 +253,7 @@ if (! class_exists('PayzenResponse', false)) {
          */
         public function getSignature()
         {
-            return @$this->rawResponse['signature'];
+            return $this->get('signature', false);
         }
 
         /**

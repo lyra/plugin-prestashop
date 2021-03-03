@@ -56,11 +56,63 @@ class PayzenSepaPayment extends AbstractPayzenPayment
     {
         $request = parent::prepareRequest($cart, $data);
 
-        // Override with SEPA card.
+        // Override with SEPA payment card.
         $request->set('payment_cards', 'SDD');
-        $request->set('page_action', Configuration::get($this->prefix . 'MANDATE_MODE'));
+
+        $customer = new Customer((int) $cart->id_customer);
+
+        // Sepa one click is active and customer is logged-in.
+        if ($this->isOneClickActive() && $customer->id) {
+            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+            $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
+            $use_identifier = isset($data['sepa_payment_by_identifier']) ? $data['sepa_payment_by_identifier'] === '1' : false;
+
+            if ($this->isValidSavedAlias()) {
+                // Customer has an identifier.
+                $request->set('identifier', $saved_identifier);
+
+                if (! $use_identifier) {
+                    // Customer choose to not use alias.
+                    $request->set('page_action', 'REGISTER_UPDATE_PAY');
+                }
+            } else {
+                // Bank data acquisition on payment page, let's ask customer for data registration.
+                PayzenTools::getLogger()->logInfo('Customer ' . $request->get('cust_email') . ' will be asked for card data registration on payment page.');
+                $request->set('page_action', 'ASK_REGISTER_PAY');
+            }
+        } else {
+            $request->set('page_action', Configuration::get($this->prefix . 'MANDATE_MODE'));
+        }
 
         return $request;
+    }
+
+    public function getTplVars($cart)
+    {
+        $vars = parent::getTplVars($cart);
+
+        // Payment by identifier.
+        $vars['payzen_is_valid_sepa_identifier'] = false;
+        $vars['payzen_sepa_saved_payment_mean'] = '';
+
+        if ($this->isValidSavedAlias()) {
+            $vars['payzen_is_valid_sepa_identifier'] = true;
+            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+            $vars['payzen_sepa_saved_payment_mean'] = isset($customers_config[$cart->id_customer][$this->name]['m']) ?
+            $customers_config[$cart->id_customer][$this->name]['m'] : 'sk';
+        }
+
+        return $vars;
+    }
+
+    public function isOneClickActive()
+    {
+        // 1-Click enabled and SEPA direct debit mode is REGISTER_PAY.
+        if ((Configuration::get($this->prefix . 'MANDATE_MODE') === 'REGISTER_PAY') && (Configuration::get($this->prefix . '1_CLICK_PAYMNT') === 'True')) {
+            return true;
+        }
+
+        return false;
     }
 
     protected function getDefaultTitle()

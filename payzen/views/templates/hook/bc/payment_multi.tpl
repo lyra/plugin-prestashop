@@ -17,7 +17,7 @@
       <a href="javascript: $('#payzen_opt').val('{$key|escape:'html':'UTF-8'}'); $('#payzen_multi').submit();"
          title="{l s='Click to pay in installments' mod='payzen'}">
 
-        <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+        <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
         ({$option.localized_label|escape:'html':'UTF-8'})
 
         <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_multi">
@@ -30,7 +30,7 @@
 {else}
   <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'} multi">
     <a class="unclickable" title="{l s='Click on a payment option to pay in installments' mod='payzen'}" href="javascript: void(0);">
-      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+      <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
       <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_multi">
         <input type="hidden" name="payzen_payment_type" value="multi" />
@@ -41,24 +41,18 @@
           <p class="tip">{if $payzen_avail_cards|@count == 1}{l s='Payment Mean' mod='payzen'}{else}{l s='Choose your payment mean' mod='payzen'}{/if}</p>
 
           {assign var=first value=true}
-          {foreach from=$payzen_avail_cards key="key" item="label"}
-            <div style="display: inline-block;">
+          {foreach from=$payzen_avail_cards key="key" item="card"}
+            <div class="payzen-pm">
               {if $payzen_avail_cards|@count == 1}
                 <input type="hidden" id="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" >
               {else}
                 <input type="radio" id="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" style="vertical-align: middle;"{if $first == true} checked="checked"{/if} >
               {/if}
 
-              <label for="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}" class="payzen_card">
-                {assign var=img_file value=$smarty.const._PS_MODULE_DIR_|cat:'payzen/views/img/':{$key|lower|escape:'html':'UTF-8'}:'.png'}
-
-                {if file_exists($img_file)}
-                  <img src="{$base_dir_ssl|escape:'html':'UTF-8'}modules/payzen/views/img/{$key|lower}.png"
-                       alt="{$label|escape:'html':'UTF-8'}"
-                       title="{$label|escape:'html':'UTF-8'}">
-                {else}
-                  <span>{$label|escape:'html':'UTF-8'}</span>
-                {/if}
+              <label for="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}">
+                <img src="{$card['logo']}"
+                     alt="{$card['label']|escape:'html':'UTF-8'}"
+                     title="{$card['label']|escape:'html':'UTF-8'}">
               </label>
 
               {assign var=first value=false}

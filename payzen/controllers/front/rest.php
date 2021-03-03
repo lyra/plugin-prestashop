@@ -87,8 +87,6 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         // Wrap payment result to use traditional order creation tunnel.
         $data = PayzenTools::convertRestResult($answer);
 
-        require_once _PS_MODULE_DIR_ . 'payzen/classes/PayzenResponse.php';
-
         /** @var PayzenResponse $response */
         $response = new PayzenResponse($data, null, null, null);
 
@@ -100,7 +98,6 @@ class PayzenRestModuleFrontController extends ModuleFrontController
 
         if ($order_id == false) {
             // Order has not been processed yet.
-
             $new_state = (int) Payzen::nextOrderState($response);
 
             if ($response->isAcceptedPayment()) {
@@ -113,7 +110,6 @@ class PayzenRestModuleFrontController extends ModuleFrontController
                 $this->redirectSuccess($order, true);
             } else {
                 // Payment KO.
-
                 $save_on_failure = (Configuration::get('PAYZEN_FAILURE_MANAGEMENT') === PayzenTools::ON_FAILURE_SAVE);
                 if ($save_on_failure) {
                     // Save on failure option is selected: save order and go to history page.

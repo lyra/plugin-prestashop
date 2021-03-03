@@ -13,7 +13,7 @@
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
   <a href="javascript: $('#payzen_other_{$payzen_other_payment_code|escape:'html':'UTF-8'}').submit();" title="{l s='Click here to pay with %s' sprintf=$payzen_other_payment_label mod='payzen'}">
-    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
     <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_other_{$payzen_other_payment_code|escape:'html':'UTF-8'}">
         <input type="hidden" name="payzen_payment_type" value="other">

@@ -1,3 +1,23 @@
+1.14.0, 2021-03-03:
+- Bug fix: Update order status after multiple payment tries or on cancellation from gateway Back Office.
+- [franfinance] Added new FranFinance submodule.
+- [sepa] Possibility to enable payment by alias with SEPA submodule.
+- [ancv] Consider the new ANCV means of payment (CVCO - Chèque-Vacances Connect).
+- [embedded] Add the pop-in choice to card data entry mode setting.
+- [embedded] Possibility to customize the "Register my card" checkbox label for embedded payment mode.
+- Possibility to configure REST API URLs.
+- [alias] Check alias validity before proceeding to payment.
+- Possibility to refund payments in installments.
+- Possibility to refund/cancel payment online when the order is cancelled in PrestaShop Back Office.
+- Possibility to add payment means dynamically in "Other payment means" section.
+- Do not use vads_order_info\* gateway parameter (use vads_ext_info_\* instead).
+- Possibility to open a support issue from the plugin configuration interface.
+- Use the online payment means logos.
+- Identify MOTO payments for orders from PrestaShop Back Office.
+- Improve installation process (do not stop installation if PrestaShop errors are thrown).
+- Possibility to upgrade the module from the PrestaShop backend.
+- [technical] Load plugin classes dynamically.
+
 1.13.8, 2020-12-10:
 - Bug fix: Incorrectly formatted amount in order confirmation page.
 - Bug fix: Error 500 due to obsolete function (get_magic_quotes_gpc) in PHP 7.4.

@@ -33,7 +33,7 @@
       $('#payzen_oneclick_payment_description').hide();
 
       var url = decodeURIComponent("{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}") + '&' + Date.now();
-      {if $payzen_saved_identifier}
+      {if $payzen_is_valid_std_identifier}
         url = url + '&payzen_payment_by_identifier=' + $('#payzen_payment_by_identifier').val();
       {/if}
 

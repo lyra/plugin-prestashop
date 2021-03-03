@@ -12,16 +12,16 @@
 {/if}
 
 <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
-{if $payzen_saved_identifier}
+{if $payzen_is_valid_std_identifier}
   <a class="unclickable payzen-standard-link" title="{l s='Choose pay with registred means of payment or enter payment information and click « Pay » button' mod='payzen'}">
-    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 {else}
   <a href="javascript: void(0);" title="{l s='Click here to pay by credit card' mod='payzen'}" id="payzen_standard_link" class="payzen-standard-link">
-    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" alt="PayZen" />{$payzen_title|escape:'html':'UTF-8'}
+    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
     <br />
 {/if}
 
-    {if $payzen_saved_identifier}
+    {if $payzen_is_valid_std_identifier}
       <br /><br />
       {include file="./payment_std_oneclick.tpl"}
       <input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" />
@@ -44,7 +44,7 @@
 
       done = true;
 
-      {if !$payzen_saved_identifier}
+      {if !$payzen_is_valid_std_identifier}
         $('#payzen_iframe').parent().addClass('unclickable');
       {/if}
 
@@ -52,7 +52,7 @@
       $('#payzen_oneclick_payment_description').hide();
 
       var url = "{$link->getModuleLink('payzen', 'redirect', ['content_only' => 1], true)|escape:'url':'UTF-8'}";
-      {if $payzen_saved_identifier}
+      {if $payzen_is_valid_std_identifier}
             url = url + '&payzen_payment_by_identifier=' + $('#payzen_payment_by_identifier').val();
       {/if}
 
@@ -66,7 +66,7 @@
 
       done = false;
 
-      {if !$payzen_saved_identifier}
+      {if !$payzen_is_valid_std_identifier}
         $('#payzen_iframe').parent().removeClass('unclickable');
       {/if}
 

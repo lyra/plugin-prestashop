@@ -17,24 +17,18 @@
     <p style="margin-bottom: .4rem;">{if $payzen_avail_cards|@count == 1}{l s='Payment Mean' mod='payzen'}{else}{l s='Choose your payment mean' mod='payzen'}{/if}</p>
 
     {assign var=first value=true}
-    {foreach from=$payzen_avail_cards key="key" item="label"}
-      <div style="display: inline-block;">
+    {foreach from=$payzen_avail_cards key="key" item="card"}
+      <div class="payzen-pm">
         {if $payzen_avail_cards|@count == 1}
           <input type="hidden" id="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" >
         {else}
           <input type="radio" id="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}" name="payzen_card_type" value="{$key|escape:'html':'UTF-8'}" style="vertical-align: middle;"{if $first == true} checked="checked"{/if} >
         {/if}
 
-        <label for="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}" class="payzen_card">
-          {assign var=img_file value=$smarty.const._PS_MODULE_DIR_|cat:'payzen/views/img/':{$key|lower|escape:'html':'UTF-8'}:'.png'}
-
-          {if file_exists($img_file)}
-            <img src="{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/{$key|lower|escape:'html':'UTF-8'}.png"
-               alt="{$label|escape:'html':'UTF-8'}"
-               title="{$label|escape:'html':'UTF-8'}">
-          {else}
-            <span>{$label|escape:'html':'UTF-8'}</span>
-          {/if}
+        <label for="payzen_multi_card_type_{$key|escape:'html':'UTF-8'}">
+          <img src="{$card['logo']}"
+               alt="{$card['label']|escape:'html':'UTF-8'}"
+               title="{$card['label']|escape:'html':'UTF-8'}">
         </label>
 
         {assign var=first value=false}
