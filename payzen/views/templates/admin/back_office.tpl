@@ -196,12 +196,13 @@
         </legend>
 
         <p style="font-size: .85em; color: #7F7F7F;">
-         {l s='Configure this section if you are using order operations from Prestashop backend or if you are using « Embedded payment fields » mode.' mod='payzen'}
-        <br />
          {l s='REST API keys are available in your store Back Office (menu: Settings > Shops > REST API keys).' mod='payzen'}
         </p>
 
         <section style="display: none; padding-top: 15px;">
+          <p style="font-size: .85em; color: #7F7F7F;">
+           {l s='Configure this section if you are using order operations from Prestashop Back Office or if you are using embedded payment fields or popin modes.' mod='payzen'}
+          </p>
           <label for="PAYZEN_PRIVKEY_TEST">{l s='Test password' mod='payzen'}</label>
           <div class="margin-form">
             <input type="password" id="PAYZEN_PRIVKEY_TEST" name="PAYZEN_PRIVKEY_TEST" value="{$PAYZEN_PRIVKEY_TEST|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off" />
@@ -209,9 +210,29 @@
           <p></p>
 
           <label for="PAYZEN_PRIVKEY_PROD">{l s='Production password' mod='payzen'}</label>
-          <div class="margin-form">
+          <div style="border-bottom: 5px;" class="margin-form">
             <input type="password" id="PAYZEN_PRIVKEY_PROD" name="PAYZEN_PRIVKEY_PROD" value="{$PAYZEN_PRIVKEY_PROD|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
           </div>
+          <p></p>
+
+          <label for="PAYZEN_REST_SERVER_URL">{l s='REST API server URL' mod='payzen'}</label>
+          <div class="margin-form">
+            <input type="text" id="PAYZEN_REST_SERVER_URL" name="PAYZEN_REST_SERVER_URL" value="{$PAYZEN_REST_SERVER_URL|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
+          </div>
+          <p></p>
+
+          <label for="PAYZEN_ENABLE_WS">{l s='Enable web services' mod='payzen'}</label>
+          <div style="border-bottom: 5px;" class="margin-form">
+            <input type="checkbox" id="PAYZEN_ENABLE_WS" name="PAYZEN_ENABLE_WS" value="enabled" {if ($PAYZEN_ENABLE_WS === 'enabled')}checked{/if}>
+             <p>
+              {l s='Enable web services for order operations from PrestaShop Back Office.' mod='payzen'}<br />
+              {l s='If you keep the box unchecked, you will have to intervene directly on your store Back Office to manage these operations.' mod='payzen'}
+             </p>
+          </div>
+
+          <p style="font-size: .85em; color: #7F7F7F;">
+           {l s='Configure this section only if you are using embedded payment fields or popin modes.' mod='payzen'}
+          </p>
           <p></p>
 
           <label for="PAYZEN_PUBKEY_TEST">{l s='Public test key' mod='payzen'}</label>
@@ -249,12 +270,6 @@
               </span>
             </p>
           </div>
-
-          <label for="PAYZEN_REST_SERVER_URL">{l s='REST API server URL' mod='payzen'}</label>
-          <div class="margin-form">
-            <input type="text" id="PAYZEN_REST_SERVER_URL" name="PAYZEN_REST_SERVER_URL" value="{$PAYZEN_REST_SERVER_URL|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
-          </div>
-          <p></p>
 
           <label for="PAYZEN_REST_JS_CLIENT_URL">{l s='JavaScript client URL' mod='payzen'}</label>
           <div class="margin-form">
@@ -335,9 +350,9 @@
       <div class="clear">&nbsp;</div>
 
       <fieldset>
-        <legend>{l s='SELECTIVE 3DS' mod='payzen'}</legend>
+        <legend>{l s='CUSTOM 3DS' mod='payzen'}</legend>
 
-        <label for="PAYZEN_3DS_MIN_AMOUNT">{l s='Disable 3DS by customer group' mod='payzen'}</label>
+        <label for="PAYZEN_3DS_MIN_AMOUNT">{l s='Manage 3DS by customer group' mod='payzen'}</label>
         <div class="margin-form">
           {include file="./table_amount_group.tpl"
             groups=$prestashop_groups
@@ -345,7 +360,7 @@
             input_value=$PAYZEN_3DS_MIN_AMOUNT
             min_only=true
           }
-          <p>{l s='Amount below which 3DS will be disabled for each customer group. Needs subscription to selective 3DS option. For more information, refer to the module documentation.' mod='payzen'}</p>
+          <p>{l s='Amount by customer group below which customer could be exempt from strong authentication. Needs subscription to « Selective 3DS1 » or « Frictionless 3DS2 » options. For more information, refer to the module documentation.' mod='payzen'}</p>
         </div>
       </fieldset>
       <div class="clear">&nbsp;</div>

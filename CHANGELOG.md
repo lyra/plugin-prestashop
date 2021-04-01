@@ -1,3 +1,10 @@
+1.14.1, 2021-04-01:
+- Bug fix: Do not refund payments when vouchers are genereated in PrestShop 1.6.x.
+- Bug fix: Do not save payments with negative amount in PrestaShop 1.7.7.x.
+- Update 3DS management option description.
+- Improve REST API keys configuration display.
+- Possibility to disable web services for order operations in PrestaShop Back Office.
+
 1.14.0, 2021-03-03:
 - Bug fix: Update order status after multiple payment tries or on cancellation from gateway Back Office.
 - [franfinance] Added new FranFinance submodule.

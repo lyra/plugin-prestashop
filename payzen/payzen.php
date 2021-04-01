@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.14.0';
+        $this->version = '1.14.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -136,18 +136,23 @@ class Payzen extends PaymentModule
 
         // Set default values.
         foreach ($admin_config_params as $param) {
-            if (! defined('PAYZEN_MODULE_UPGRADE') || ! in_array($param['key'], $already_installed_params)) {
-                if (in_array($param['key'], PayzenTools::$multi_lang_fields)) {
+            $key = $param['key'];
+
+            if (! defined('PAYZEN_MODULE_UPGRADE') || ! in_array($key, $already_installed_params)) {
+                if (in_array($key, PayzenTools::$multi_lang_fields)) {
                     $default = PayzenTools::convertIsoArrayToIdArray($param['default']);
                 } elseif (is_array($param['default'])) {
                     $default = serialize($param['default']);
+                } elseif (defined('PAYZEN_TRANSIENT_DEFAULT')) {
+                    $defaults = unserialize(PAYZEN_TRANSIENT_DEFAULT);
+                    $default = isset($defaults[$key]) ? $defaults[$key] : $param['default'];
                 } else {
                     $default = $param['default'];
                 }
 
-                if (! Configuration::updateValue($param['key'], $default, false, false, false)) {
-                    $this->logger->logWarning("Error while saving default value for field {$param['key']}.");
-                    $this->_errors[] = sprintf($this->l('Error while saving default value for field « %s ».'), $param['key']);
+                if (! Configuration::updateValue($key, $default, false, false, false)) {
+                    $this->logger->logWarning("Error while saving default value for field {$key}.");
+                    $this->_errors[] = sprintf($this->l('Error while saving default value for field « %s ».'), $key);
 
                     $installError = true;
                 }
@@ -469,7 +474,7 @@ class Payzen extends PaymentModule
         foreach (PayzenTools::getAdminParameters() as $param) {
             $key = $param['key']; // PrestaShop parameter key.
 
-            if (! Tools::getIsset($key)) {
+            if (! Tools::getIsset($key) && $key !== 'PAYZEN_ENABLE_WS') {
                 // If field is disabled, don't save it.
                 continue;
             }
@@ -478,7 +483,10 @@ class Payzen extends PaymentModule
             $name = isset($param['name']) ? $param['name'] : null; // Gateway API parameter name.
 
             $value = Tools::getValue($key, null);
-            if ($value === '') { // Consider empty strings as null.
+
+            if ($key === 'PAYZEN_ENABLE_WS') {
+                $value = $value ? $value : 'disabled';
+            } elseif ($value === '') { // Consider empty strings as null.
                 $value = null;
             }
 
@@ -1623,13 +1631,18 @@ class Payzen extends PaymentModule
      */
     public function hookActionOrderStatusUpdate($params)
     {
-        // It is an IPN, no online refund.
-        if (PayzenTools::checkFormIpnValidity() || PayzenTools::checkRestIpnValidity()) {
+        $order = new Order((int) $params['id_order']);
+        if (! $this->active || ($order->module != $this->name)) {
             return;
         }
 
-        $order = new Order((int) $params['id_order']);
-        if (! $this->active || ($order->module != $this->name)) {
+        // WS disabled in plugin configuration, no online refund.
+        if (Configuration::get('PAYZEN_ENABLE_WS') === 'disabled') {
+            return;
+        }
+
+        // It is an IPN, no online refund.
+        if (PayzenTools::checkFormIpnValidity() || PayzenTools::checkRestIpnValidity()) {
             return;
         }
 
@@ -1649,7 +1662,26 @@ class Payzen extends PaymentModule
 
         // If any error during WS refund/cancel redirect to order details to avoid display success message.
         if (! $this->refund($order, $order->total_paid_real)) {
-            Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . Tools::getValue('token'));
+            if (Tools::isSubmit('token')) {
+                // PrestaShop versions < 1.7.7.0.
+                Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . Tools::getValue('token'));
+            } else {
+                // Display warning to customer if any for PrestaShop versions >= 1.7.7.0.
+                if (isset($this->context->cookie->payzenRefundWarn)) {
+                    $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+                    unset($this->context->cookie->payzenRefundWarn);
+                }
+
+                // PrestaShop versions >= 1.7.7.0.
+                $url_admin_orders = $this->context->link->getAdminLink('AdminOrders');
+                $url_admin_order = str_replace('/?_token=', '/' . $order->id . '/view?_token=', $url_admin_orders);
+
+                Tools::redirectAdmin($url_admin_order);
+            }
+        } elseif (! Tools::isSubmit('token') && isset($this->context->cookie->payzenRefundWarn)) {
+            // Display warning to customer if any for Prestashop versions >= 1.7.7.0.
+            $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+            unset($this->context->cookie->payzenRefundWarn);
         }
 
         return true;
@@ -1664,6 +1696,11 @@ class Payzen extends PaymentModule
     {
         $order = new Order((int) $params['id_order']);
         if (! $this->active || ($order->module != $this->name)) {
+            return;
+        }
+
+        // WS disabled in plugin configuration, no online refund.
+        if (Configuration::get('PAYZEN_ENABLE_WS') === 'disabled') {
             return;
         }
 
@@ -1693,33 +1730,69 @@ class Payzen extends PaymentModule
             return;
         }
 
-        // Stop the refund if the merchant want to generate a discount.
-        if (Tools::isSubmit('generateDiscount')) {
+        // WS disabled in plugin configuration, no online refund.
+        if (Configuration::get('PAYZEN_ENABLE_WS') === 'disabled') {
             return;
         }
 
-        // Get amount from OrderSlip, for now it's a workaround instead of use OrderSlip->amount for a bug in prestashop calculation.
-        $amount = ! Tools::getValue('TaxMethod') ? $orderSlipObject->total_products_tax_excl : $orderSlipObject->total_products_tax_incl;
+        // Stop the refund if the merchant want to generate a discount.
+        // If in POST we receive generateDiscount OR generateDiscountRefund for versions < 1.7.7.0.
+        // If in POST we receive cancel_product['voucher'] for versions >= 1.7.7.0.
+        if (Tools::isSubmit('generateDiscount') // PrestaShop >= 1.7.7.0
+            || Tools::isSubmit('generateDiscountRefund') // PrestaShop < 1.7.7.0
+            || (($cancel_product = Tools::getValue('cancel_product')) && isset($cancel_product['voucher']))) {
+            return;
+        }
+
+        // Get amount from OrderSlip.
+        $amount = $orderSlipObject->amount;
+        if (Tools::isSubmit('TaxMethod')) {
+            // Prestashop versions < 1.7.7.0.
+            // For now it's a workaround instead of use OrderSlip->amount for a bug in prestashop calculation.
+            $amount = ! Tools::getValue('TaxMethod') ? $orderSlipObject->total_products_tax_excl : $orderSlipObject->total_products_tax_incl;
+        }
 
         // Add shipping cost amount.
         $amount += $orderSlipObject->shipping_cost_amount;
 
-        // If any error during WS refund redirect to order details to avoid creation of a credit and displaying success message.
+        // If any error during WS refund, redirect to order details to avoid creation of a credit and displaying success message.
         if (! $this->refund($order, $amount)) {
             // No refund, so get back refunded products quantities, and available products stock quantities.
             $id_order_details = Tools::isSubmit('generateCreditSlip') ? Tools::getValue('cancelQuantity')
                 : Tools::getValue('partialRefundProductQuantity');
-            foreach ($id_order_details as $id_order_detail => $quantity) {
-                // Update order detail.
-                $order_detail = new OrderDetail($id_order_detail);
-                $order_detail->product_quantity_refunded -= $quantity;
-                $order_detail->update();
+            if (is_array($id_order_details) && ! empty($id_order_details)) {
+                // Prestashop versions < 1.7.7.0.
+                foreach ($id_order_details as $id_order_detail => $quantity) {
+                    // Update order detail.
+                    $order_detail = new OrderDetail($id_order_detail);
+                    $order_detail->product_quantity_refunded -= $quantity;
+                    $order_detail->update();
 
-                // Update product available quantity.
-                StockAvailable::updateQuantity($order_detail->product_id, $order_detail->product_attribute_id, -$quantity, $order->id_shop);
+                    // Update product available quantity.
+                    StockAvailable::updateQuantity($order_detail->product_id, $order_detail->product_attribute_id, -$quantity, $order->id_shop);
+                }
             }
 
-            Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order_id . '&vieworder&token=' . Tools::getValue('token'));
+            if (Tools::isSubmit('token')) {
+                // Prestashop versions < 1.7.7.0.
+                Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . Tools::getValue('token'));
+            } else {
+                // Display warning to customer if any for Prestashop versions >= 1.7.7.0.
+                if (isset($this->context->cookie->payzenRefundWarn)) {
+                    $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+                    unset($this->context->cookie->payzenRefundWarn);
+                }
+
+                // Prestashop versions >= 1.7.7.0.
+                $url_admin_orders = $this->context->link->getAdminLink('AdminOrders');
+                $url_admin_order = str_replace('/?_token=', '/' . $order->id . '/view?_token=', $url_admin_orders);
+
+                Tools::redirectAdmin($url_admin_order);
+            }
+        } elseif (! Tools::isSubmit('token') && isset($this->context->cookie->payzenRefundWarn)) {
+            // Display warning to customer if any for Prestashop versions >= 1.7.7.0.
+            $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+            unset($this->context->cookie->payzenRefundWarn);
         }
 
         return true;
@@ -2464,8 +2537,20 @@ class Payzen extends PaymentModule
             }
 
             if ($response->get('operation_type') === 'CREDIT') {
-                // This is a refund, set transaction amount to negative.
-                $amount = $amount * -1;
+                if (version_compare(_PS_VERSION_, '1.7.7.0', '>=')) {
+                    // Workarround for PrestaShop 1.7.7.x, payments with negative amounts not accepted.
+                    $order->total_paid_real -= $amount;
+
+                    if ($order->total_paid_real < 0) {
+                        $order->total_paid_real = 0;
+                    }
+
+                    $order->update();
+                    return;
+                } else {
+                    // This is a refund, set transaction amount to negative.
+                    $amount = $amount * -1;
+                }
             }
 
             $timestamp = strtotime($response->get('presentation_date').' UTC');

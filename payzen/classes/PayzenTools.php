@@ -30,7 +30,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.14.0';
+    private static $PLUGIN_VERSION = '1.14.1';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -242,6 +242,7 @@ class PayzenTools
 
             array('key' => 'PAYZEN_PRIVKEY_TEST', 'default' => '', 'label' => 'Test password'),
             array('key' => 'PAYZEN_PRIVKEY_PROD', 'default' => '', 'label' => 'Production password'),
+            array('key' => 'PAYZEN_ENABLE_WS', 'default' => 'disabled', 'label' => 'Enable web services'),
             array('key' => 'PAYZEN_PUBKEY_TEST', 'default' => '', 'label' => 'Public test key'),
             array('key' => 'PAYZEN_PUBKEY_PROD', 'default' => '', 'label' => 'Public production key'),
             array('key' => 'PAYZEN_RETKEY_TEST', 'default' => '', 'label' => 'SHA256 test key'),
