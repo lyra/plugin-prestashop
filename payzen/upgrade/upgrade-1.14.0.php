@@ -14,6 +14,5 @@ if (! defined('_PS_VERSION_')) {
 
 function upgrade_module_1_14_0($module)
 {
-    define('PAYZEN_MODULE_UPGRADE', true);
-    return $module->install();
+    return true;
 }

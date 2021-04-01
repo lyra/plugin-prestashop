@@ -21,10 +21,11 @@ div.payment_module.payzen a img {
 }
 
 div.payment_module.payzen a img.logo {
-    width: 86px;
     display: inline-block;
     vertical-align: middle;
     margin-right: 10px;
+    max-width: 86px;
+    max-height: 36px;
 }
 
 div.payment_module.payzen a form {
