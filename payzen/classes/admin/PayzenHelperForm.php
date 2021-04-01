@@ -262,6 +262,7 @@ class PayzenHelperForm
 
             'PAYZEN_PUBKEY_TEST' => Configuration::get('PAYZEN_PUBKEY_TEST'),
             'PAYZEN_PRIVKEY_TEST' => Configuration::get('PAYZEN_PRIVKEY_TEST'),
+            'PAYZEN_ENABLE_WS' => Configuration::get('PAYZEN_ENABLE_WS'),
             'PAYZEN_PUBKEY_PROD' => Configuration::get('PAYZEN_PUBKEY_PROD'),
             'PAYZEN_PRIVKEY_PROD' => Configuration::get('PAYZEN_PRIVKEY_PROD'),
             'PAYZEN_RETKEY_TEST' => Configuration::get('PAYZEN_RETKEY_TEST'),
