@@ -108,6 +108,7 @@ class PayzenHelperForm
 
         $tpl_vars = array(
             'payzen_support_email' => PayzenTools::getDefault('SUPPORT_EMAIL'),
+            'payzen_formatted_support_email' => PayzenApi::formatSupportEmails(PayzenTools::getDefault('SUPPORT_EMAIL')),
             'payzen_plugin_version' => PayzenTools::getDefault('PLUGIN_VERSION'),
             'payzen_gateway_version' => PayzenTools::getDefault('GATEWAY_VERSION'),
             'payzen_contrib' => PayzenTools::getContrib(),
@@ -262,7 +263,6 @@ class PayzenHelperForm
 
             'PAYZEN_PUBKEY_TEST' => Configuration::get('PAYZEN_PUBKEY_TEST'),
             'PAYZEN_PRIVKEY_TEST' => Configuration::get('PAYZEN_PRIVKEY_TEST'),
-            'PAYZEN_ENABLE_WS' => Configuration::get('PAYZEN_ENABLE_WS'),
             'PAYZEN_PUBKEY_PROD' => Configuration::get('PAYZEN_PUBKEY_PROD'),
             'PAYZEN_PRIVKEY_PROD' => Configuration::get('PAYZEN_PRIVKEY_PROD'),
             'PAYZEN_RETKEY_TEST' => Configuration::get('PAYZEN_RETKEY_TEST'),
@@ -308,7 +308,8 @@ class PayzenHelperForm
                                             array('') :
                                             explode(';', Configuration::get('PAYZEN_STD_PAYMENT_CARDS')),
             'PAYZEN_STD_PROPOSE_ONEY' => Configuration::get('PAYZEN_STD_PROPOSE_ONEY'),
-            'PAYZEN_STD_CARD_DATA_MODE' => Configuration::get('PAYZEN_STD_CARD_DATA_MODE'),
+            'PAYZEN_STD_CARD_DATA_MODE' => Configuration::get('PAYZEN_STD_CARD_DATA_MODE') ?
+                                            Configuration::get('PAYZEN_STD_CARD_DATA_MODE') : '1',
             'PAYZEN_STD_REST_THEME' => Configuration::get('PAYZEN_STD_REST_THEME'),
             'PAYZEN_STD_REST_PLACEHLDR' => $placeholders,
             'PAYZEN_STD_REST_LBL_REGIST' => self::getLangConfig('PAYZEN_STD_REST_LBL_REGIST'),

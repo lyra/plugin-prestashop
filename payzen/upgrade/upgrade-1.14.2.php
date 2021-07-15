@@ -12,7 +12,9 @@ if (! defined('_PS_VERSION_')) {
     exit;
 }
 
-function upgrade_module_1_14_1($module)
+function upgrade_module_1_14_2($module)
 {
-    return true;
+    define('PAYZEN_MODULE_UPGRADE', true);
+
+    return $module->install();
 }

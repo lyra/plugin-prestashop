@@ -18,7 +18,7 @@
     </li>
 
     <li>
-      <p class="payzen_link" onclick="payzenSepaOneclickPaymentSelect(0)">{l s='Click here to pay with another means of payment.' mod='payzen'}</p>
+      <p class="payzen_link" onclick="payzenSepaOneclickPaymentSelect(0)">{l s='Click here to update the IBAN associated with the SEPA mandate.' mod='payzen'}</p>
     </li>
   </ul>
   <ul id="payzen_sepa_oneclick_payment_description_2" style="display: none;">

@@ -18,48 +18,48 @@
       animated: false
     });
 
-    $('contact-support').on('sendmail', function(e){
+    {if $payzen_plugin_features['support']}
+      $('contact-support').on('sendmail', function(e){
         $.ajax({
-            type: "POST",
-            url: "{$payzen_request_uri}",
-            data: e.originalEvent.detail,
-            success: function(res) {
-                location.reload();
-            },
-            dataType: 'html'
+          type: 'POST',
+          url: "{$payzen_request_uri}",
+          data: e.originalEvent.detail,
+          success: function(res) {
+            location.reload();
+          },
+          dataType: 'html'
         });
-    });
- });
+      });
+    {/if}
+  });
 </script>
 
 <script type="text/javascript">
-    function payzenCardEntryChanged() {
-        var cardDataMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
+  function payzenCardEntryChanged() {
+    var cardDataMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
 
-        switch (cardDataMode) {
-            case '4':
-                if (! confirm('{l s='Warning, some payment means are not compatible with an integration by iframe. Please consult the documentation for more details.' mod='payzen'}')) {
-                    var oldCardDataMode = $('#PAYZEN_STD_CARD_DATA_MODE_OLD').val();
-                    $('select#PAYZEN_STD_CARD_DATA_MODE').val(oldCardDataMode).change()
-                } else {
-                    $('#PAYZEN_REST_SETTINGS').hide();
-                    $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
-                }
-
-                break;
-            case '5':
-            case '6':
-                $('#PAYZEN_REST_SETTINGS').show();
-                $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
-                break;
-            default:
-                $('#PAYZEN_REST_SETTINGS').hide();
-                $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+    switch (cardDataMode) {
+      case '4':
+        if (! confirm('{l s='Warning, some payment means are not compatible with an integration by iframe. Please consult the documentation for more details.' mod='payzen'}')) {
+          var oldCardDataMode = $('#PAYZEN_STD_CARD_DATA_MODE_OLD').val();
+          $('select#PAYZEN_STD_CARD_DATA_MODE').val(oldCardDataMode).change()
+        } else {
+          $('#PAYZEN_REST_SETTINGS').hide();
+          $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
         }
-    }
-</script>
 
-<script type="text/javascript" src="../modules/payzen/views/js/support.js"></script>
+        break;
+      case '5':
+      case '6':
+        $('#PAYZEN_REST_SETTINGS').show();
+        $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+        break;
+      default:
+        $('#PAYZEN_REST_SETTINGS').hide();
+        $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+    }
+  }
+</script>
 
 <form method="POST" action="{$payzen_request_uri|escape:'html':'UTF-8'}" class="defaultForm form-horizontal">
   <div style="width: 100%;">
@@ -68,25 +68,26 @@
         <img style="width: 20px; vertical-align: middle;" src="../modules/payzen/logo.png">PayZen
       </legend>
 
-      {l s='Developed by' mod='payzen'} : <b><a href="https://www.lyra.com/" target="_blank">Lyra Network</a></b><br />
-      {l s='Contact us' mod='payzen'} : <b><a href="mailto:{$payzen_support_email|escape:'html':'UTF-8'}">{$payzen_support_email|escape:'html':'UTF-8'}</a></b><br />
-      {l s='Module version' mod='payzen'} : <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}{$payzen_plugin_version|escape:'html':'UTF-8'}</b><br />
-      {l s='Gateway version' mod='payzen'} : <b>{$payzen_gateway_version|escape:'html':'UTF-8'}</b><br />
+      <div style="padding: 5px;">{l s='Developed by' mod='payzen'} <b><a href="https://www.lyra.com/" target="_blank">Lyra Network</a></b></div>
+      <div style="padding: 5px;">{l s='Contact us' mod='payzen'} <span style="display: inline-table;"><b>{$payzen_formatted_support_email|unescape:'html':'UTF-8'}</b></span></div>
+      <div style="padding: 5px;">{l s='Module version' mod='payzen'} <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}{$payzen_plugin_version|escape:'html':'UTF-8'}</b></div>
+      <div style="padding: 5px;">{l s='Gateway version' mod='payzen'} <b>{$payzen_gateway_version|escape:'html':'UTF-8'}</b></div>
 
       {if !empty($payzen_doc_files)}
-        <span style="color: red; font-weight: bold; text-transform: uppercase;">{l s='Click to view the module configuration documentation :' mod='payzen'}</span>
+        <div style="padding: 5px;"><span style="color: red; font-weight: bold; text-transform: uppercase;">{l s='Click to view the module configuration documentation :' mod='payzen'}</span>
         {foreach from=$payzen_doc_files key="file" item="lang"}
           <a style="margin-left: 10px; font-weight: bold; text-transform: uppercase;" href="../modules/payzen/installation_doc/{$file|escape:'html':'UTF-8'}" target="_blank">{$lang|escape:'html':'UTF-8'}</a>
         {/foreach}
-        <br />
+        </div>
       {/if}
 
-      <contact-support
-          shop-id={$PAYZEN_SITE_ID|escape:'html':'UTF-8'}
-          context-mode={$PAYZEN_MODE|escape:'html':'UTF-8'}
-          sign-algo={$PAYZEN_SIGN_ALGO|escape:'html':'UTF-8'}
-          contrib={$payzen_contrib|escape:'html':'UTF-8'}
-          integration-mode={$payzen_card_data_entry_modes[$PAYZEN_STD_CARD_DATA_MODE]|escape:'html':'UTF-8'}
+      {if $payzen_plugin_features['support']}
+        <div style="padding: 5px;"><contact-support
+          shop-id="{$PAYZEN_SITE_ID|escape:'html':'UTF-8'}"
+          context-mode="{$PAYZEN_MODE|escape:'html':'UTF-8'}"
+          sign-algo="{$PAYZEN_SIGN_ALGO|escape:'html':'UTF-8'}"
+          contrib="{$payzen_contrib|escape:'html':'UTF-8'}"
+          integration-mode="{$payzen_card_data_entry_modes[$PAYZEN_STD_CARD_DATA_MODE]|escape:'html':'UTF-8'}"
           plugins="{$payzen_installed_modules|escape:'html':'UTF-8'}"
           title=""
           first-name="{$payzen_employee->firstname|escape:'html':'UTF-8'}"
@@ -95,8 +96,9 @@
           to-email="{$payzen_support_email|escape:'html':'UTF-8'}"
           cc-emails=""
           phone-number=""
-          language="{$prestashop_lang.iso_code|escape:'html':'UTF-8'}"
-      ></contact-support><br />
+          language="{$prestashop_lang.iso_code|escape:'html':'UTF-8'}">
+        </contact-support></div>
+      {/if}
     </fieldset>
   </div>
 
@@ -220,15 +222,6 @@
             <input type="text" id="PAYZEN_REST_SERVER_URL" name="PAYZEN_REST_SERVER_URL" value="{$PAYZEN_REST_SERVER_URL|escape:'html':'UTF-8'}" style="width: 470px;" autocomplete="off">
           </div>
           <p></p>
-
-          <label for="PAYZEN_ENABLE_WS">{l s='Enable web services' mod='payzen'}</label>
-          <div style="border-bottom: 5px;" class="margin-form">
-            <input type="checkbox" id="PAYZEN_ENABLE_WS" name="PAYZEN_ENABLE_WS" value="enabled" {if ($PAYZEN_ENABLE_WS === 'enabled')}checked{/if}>
-             <p>
-              {l s='Enable web services for order operations from PrestaShop Back Office.' mod='payzen'}<br />
-              {l s='If you keep the box unchecked, you will have to intervene directly on your store Back Office to manage these operations.' mod='payzen'}
-             </p>
-          </div>
 
           <p style="font-size: .85em; color: #7F7F7F;">
            {l s='Configure this section only if you are using embedded payment fields or popin modes.' mod='payzen'}
@@ -456,7 +449,7 @@
           <span class="ui-icon ui-icon-triangle-1-e" style="display: inline-block; vertical-align: middle;"></span>
           {l s='ADDITIONAL OPTIONS' mod='payzen'}
         </legend>
-        <p style="font-size: .85em; color: #7F7F7F;">{l s='Configure this section if you use advanced risk assessment module or if you have a FacilyPay Oney contract.' mod='payzen'}</p>
+        <p style="font-size: .85em; color: #7F7F7F;">{l s='Configure this section if you use advanced risk assessment module or if you have a Oney 3x/4x contract.' mod='payzen'}</p>
 
         <section style="display: none; padding-top: 15px;">
           <label for="PAYZEN_SEND_CART_DETAIL">{l s='Send shopping cart details' mod='payzen'}</label>
@@ -771,7 +764,7 @@
                 <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_CANCEL_IFRAME === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
               {/foreach}
             </select>
-            <p>{l s='Select « Yes » if you want to propose payment cancellation in iframe mode.' sprintf='PayZen' mod='payzen'}</p>
+            <p>{l s='Select « Yes » if you want to propose payment cancellation in iframe mode.' mod='payzen'}</p>
           </div>
         </div>
 
@@ -869,7 +862,7 @@
                 <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_1_CLICK_PAYMENT === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
               {/foreach}
             </select>
-            <p>{l s='The payment by token allows to pay orders without re-entering bank data at each payment. The "payment by token" option should be enabled on your %s store to use this feature.' sprintf='PayZen' mod='payzen'}</p>
+            <p>{l s='This option allows to pay orders without re-entering bank data at each payment. The "payment by token" option should be enabled on your %s store to use this feature.' sprintf='PayZen' mod='payzen'}</p>
           </div>
 
         </div>
@@ -2072,14 +2065,14 @@
           </div>
 
           <div id="PAYZEN_SEPA_1_CLICK_PAYMNT_MENU"  {if $PAYZEN_SEPA_MANDATE_MODE !== 'REGISTER_PAY'} style="display: none;"{/if}>
-            <label for="PAYZEN_SEPA_1_CLICK_PAYMNT">{l s='Payment by token' mod='payzen'}</label>
+            <label for="PAYZEN_SEPA_1_CLICK_PAYMNT">{l s='1-Click payment' mod='payzen'}</label>
             <div class="margin-form">
               <select id="PAYZEN_SEPA_1_CLICK_PAYMNT" name="PAYZEN_SEPA_1_CLICK_PAYMNT">
                 {foreach from=$payzen_yes_no_options key="key" item="option"}
                   <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_SEPA_1_CLICK_PAYMNT === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
                 {/foreach}
               </select>
-              <p>{l s='The payment by token allows to pay orders without re-entering bank data at each payment. The "payment by token" option should be enabled on your %s store to use this feature.' sprintf='PayZen' mod='payzen'}</p>
+              <p>{l s='This option allows to pay orders without re-entering bank data at each payment. The "payment by token" option should be enabled on your %s store to use this feature.' sprintf='PayZen' mod='payzen'}</p>
             </div>
           </div>
         </fieldset>
@@ -2464,7 +2457,7 @@
 
           <p>
             {l s='Click on « Add » button to add one or more new payment means.' mod='payzen'}<br />
-            <b>{l s='Code' mod='payzen'} : </b>{l s='The code of the means of payment as expected by PayZen gateway.' sprintf='PayZen' mod='payzen'}<br />
+            <b>{l s='Code' mod='payzen'} : </b>{l s='The code of the means of payment as expected by %s gateway.' sprintf='PayZen' mod='payzen'}<br />
             <b>{l s='Label' mod='payzen'} : </b>{l s='The default label of the means of payment.' mod='payzen'}<br />
             <b>{l s='Do not forget to click on « Save » button to save your modifications.' mod='payzen'}</b>
           </p>

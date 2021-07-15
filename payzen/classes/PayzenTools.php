@@ -30,7 +30,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.14.1';
+    private static $PLUGIN_VERSION = '1.14.2';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -99,6 +99,7 @@ class PayzenTools
         'restrictmulti' => false,
         'shatwo' => true,
         'embedded' => true,
+        'support' => true,
 
         'multi' => true,
         'choozeo' => false,
@@ -242,7 +243,6 @@ class PayzenTools
 
             array('key' => 'PAYZEN_PRIVKEY_TEST', 'default' => '', 'label' => 'Test password'),
             array('key' => 'PAYZEN_PRIVKEY_PROD', 'default' => '', 'label' => 'Production password'),
-            array('key' => 'PAYZEN_ENABLE_WS', 'default' => 'disabled', 'label' => 'Enable web services'),
             array('key' => 'PAYZEN_PUBKEY_TEST', 'default' => '', 'label' => 'Public test key'),
             array('key' => 'PAYZEN_PUBKEY_PROD', 'default' => '', 'label' => 'Public production key'),
             array('key' => 'PAYZEN_RETKEY_TEST', 'default' => '', 'label' => 'SHA256 test key'),
@@ -830,10 +830,16 @@ class PayzenTools
             $effectiveCurrency = PayzenApi::getCurrencyNumCode(self::getProperty($transactionDetails, 'effectiveCurrency'));
 
             if ($effectiveAmount && $effectiveCurrency) {
-                $response['vads_effective_amount'] = $response['vads_amount'];
-                $response['vads_effective_currency'] = $response['vads_currency'];
-                $response['vads_amount'] = $effectiveAmount;
-                $response['vads_currency'] = $effectiveCurrency;
+                // Invert only if there is currency conversion.
+                if ($effectiveCurrency !== $response['vads_currency']) {
+                    $response['vads_effective_amount'] = $response['vads_amount'];
+                    $response['vads_effective_currency'] = $response['vads_currency'];
+                    $response['vads_amount'] = $effectiveAmount;
+                    $response['vads_currency'] = $effectiveCurrency;
+                } else {
+                    $response['vads_effective_amount'] = $effectiveAmount;
+                    $response['vads_effective_currency'] = $effectiveCurrency;
+                }
             }
 
             $response['vads_warranty_result'] = self::getProperty($transactionDetails, 'liabilityShift');
@@ -847,8 +853,11 @@ class PayzenTools
                 $response['vads_expiry_month'] = self::getProperty($cardDetails, 'expiryMonth');
                 $response['vads_expiry_year'] = self::getProperty($cardDetails, 'expiryYear');
 
+                $response['vads_payment_option_code'] = self::getProperty($cardDetails, 'installmentNumber');
+
                 if ($authorizationResponse = self::getProperty($cardDetails, 'authorizationResponse')) {
                     $response['vads_auth_result'] = self::getProperty($authorizationResponse, 'authorizationResult');
+                    $response['vads_authorized_amount'] = self::getProperty($authorizationResponse, 'amount');
                 }
 
                 if (($authenticationResponse = self::getProperty($cardDetails, 'authenticationResponse'))
@@ -900,7 +909,7 @@ class PayzenTools
             throw new PayzenWsException($errorMessage, $answer['errorCode']);
         } elseif (! empty($expectedStatuses) && ! in_array($answer['detailedStatus'], $expectedStatuses)) {
             $payzen = Module::getInstanceByName('payzen');
-            throw new Exception(sprintf($payzen->l('Unexpected transaction type received (%s).'), $answer['detailedStatus']));
+            throw new Exception(sprintf($payzen->l('Unexpected transaction type received (%1$s).'), $answer['detailedStatus']));
         }
     }
 
@@ -992,7 +1001,8 @@ class PayzenTools
 
     public static function getContrib()
     {
-        return self::getDefault('CMS_IDENTIFIER') . '_' . self::getDefault('PLUGIN_VERSION') . '/' . _PS_VERSION_ . '/' . PHP_VERSION;
+        return self::getDefault('CMS_IDENTIFIER') . '_' . self::getDefault('PLUGIN_VERSION') . '/' . _PS_VERSION_ . '/'
+            . PayzenApi::shortPhpVersion();
     }
 
     public static function getModulesInstalled()
