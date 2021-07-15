@@ -1,3 +1,11 @@
+1.14.2, 2021-07-15:
+- [embedded] Bug fix: Fix order status after a payment in installments with interests.
+- Possibility to open support issue from command details in PrestaShop backend.
+- Improve refund management.
+- [SEPA] Fix 1-click payment with SEPA.
+- Display authorized amount in order details when it is available.
+- Display installments number in order details when it is available.
+
 1.14.1, 2021-04-01:
 - Bug fix: Do not refund payments when vouchers are genereated in PrestShop 1.6.x.
 - Bug fix: Do not save payments with negative amount in PrestaShop 1.7.7.x.

@@ -22,7 +22,7 @@
       </li>
 
       <li>
-        <a href="javascript: void(0);" onclick="payzenSepaOneclickPaymentSelect(0)">{l s='Click here to pay with another means of payment.' mod='payzen'}</a>
+        <a href="javascript: void(0);" onclick="payzenSepaOneclickPaymentSelect(0)">{l s='Click here to update the IBAN associated with the SEPA mandate.' mod='payzen'}</a>
       </li>
     </ul>
     <ul id="payzen_sepa_oneclick_payment_description_2" style="display: none;">

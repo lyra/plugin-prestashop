@@ -172,7 +172,7 @@ if ($order_id === false) {
         'PAYZEN_OS_PAYMENT_OUTOFSTOCK', // Paid state for PrestaShop < 1.6.1.
         'PS_OS_PAYMENT',
         'PAYZEN_OS_TRANS_PENDING',
-        'PS_OS_REFUND',
+        'PAYZEN_OS_REFUNDED',
         'PS_OS_CANCELED'
     );
 
