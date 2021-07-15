@@ -76,9 +76,8 @@ class PayzenSepaPayment extends AbstractPayzenPayment
                     $request->set('page_action', 'REGISTER_UPDATE_PAY');
                 }
             } else {
-                // Bank data acquisition on payment page, let's ask customer for data registration.
-                PayzenTools::getLogger()->logInfo('Customer ' . $request->get('cust_email') . ' will be asked for card data registration on payment page.');
-                $request->set('page_action', 'ASK_REGISTER_PAY');
+                // Bank data acquisition on payment page.
+                $request->set('page_action', 'REGISTER_PAY');
             }
         } else {
             $request->set('page_action', Configuration::get($this->prefix . 'MANDATE_MODE'));
