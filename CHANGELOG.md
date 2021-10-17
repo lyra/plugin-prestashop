@@ -1,3 +1,17 @@
+1.15.0, 2021-10-17:
+- [embedded] Bug fix: Do not refresh payment page automatically after an unrecoverable error.
+- Bug fix: Consider the "Refunded with PayZen" order status as a final status.
+- Bug fix: Manage refund captured transactions in 1.7.x PrestaShop versions.
+- Bug fix: Fix wrong PrestaShop order status for partially paid orders after a total refund or cancellation from gateway Back Office.
+- Bug fix: Fix wrong PrestaShop order status after refund cancelling from gateway Back Office.
+- [fullcb] Bug fix: Fix smarty error "Undefined index: FR" when country "France" is disabled.
+- Added option to enable/disable customer service messages.
+- [oney] Consider Chronopost Relay delivery method by sending selected relay point address to Oney 3x/4x.
+- [oney] Deleted FacilyPay Oney submodule.
+- [franfinance] Send information about shipping method for Franfinance payment method.
+- Set conversion rate value in order payments.
+- Manage currency conversion in refund process.
+
 1.14.2, 2021-07-15:
 - [embedded] Bug fix: Fix order status after a payment in installments with interests.
 - Possibility to open support issue from command details in PrestaShop backend.
@@ -180,7 +194,7 @@
 - [oney] Consider SoColissimo delivery method by sending selected relay point address to FacilyPay Oney.
 - Display card brand user choice if any in backend order details.
 - [fullcb] Added Full CB submodule.
-- Disbale payment submodules for unsupported currencies.
+- Disable payment submodules for unsupported currencies.
 - Add new "To validate payment" order state.
 - Manage extended IPN calls (transaction validation, refund, modification and cancellation).
 - Add "Delay" field and update "Rapidity" field in shipping options configuration.

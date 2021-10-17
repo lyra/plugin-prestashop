@@ -18,6 +18,7 @@ class PayzenOtherPayment extends AbstractPayzenPayment
     protected $tpl_name = 'payment_other.tpl';
     protected $logo;
     protected $name = 'other';
+
     protected $needs_cart_data = false;
     protected $force_local_cart_data = true;
 

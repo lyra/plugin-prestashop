@@ -20,6 +20,7 @@ class PayzenGroupedOtherPayment extends AbstractPayzenPayment
     protected $name = 'grouped_other';
 
     protected $other_payments;
+
     protected $needs_cart_data = false;
     protected $force_local_cart_data = true;
 

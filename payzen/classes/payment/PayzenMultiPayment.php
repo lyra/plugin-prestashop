@@ -55,7 +55,7 @@ class PayzenMultiPayment extends AbstractPayzenPayment
             $min = $option['min_amount'];
             $max = $option['max_amount'];
 
-            if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)) {
+            if ((empty($min) || ($amount >= $min)) && (empty($max) || ($amount <= $max))) {
                 $default = is_string($option['label']) ? $option['label'] : $option['count'] . ' x';
                 $option_label = is_array($option['label']) && isset($option['label'][$cart->id_lang]) ?
                     $option['label'][$cart->id_lang] : $default;

@@ -20,7 +20,6 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
     private $accepted_payment_types = array(
         'standard',
         'multi',
-        'oney',
         'oney34',
         'fullcb',
         'franfinance',
@@ -154,15 +153,6 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
                 $payment = new PayzenMultiPayment();
                 $options = PayzenMultiPayment::getAvailableOptions($cart);
-                $option = ' (' . $options[$data['opt']]['count'] . ' x)';
-                break;
-
-            case 'oney':
-                $payment = new PayzenOneyPayment();
-
-                $data['opt'] = Tools::getValue('payzen_oney_option');
-
-                $options = PayzenOneyPayment::getAvailableOptions($cart);
                 $option = ' (' . $options[$data['opt']]['count'] . ' x)';
                 break;
 

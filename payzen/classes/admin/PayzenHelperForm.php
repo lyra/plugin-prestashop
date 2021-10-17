@@ -82,6 +82,7 @@ class PayzenHelperForm
         $enabledCountries = Country::getCountries((int) $context->language->id, true);
         $all_countries = Country::getCountries((int) $context->language->id, false);
         $countryList = array();
+        $countryList['ps_countries'] = array();
         foreach ($enabledCountries as $value) {
             $countryList['ps_countries'][$value['iso_code']] = $value['name'];
         }
@@ -252,6 +253,7 @@ class PayzenHelperForm
             ),
 
             'PAYZEN_ENABLE_LOGS' => Configuration::get('PAYZEN_ENABLE_LOGS'),
+            'PAYZEN_ENABLE_CUST_MSG' => Configuration::get('PAYZEN_ENABLE_CUST_MSG'),
 
             'PAYZEN_SITE_ID' => Configuration::get('PAYZEN_SITE_ID'),
             'PAYZEN_KEY_TEST' => Configuration::get('PAYZEN_KEY_TEST'),
@@ -307,7 +309,6 @@ class PayzenHelperForm
             'PAYZEN_STD_PAYMENT_CARDS' => ! Configuration::get('PAYZEN_STD_PAYMENT_CARDS') ?
                                             array('') :
                                             explode(';', Configuration::get('PAYZEN_STD_PAYMENT_CARDS')),
-            'PAYZEN_STD_PROPOSE_ONEY' => Configuration::get('PAYZEN_STD_PROPOSE_ONEY'),
             'PAYZEN_STD_CARD_DATA_MODE' => Configuration::get('PAYZEN_STD_CARD_DATA_MODE') ?
                                             Configuration::get('PAYZEN_STD_CARD_DATA_MODE') : '1',
             'PAYZEN_STD_REST_THEME' => Configuration::get('PAYZEN_STD_REST_THEME'),
@@ -333,14 +334,6 @@ class PayzenHelperForm
             'PAYZEN_ANCV_AMOUNTS' => self::getArrayConfig('PAYZEN_ANCV_AMOUNTS'),
             'PAYZEN_ANCV_DELAY' => Configuration::get('PAYZEN_ANCV_DELAY'),
             'PAYZEN_ANCV_VALIDATION' => Configuration::get('PAYZEN_ANCV_VALIDATION'),
-
-            'PAYZEN_ONEY_TITLE' => self::getLangConfig('PAYZEN_ONEY_TITLE'),
-            'PAYZEN_ONEY_ENABLED' => Configuration::get('PAYZEN_ONEY_ENABLED'),
-            'PAYZEN_ONEY_AMOUNTS' => self::getArrayConfig('PAYZEN_ONEY_AMOUNTS'),
-            'PAYZEN_ONEY_DELAY' => Configuration::get('PAYZEN_ONEY_DELAY'),
-            'PAYZEN_ONEY_VALIDATION' => Configuration::get('PAYZEN_ONEY_VALIDATION'),
-            'PAYZEN_ONEY_ENABLE_OPTIONS' => Configuration::get('PAYZEN_ONEY_ENABLE_OPTIONS'),
-            'PAYZEN_ONEY_OPTIONS' => self::getArrayConfig('PAYZEN_ONEY_OPTIONS'),
 
             'PAYZEN_ONEY34_TITLE' => self::getLangConfig('PAYZEN_ONEY34_TITLE'),
             'PAYZEN_ONEY34_ENABLED' => Configuration::get('PAYZEN_ONEY34_ENABLED'),

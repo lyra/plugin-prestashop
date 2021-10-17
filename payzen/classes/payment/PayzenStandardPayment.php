@@ -21,53 +21,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
     protected $allow_backend_payment = true;
 
-    public function isAvailable($cart)
-    {
-        if (! parent::isAvailable($cart)) {
-            return false;
-        }
-
-        if ($this->proposeOney()) {
-            return PayzenTools::checkOneyRequirements($cart, 'FacilyPay Oney');
-        }
-
-        return true;
-    }
-
-    protected function proposeOney($data = array())
-    {
-        if (isset($data['card_type']) && ! in_array($data['card_type'], array('ONEY_SANDBOX', 'ONEY'))) {
-            return false;
-        }
-
-        if (Configuration::get($this->prefix . 'PROPOSE_ONEY') !== 'True') {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function validate($cart, $data = array())
-    {
-        $errors = parent::validate($cart, $data);
-
-        if (empty($errors) && $this->proposeOney($data)) {
-            $billing_address = new Address((int) $cart->id_address_invoice);
-
-            // Check address validity according to FacilyPay Oney payment specifications.
-            $errors = PayzenTools::checkAddress($billing_address, 'billing', $this->name);
-
-            if (empty($errors)) {
-                // Billing address is valid, check delivery address.
-                $delivery_address = new Address((int) $cart->id_address_delivery);
-
-                $errors = PayzenTools::checkAddress($delivery_address, 'delivery', $this->name);
-            }
-        }
-
-        return $errors;
-    }
-
     public function getTplVars($cart)
     {
         $vars = parent::getTplVars($cart);
@@ -132,10 +85,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         } else {
             // No card type selected, display all supported cards.
             $cards = array_keys(PayzenTools::getSupportedCardTypes());
-        }
-
-        if ($this->proposeOney()) {
-            $cards[] = (Configuration::get('PAYZEN_MODE') === 'TEST') ? 'ONEY_SANDBOX' : 'ONEY';
         }
 
         // Retrieve card labels.
@@ -209,10 +158,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             }
         } else {
             $cards = Configuration::get($this->prefix . 'PAYMENT_CARDS');
-            if (! empty($cards) && $this->proposeOney()) {
-                $cards .= ';' . (Configuration::get('PAYZEN_MODE') === 'TEST' ? 'ONEY_SANDBOX' : 'ONEY');
-            }
-
             $request->set('payment_cards', $cards);
         }
 

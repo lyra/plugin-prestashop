@@ -88,7 +88,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
         // Search order in db.
         $order_id = Order::getOrderByCartId($cart_id);
 
-        if ($order_id == false) {
+        if (! $order_id) {
             // Order has not been processed yet.
             $new_state = (int) Payzen::nextOrderState($response);
 
@@ -151,7 +151,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
             $this->logger->logInfo("The current state for order corresponding to cart #$cart_id is ($old_state).");
 
             $outofstock = Payzen::isOutOfStock($order);
-            $new_state = (int) Payzen::nextOrderState($response, false, $outofstock);
+            $new_state = (int) Payzen::nextOrderState($response, $outofstock);
 
             // For PrestaShop < 1.6.1, expect either original "Out of stock" state or ours to check order consistency.
             $bc_os_state_valid = $outofstock;
