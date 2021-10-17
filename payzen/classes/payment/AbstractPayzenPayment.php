@@ -23,9 +23,12 @@ abstract class AbstractPayzenPayment
 
     protected $currencies = array();
     protected $countries = array();
+
     protected $needs_cart_data = false;
     protected $force_local_cart_data = false;
     protected $allow_backend_payment = false;
+
+    protected $needs_shipping_method_data = false;
 
     protected $module;
     protected $context;
@@ -157,16 +160,6 @@ abstract class AbstractPayzenPayment
             return true;
         }
 
-        return false;
-    }
-
-    protected function proposeOney($data = array())
-    {
-        return false;
-    }
-
-    protected function isOney34()
-    {
         return false;
     }
 
@@ -368,44 +361,7 @@ abstract class AbstractPayzenPayment
         }
 
         // Prepare cart data to send to gateway.
-        if (Configuration::get('PAYZEN_COMMON_CATEGORY') !== 'CUSTOM_MAPPING') {
-            $category = Configuration::get('PAYZEN_COMMON_CATEGORY');
-        } else {
-            $oney_categories = @unserialize(Configuration::get('PAYZEN_CATEGORY_MAPPING'));
-        }
-
-        $subtotal = 0;
-        $products = $cart->getProducts(true);
-        if (count($products) <= self::PAYZEN_CART_MAX_NB_PRODUCTS || $this->proposeOney($data)) {
-            $product_label_regex_not_allowed = '#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ ]#ui';
-
-            foreach ($products as $product) {
-                if (! isset($category)) {
-                    // Build query to get product default category.
-                    $sql = 'SELECT `id_category_default` FROM `' . _DB_PREFIX_ . 'product` WHERE `id_product` = '
-                        . (int) $product['id_product'];
-                    $db_category = Db::getInstance()->getValue($sql);
-
-                    $category = $oney_categories[$db_category];
-                }
-
-                $price_in_cents = $currency->convertAmountToInteger($product['price']);
-                $qty = (int) $product['cart_quantity'];
-
-                if ((! $this->force_local_cart_data && (Configuration::get('PAYZEN_SEND_CART_DETAIL') === 'True')) || $this->needs_cart_data) {
-                    $request->addProduct(
-                        Tools::substr(preg_replace($product_label_regex_not_allowed, ' ', $product['name']), 0, 255),
-                        $price_in_cents,
-                        $qty,
-                        $product['id_product'],
-                        $category,
-                        number_format($product['rate'], 4, '.', '')
-                    );
-                }
-
-                $subtotal += $price_in_cents * $qty;
-            }
-        }
+        $this->setCartData($cart, $currency, $request);
 
         // Set misc optional params as possible.
         $request->set(
@@ -413,23 +369,17 @@ abstract class AbstractPayzenPayment
             $currency->convertAmountToInteger($cart->getOrderTotal(false, Cart::ONLY_SHIPPING))
         );
 
-        // Recalculate tax_amount to avoid rounding problems.
-        $tax_amount_in_cents = $request->get('amount') - $subtotal - $request->get('shipping_amount');
-        if ($tax_amount_in_cents < 0) {
-            // When order is discounted.
-            $tax_amount = $cart->getOrderTotal(true) - $cart->getOrderTotal(false);
-            $tax_amount_in_cents = ($tax_amount <= 0) ? 0 : $currency->convertAmountToInteger($tax_amount);
-        }
+        // Avoid recalculating tax amount, not correct in many cases, just send tax amount as returned by PrestaShop.
+        $tax_amount = $cart->getOrderTotal(true) - $cart->getOrderTotal(false);
+        $tax_amount_in_cents = ($tax_amount <= 0) ? 0 : $currency->convertAmountToInteger($tax_amount);
 
         $request->set('tax_amount', $tax_amount_in_cents);
 
         // VAT amount for colombian payment means.
         $request->set('totalamount_vat', $tax_amount_in_cents);
 
-        if (Configuration::get('PAYZEN_SEND_SHIP_DATA') === 'True' || $this->proposeOney($data)) {
-            // Set information about delivery mode.
-            $this->setAdditionalData($cart, $delivery_address, $request, $this->proposeOney($data), $this->isOney34());
-        }
+        // Set information about delivery mode.
+        $this->setAdvancedShippingData($cart, $delivery_address, $request);
 
         // Override capture delay if defined in submodule.
         if (is_numeric(Configuration::get($this->prefix . 'DELAY'))) {
@@ -497,8 +447,60 @@ abstract class AbstractPayzenPayment
         return $return;
     }
 
-    private function setAdditionalData($cart, $delivery_address, &$payzen_request, $use_oney = false, $isOney34 = false)
+    private function setCartData($cart, $currency, &$payzen_request)
     {
+        $products = $cart->getProducts(true);
+
+        if (! $this->needs_cart_data && (count($products) > self::PAYZEN_CART_MAX_NB_PRODUCTS)) {
+            return;
+        }
+
+        if (! $this->needs_cart_data && ($this->force_local_cart_data || (Configuration::get('PAYZEN_SEND_CART_DETAIL') !== 'True'))) {
+            return;
+        }
+
+        // Prepare cart data to send to gateway.
+        if (Configuration::get('PAYZEN_COMMON_CATEGORY') !== 'CUSTOM_MAPPING') {
+            $category = Configuration::get('PAYZEN_COMMON_CATEGORY');
+        } else {
+            $oney_categories = @unserialize(Configuration::get('PAYZEN_CATEGORY_MAPPING'));
+        }
+
+        $product_label_regex_not_allowed = '#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ ]#ui';
+
+        foreach ($products as $product) {
+            if (!isset($category)) {
+                // Build query to get product default category.
+                $sql = 'SELECT `id_category_default` FROM `' . _DB_PREFIX_ . 'product` WHERE `id_product` = ' .
+                    (int) $product['id_product'];
+                $db_category = Db::getInstance()->getValue($sql);
+
+                $category = $oney_categories[$db_category];
+            }
+
+            $price_in_cents = $currency->convertAmountToInteger($product['price']);
+            $qty = (int) $product['cart_quantity'];
+
+            $payzen_request->addProduct(
+                Tools::substr(preg_replace($product_label_regex_not_allowed, ' ', $product['name']), 0, 255),
+                $price_in_cents,
+                $qty,
+                $product['id_product'],
+                $category,
+                number_format($product['rate'], 4, '.', '')
+            );
+        }
+    }
+
+    private function setAdvancedShippingData($cart, $delivery_address, &$payzen_request)
+    {
+        if (Configuration::get('PAYZEN_SEND_SHIP_DATA') !== 'True' && ! $this->needs_shipping_method_data) {
+            return;
+        }
+
+        // For Oney, some parameters must contains different data.
+        $isOney34 = $this instanceof PayzenOney34Payment;
+
         // Oney delivery options defined in admin panel.
         $shipping_options = @unserialize(Configuration::get('PAYZEN_ONEY_SHIP_OPTIONS'));
 
@@ -518,7 +520,7 @@ abstract class AbstractPayzenPayment
             }
         }
 
-        $not_allowed_chars = "#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /'-]#ui";
+        $not_allowed_chars = "#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ -]#ui";
         $address_not_allowed_chars = "#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '.,-]#ui";
         $relay_point_name = null;
 
@@ -527,11 +529,6 @@ abstract class AbstractPayzenPayment
             // No shipping options or virtual cart.
             $payzen_request->set('ship_to_type', 'ETICKET');
             $payzen_request->set('ship_to_speed', 'EXPRESS');
-
-            $payzen_request->set(
-                'ship_to_delivery_company_name',
-                preg_replace($not_allowed_chars, ' ', Configuration::get('PS_SHOP_NAME'))
-            );
         } elseif (self::isSupportedRelayPoint($carrier_id)) {
             // Specific supported relay point carrier.
             $payzen_request->set('ship_to_type', 'RELAY_POINT');
@@ -555,8 +552,8 @@ abstract class AbstractPayzenPayment
                     $relay_point_name = $isOney34 ? $row['name'] : null; // Relay point name.
                     $city = $row['city'];
                     $zipcode = $row['zipcode'];
-
                     break;
+
                 case self::isNewMondialRelay($carrier_id):
                     $sql = 'SELECT * FROM `' . _DB_PREFIX_ . 'mondialrelay_selected_relay` s WHERE s.`id_cart` = ' . (int) $cart->id;
                     $row = Db::getInstance()->getRow($sql);
@@ -572,6 +569,7 @@ abstract class AbstractPayzenPayment
                     $zipcode = $row['selected_relay_postcode'];
                     $country = $row['selected_relay_country_iso'];
                     break;
+
                 case self::isMondialRelay($carrier_id):
                     $sql = 'SELECT * FROM `' . _DB_PREFIX_ . 'mr_selected` s WHERE s.`id_cart` = ' . (int) $cart->id;
                     $row = Db::getInstance()->getRow($sql);
@@ -586,8 +584,8 @@ abstract class AbstractPayzenPayment
                     $city = $row['MR_Selected_Ville'];
                     $zipcode = $row['MR_Selected_CP'];
                     $country = $row['MR_Selected_Pays'];
-
                     break;
+
                 case self::isDpdFranceRelais($carrier_id):
                     $sql = 'SELECT * FROM `' . _DB_PREFIX_ . 'dpdfrance_shipping` WHERE `id_cart` = ' . (int) $cart->id;
                     $row = Db::getInstance()->getRow($sql);
@@ -604,7 +602,6 @@ abstract class AbstractPayzenPayment
 
                     $ps_country = new Country((int) $row['id_country']);
                     $country = $ps_country->iso_code;
-
                     break;
 
                 case (self::isColissimoRelay($carrier_id) && $delivery_address->company /* Relay point. */):
@@ -618,7 +615,30 @@ abstract class AbstractPayzenPayment
                     $country = $payzen_request->get('ship_to_country');
                     break;
 
+                case (self::isChronoPostRelay($carrier_id)):
+                    $sql = 'SELECT id_pr FROM `' . _DB_PREFIX_ . 'chrono_cart_relais`
+                            WHERE id_cart = ' . (int) $cart->id;
+                    $id_pr = Db::getInstance()->getValue($sql);
+
+                    if (! $id_pr) {
+                        break;
+                    }
+
+                    $relaypoint_address = $this->getChronopostRelayPointAddress($id_pr);
+
+                    $address = $relaypoint_address->adresse1 . ' ' . $relaypoint_address->adresse2;
+                    $address = $isOney34 ? $address : $relaypoint_address->nomEnseigne . ' ' . $address; // Relay point address.
+                    $relay_point_name = $isOney34 ? $relaypoint_address->nomEnseigne : null; // Relay point name.
+
+                    $city = $relaypoint_address->localite;
+                    $zipcode = $relaypoint_address->codePostal;
+                    $country = $payzen_request->get('ship_to_country');
+                    break;
+
                 // Can implement more specific relay point carriers logic here.
+
+                default:
+                    break;
             }
 
             // Override shipping address.
@@ -638,16 +658,13 @@ abstract class AbstractPayzenPayment
             $payzen_request->set('ship_to_type', $delivery_type);
             $payzen_request->set('ship_to_speed', $delivery_speed);
 
-            if (isset($shipping_options[$carrier_id])) {
-                $company_name = $shipping_options[$carrier_id]['label'];
-            } else {
-                $delivery_option_list = $cart->getDeliveryOptionList();
+            // Get delivery company name.
+            $delivery_option_list = $cart->getDeliveryOptionList();
 
-                $delivery_option = $cart->getDeliveryOption();
-                $carrier_key = $delivery_option[(int) $cart->id_address_delivery];
-                $carrier_list = $delivery_option_list[(int) $cart->id_address_delivery][$carrier_key]['carrier_list'];
-                $company_name = $carrier_list[$carrier_id]['instance']->name;
-            }
+            $delivery_option = $cart->getDeliveryOption();
+            $carrier_key = $delivery_option[(int) $cart->id_address_delivery];
+            $carrier_list = $delivery_option_list[(int) $cart->id_address_delivery][$carrier_key]['carrier_list'];
+            $company_name = $carrier_list[$carrier_id]['instance']->name;
 
             if ($delivery_type === 'RECLAIM_IN_SHOP') {
                 $shop_name = preg_replace($not_allowed_chars, ' ', Configuration::get('PS_SHOP_NAME'));
@@ -667,10 +684,10 @@ abstract class AbstractPayzenPayment
                 $payzen_request->set('ship_to_delay', $shipping_options[$carrier_id]['delay']);
             }
 
-            $payzen_request->set('ship_to_delivery_company_name', $company_name);
+            $payzen_request->set('ship_to_delivery_company_name', preg_replace($not_allowed_chars, ' ', $company_name));
         }
 
-        if ($use_oney) {
+        if ($isOney34) {
             // Modify address to send it to Oney.
             if ($payzen_request->get('ship_to_street')) { // If there is a delivery address.
                 $payzen_request->set('ship_to_status', 'PRIVATE'); // By default PrestaShop doesn't manage customer type.
@@ -696,7 +713,7 @@ abstract class AbstractPayzenPayment
     {
         return self::isTntRelayPoint($carrier_id) || self::isNewMondialRelay($carrier_id)
             || self::isMondialRelay($carrier_id) || self::isDpdFranceRelais($carrier_id)
-            || self::isColissimoRelay($carrier_id);
+            || self::isColissimoRelay($carrier_id) || self::isChronoPostRelay($carrier_id);
     }
 
     private static function isTntRelayPoint($carrier_id)
@@ -750,6 +767,29 @@ abstract class AbstractPayzenPayment
 
         // SoColissimo is not selected as shipping method.
         return (Configuration::get('SOCOLISSIMO_CARRIER_ID') == $carrier_id);
+    }
+
+    private static function isChronoPostRelay($carrier_id)
+    {
+        if (file_exists($fileName = _PS_MODULE_DIR_ . 'chronopost/chronopost.php')) {
+            require_once($fileName);
+
+            return Chronopost::isRelais($carrier_id);
+        } else {
+            return false;
+        }
+    }
+
+    private function getChronopostRelayPointAddress($chronopostRelayId)
+    {
+        include_once _PS_MODULE_DIR_ . 'chronopost/libraries/PointRelaisServiceWSService.php';
+
+        // Fetch BT object
+        $ws = new PointRelaisServiceWSService();
+
+        $p = new rechercheBtAvecPFParIdChronopostA2Pas();
+        $p->id = $chronopostRelayId;
+        return $ws->rechercheBtAvecPFParIdChronopostA2Pas($p)->return;
     }
 
     /**

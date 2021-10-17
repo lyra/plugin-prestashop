@@ -23,7 +23,6 @@ class Payzen extends PaymentModule
     const DELIVERY_COMPANY_ADDRESS_REGEX = '#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /\'-]{1,72}$#ui';
     const DELIVERY_COMPANY_LABEL_REGEX = '#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ /\'-]{1,55}$#ui';
 
-    const PAYMENT_DETAILS_PS17 = true; // Display more payment details using a closed SAV thread on PS >= 1.7.1.2.
     private $logger;
 
     /**
@@ -33,7 +32,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.14.2';
+        $this->version = '1.15.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -640,13 +639,6 @@ class Payzen extends PaymentModule
                     $value = array();
                 } else {
                     foreach ($value as $id => $option) {
-                        if (! preg_match(self::DELIVERY_COMPANY_LABEL_REGEX, $option['label'])) {
-                            unset($value[$id]); // Error, not save this option.
-
-                            $this->_errors[] = sprintf($this->l('The field « %1$s » is invalid: please check column « %2$s » of the option « %3$s » in section « %4$s ».'), $label, $this->l('Name'), $id, $this->l('ADDITIONAL OPTIONS'))
-                                . ' ' . sprintf($this->l('Use %1$d alphanumeric characters, accentuated characters and these special characters: space, slash, hyphen, apostrophe.'), 55);
-                        }
-
                         if ($option['type'] === 'RECLAIM_IN_SHOP') {
                             $address = ($option['address'] ? ' ' . $option['address'] : '') . ($option['zip'] ? ' ' . $option['zip'] : '')
                                 . ($option['city'] ? ' ' . $option['city'] : '');
@@ -671,15 +663,8 @@ class Payzen extends PaymentModule
                 }
 
                 $value = serialize($value);
-            } elseif (($key === 'PAYZEN_ONEY_ENABLED') && ($value === 'True')) {
-                $error = $this->validateOney();
-
-                if (is_string($error) && ! empty($error)) {
-                    $this->_errors[] = $error;
-                    $value = 'False'; // There is errors, not allow FacilyPay Oney activation.
-                }
             } elseif (($key === 'PAYZEN_ONEY34_ENABLED') && ($value === 'True')) {
-                $error = $this->validateOney(false, true);
+                $error = $this->validateOney();
 
                 if (is_string($error) && ! empty($error)) {
                     $this->_errors[] = $error;
@@ -690,52 +675,6 @@ class Payzen extends PaymentModule
                     $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $value, $label);
                     continue;
                 }
-            } elseif (($key === 'PAYZEN_STD_PROPOSE_ONEY') && ($value === 'True')) {
-                $oney_enabled = Tools::getValue('PAYZEN_ONEY_ENABLED', 'False') === 'True' ? true : false;
-
-                if ($oney_enabled) {
-                    $value = 'False';
-                    $this->_errors[] = $this->l('FacilyPay Oney payment mean cannot be enabled in standard payment and in FacilyPay Oney sub-module.');
-                    $this->_errors[] = $this->l('You must disable the FacilyPay Oney sub-module to enable it in standard payment.');
-                } else {
-                    $error = $this->validateOney(true, false);
-
-                    if (is_string($error) && ! empty($error)) {
-                        $this->_errors[] = $error;
-                        $value = 'False'; // There is errors, not allow Oney activation in standard payment.
-                    }
-                }
-            } elseif (($key === 'PAYZEN_ONEY_OPTIONS') && (Tools::getValue('PAYZEN_ONEY_ENABLE_OPTIONS', 'False') === 'True')) {
-                if (! is_array($value) || empty($value)) {
-                    $value = array();
-                } else {
-                    $error = false;
-                    foreach ($value as $id => $option) {
-                        if (! is_numeric($option['count']) || ! is_numeric($option['rate']) || empty($option['code'])) {
-                            unset($value[$id]); // Error, do not save this option.
-                            $error = true;
-                        } else {
-                            $default = is_string($option['label']) && $option['label'] ?
-                                $option['label'] : $option['count'] . ' x';
-                            $option_label = is_array($option['label']) ? $option['label'] : array();
-
-                            foreach (Language::getLanguages(false) as $language) {
-                                $lang = $language['id_lang'];
-                                if (! isset($option_label[$lang]) || empty($option_label[$lang])) {
-                                    $option_label[$lang] = $default;
-                                }
-                            }
-
-                            $value[$id]['label'] = $option_label;
-                        }
-                    }
-
-                    if ($error) {
-                        $this->_errors[] = sprintf($this->l('One or more values are invalid for field « %s ». Only valid entries are saved.'), $label);
-                    }
-                }
-
-                $value = serialize($value);
             } elseif ($key === 'PAYZEN_ONEY34_OPTIONS') {
                 if (! is_array($value) || empty($value)) {
                     $value = array();
@@ -998,16 +937,16 @@ class Payzen extends PaymentModule
         }
     }
 
-    private function validateOney($inside = false, $isOney34 = false)
+    private function validateOney($inside = false)
     {
-        $label = $isOney34 ? $this->l('Payment in 3 or 4 times Oney', 'payzenoney34payment') : $this->l('Payment with FacilyPay Oney', 'payzenoneypayment');
+        $label = $this->l('Payment in 3 or 4 times Oney', 'payzenoney34payment');
 
         if (Configuration::get('PS_ALLOW_MULTISHIPPING')) {
             return sprintf($this->l('Multishipping is activated. %s cannot be used.'), $label);
         }
 
         if (! $inside) {
-            $key = $isOney34 ? 'PAYZEN_ONEY34_AMOUNTS' : 'PAYZEN_ONEY_AMOUNTS' ;
+            $key = 'PAYZEN_ONEY34_AMOUNTS';
             $group_amounts = Tools::getValue($key);
 
             $default_min = $group_amounts[0]['min_amount'];
@@ -1031,7 +970,7 @@ class Payzen extends PaymentModule
                 }
             }
 
-            if ($isOney34 && ! Tools::getValue('PAYZEN_ONEY34_OPTIONS')) {
+            if (! Tools::getValue('PAYZEN_ONEY34_OPTIONS')) {
                 return sprintf($this->l('The field « %s » is mandatory.'), $this->l('Payment in 3 or 4 times Oney - Payment options', 'back_office'));
             }
         }
@@ -1311,12 +1250,6 @@ class Payzen extends PaymentModule
             $html .= $this->display(__FILE__, 'bc/' . $choozeo->getTplName());
         }
 
-        $oney = new PayzenOneyPayment();
-        if ($oney->isAvailable($cart)) {
-            $this->context->smarty->assign($oney->getTplVars($cart));
-            $html .= $this->display(__FILE__, 'bc/' . $oney->getTplName());
-        }
-
         $oney34 = new PayzenOney34Payment();
         if ($oney34->isAvailable($cart)) {
             $this->context->smarty->assign($oney34->getTplVars($cart));
@@ -1485,19 +1418,6 @@ class Payzen extends PaymentModule
             if ($choozeo->hasForm()) {
                 $this->context->smarty->assign($choozeo->getTplVars($cart));
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $choozeo->getTplName());
-                $option->setForm($form);
-            }
-
-            $options[] = $option;
-        }
-
-        $oney = new PayzenOneyPayment();
-        if ($oney->isAvailable($cart)) {
-            $option = $oney->getPaymentOption($cart);
-
-            if ($oney->hasForm()) {
-                $this->context->smarty->assign($oney->getTplVars($cart));
-                $form = $this->fetch('module:payzen/views/templates/hook/' . $oney->getTplName());
                 $option->setForm($form);
             }
 
@@ -2092,35 +2012,50 @@ class Payzen extends PaymentModule
         );
 
         if ($transStatus === 'CAPTURED') { // Transaction captured, we can do refund.
-            // No refund for captured transactions if order currency different than transaction currency.
-            if ($orderCurrency->iso_code !== $transaction['currency']) {
-                $msg = $this->l('Refund is not supported on captured transactions with currency conversion.');
-                throw new Exception($msg);
+            $real_refund_amount = $amountInCents;
+            // Get transaction amount and already transaction refunded amount.
+            if ($orderCurrency->iso_code != $transaction['currency']) {
+                $currency_conversion = true;
+                $transAmount = $transaction['transactionDetails']['effectiveAmount'];
+                $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['effectiveRefundAmount'];
+            } else {
+                $currency_conversion = false;
+                $transAmount = $transaction['amount'];
+                $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
             }
-
-            // Get already refunded amount.
-            $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
 
             if (empty($refundedAmount)) {
                 $refundedAmount = 0;
             }
 
-            $remainingAmount = $transaction['amount'] - $refundedAmount; // Calculate remaing amount.
+            $remainingAmount = $transAmount - $refundedAmount; // Calculate remaing amount.
+            $currency_alpha3 = $currency->getAlpha3();
 
             if ($remainingAmount < $amountInCents) {
-                $remainingAmountFloat = $currency->convertAmountToFloat($remainingAmount);
-                $msg = sprintf(
-                    $this->l('Remaining amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'),
-                    $remainingAmountFloat,
-                    $orderCurrency->sign,
-                    $amount
-                );
-                throw new Exception($msg);
+                if (! $currency_conversion) {
+                    $remainingAmountFloat = $currency->convertAmountToFloat($remainingAmount);
+                    $msg = sprintf(
+                        $this->l('Remaining amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'),
+                        $remainingAmountFloat,
+                        $orderCurrency->sign,
+                        $amount
+                        );
+                    throw new Exception($msg);
+                } else {
+                    // It may be caused by currency conversion.
+                    // We ferund all the transaction refundable remaining amount in the gateway currency to avoid also conversions rounding.
+                    $amountInCents = $transaction['amount'] - $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
+                    $currency_alpha3 = $transaction['currency'];
+
+                    $forceUpdateOrderStatus = true;
+                    $real_refund_amount = $remainingAmount; // Real refunded amount in order currency;
+                }
             }
 
             $requestData = array(
                 'uuid' => $uuid,
                 'amount' => $amountInCents,
+                'currency' => $currency_alpha3,
                 'resolutionMode' => 'REFUND_ONLY',
                 'comment' => $commentText
             );
@@ -2143,7 +2078,7 @@ class Payzen extends PaymentModule
             $response = new PayzenResponse($responseData, null, null, null);
 
             // Save refund transaction in PrestaShop.
-            $refundedAmount += $amountInCents;
+            $refundedAmount += $real_refund_amount;
 
             // Create payment.
             $this->createMessage($order, $response);
@@ -2152,7 +2087,7 @@ class Payzen extends PaymentModule
             // Update order status if it is not a call from hookActionOrderStatusUpdate to avoid double status update.
             $isManualUpdateRefundStatus = isset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses) && ($this->context->cookie->payzenManualUpdateToManagedRefundStatuses === 'True');
             if (! $isManualUpdateRefundStatus &&
-                ((($forceUpdateOrderStatus !== null) && $forceUpdateOrderStatus) || ($forceUpdateOrderStatus === null) && ($refundedAmount == $transaction['amount']))) {
+                ((($forceUpdateOrderStatus !== null) && $forceUpdateOrderStatus) || ($forceUpdateOrderStatus === null) && ($refundedAmount == $transAmount))) {
 
                 $order->setCurrentState((int) Configuration::get('PAYZEN_OS_REFUNDED'));
             }
@@ -2235,19 +2170,20 @@ class Payzen extends PaymentModule
     private function getTransactionRefundableAmount($transaction, $orderCurrency, $orderReference)
     {
         if ($transaction['detailedStatus'] === 'CAPTURED') {
+            // Get transaction amount and already refunded amount.
             if ($orderCurrency->iso_code !== $transaction['currency']) {
-                $this->logger->logWarning("Online transaction with uuid #{$transaction['uuid']} refund for order #$orderReference is failed: Refund is not supported on captured transactions with currency conversion.");
-                return 0;
+                $transAmount = $transaction['transactionDetails']['effectiveAmount'];
+                $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['effectiveRefundAmount'];
+            } else {
+                $transAmount = $transaction['amount'];
+                $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
             }
-
-            // Get already refunded amount.
-            $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
 
             if (empty($refundedAmount)) {
                 $refundedAmount = 0;
             }
 
-            $refundedableAmount = $transaction['amount'] - $refundedAmount;
+            $refundedableAmount = $transAmount - $refundedAmount;
         } else {
             $refundedableAmount = ($orderCurrency->iso_code !== $transaction['currency']) ?
                 $transaction['transactionDetails']['effectiveAmount'] : $transaction['amount'];
@@ -2316,7 +2252,7 @@ class Payzen extends PaymentModule
      */
     public function hookActionAdminCarrierWizardControllerSaveBefore($params)
     {
-        if ((Configuration::get('PAYZEN_SEND_SHIP_DATA') === 'True') || (Configuration::get('PAYZEN_ONEY_ENABLED') === 'True') || (Configuration::get('PAYZEN_ONEY34_ENABLED') === 'True')) {
+        if ((Configuration::get('PAYZEN_SEND_SHIP_DATA') === 'True') || (Configuration::get('PAYZEN_FFIN_ENABLED') === 'True') || (Configuration::get('PAYZEN_ONEY34_ENABLED') === 'True')) {
             $msg = $this->l('Warning! Do not forget to configure the shipping options mapping in the payment module: GENERAL CONFIGURATION > ADDITIONAL OPTIONS.');
             $this->context->cookie->payzenShippingOptionsWarn = $msg;
         }
@@ -2492,7 +2428,7 @@ class Payzen extends PaymentModule
 
         $message = $response->getCompleteMessage() . $msg_brand_choice . $msg_3ds . $msg_src . $msg_trans_uuid . $msg_authorized_amount . $msg_installments_number;
 
-        if (self::PAYMENT_DETAILS_PS17 && version_compare(_PS_VERSION_, '1.7.1.2', '>=')) {
+        if ((Configuration::get('PAYZEN_ENABLE_CUST_MSG') === 'True') && version_compare(_PS_VERSION_, '1.7.1.2', '>=')) {
             $msg = new CustomerMessage();
             $msg->message = $message;
             $msg->id_customer_thread = $this->createCustomerThread((int) $order->id);
@@ -2634,6 +2570,10 @@ class Payzen extends PaymentModule
                     'expiry_year' => isset($trs->{'expiry_year'}) ? $trs->{'expiry_year'} : null
                 );
 
+                if (isset($trs->{'change_rate'})) {
+                    $data['change_rate'] = $trs->{'change_rate'};
+                }
+
                 if (! ($pccId = $this->addOrderPayment($order, $invoice, $trans_id, $amount, $timestamp, $data))) {
                     return;
                 }
@@ -2664,6 +2604,10 @@ class Payzen extends PaymentModule
                 'expiry_month' => $response->get('expiry_month'),
                 'expiry_year' => $response->get('expiry_year')
             );
+
+            if ($response->get('change_rate') !== null) {
+                $data['change_rate'] = $response->get('change_rate');
+            }
 
             $total_paid_real = 0;
             $first_seq_num = $response->get('sequence_number') ? (int) $response->get('sequence_number') : 1;
@@ -2717,6 +2661,24 @@ class Payzen extends PaymentModule
             if ($response->get('operation_type') === 'CREDIT') {
                 if (version_compare(_PS_VERSION_, '1.7.7', '>=')) {
                     // Workarround for PrestaShop 1.7.7.x, payments with negative amounts not accepted.
+                    // Create a credit slip if it is not already created from BO PrestaShop.
+                    if (! Tools::isSubmit('doPartialRefundPayzen') && ! Tools::isSubmit('doStandardRefundPayzen')) {
+                        $orderCurrency = new Currency((int) $order->id_currency);
+                        $formatted_price_amount = $amount . ' ' . $orderCurrency->sign;
+                        $this->logger->logInfo("Creating order slip with $formatted_price_amount amount for order #{$order->id}");
+
+                        try {
+                            if($this->payzenCreateOrderSlip($order, $amount)) {
+                                $this->logger->logInfo("Order slip with $formatted_price_amount amount was successfully created for order #{$order->id}");
+                            } else {
+                                $this->logger->logInfo("Order slip with $formatted_price_amount amount could not be created for order #{$order->id}");
+                            }
+                        } catch (Exception $e) {
+                            $this->logger->logError("Error while creating order slip with $formatted_price_amount amount for order #{$order->id} : {$e->getMessage()}" . ($e->getCode() > 0 ? ' (' . $e->getCode() . ').' : ''));
+                        }
+                    }
+
+                    // Update order total paid real.
                     $order->total_paid_real -= $amount;
 
                     if ($order->total_paid_real < 0) {
@@ -2742,6 +2704,10 @@ class Payzen extends PaymentModule
                 'expiry_month' => $response->get('expiry_month'),
                 'expiry_year' => $response->get('expiry_year')
             );
+
+            if ($response->get('change_rate') !== null) {
+                $data['change_rate'] = $response->get('change_rate');
+            }
 
             if (! ($pccId = $this->addOrderPayment($order, $invoice, $trans_id, $amount, $timestamp, $data))) {
                 return;
@@ -2944,6 +2910,11 @@ class Payzen extends PaymentModule
             $this->logger->logInfo("Transaction presentation date is modified for cart #{$order->id_cart}. New date is $date.");
         }
 
+        // Set conversion_rate.
+        if (isset($data['change_rate'])) {
+            $pcc->conversion_rate = $data['change_rate'];
+        }
+
         if ($pcc->update()) {
             if ($diff > 0) {
                 $order->total_paid_real -= $diff;
@@ -2967,8 +2938,13 @@ class Payzen extends PaymentModule
         return $trs->{'operation_type'} === 'DEBIT' && in_array($trs->{'trans_status'}, $successful_states);
     }
 
-    public static function nextOrderState($response, $total_refund = false, $outofstock = false)
+    public static function nextOrderState($response, $outofstock = false, $old_state = null, $is_partial_payment = false)
     {
+        // PAYZEN_OS_REFUNDED is a final state no state change.
+        if (Configuration::get('PAYZEN_OS_REFUNDED') == $old_state) {
+            return $old_state;
+        }
+
         if ($response->isAcceptedPayment()) {
             $valid = false;
 
@@ -2990,7 +2966,7 @@ class Payzen extends PaymentModule
                     break;
                 default:
                     // Payment successful.
-                    if (($response->get('operation_type') === 'CREDIT') && $total_refund) {
+                    if (($response->get('operation_type') === 'CREDIT') && ! $is_partial_payment) {
                         $new_state = 'PAYZEN_OS_REFUNDED';
                     } elseif (self::isSofort($response) || self::isSepa($response)) {
                         // Pending funds transfer order state.
@@ -3011,7 +2987,12 @@ class Payzen extends PaymentModule
                 }
             }
         } elseif ($response->isCancelledPayment() || ($response->getTransStatus() === 'CANCELLED')) {
-            $new_state = 'PS_OS_CANCELED';
+            // Do not cancel PrestaShop order, no state changing return PrestaShop order old state.
+            if ($response->get('operation_type') === 'CREDIT' || $is_partial_payment) {
+                return $old_state;
+            } else {
+                $new_state = 'PS_OS_CANCELED';
+            }
         } else {
             $new_state = 'PS_OS_ERROR';
         }
@@ -3134,7 +3115,7 @@ class Payzen extends PaymentModule
 
     public static function isOney($response)
     {
-        return in_array($response->get('card_brand'), array('ONEY', 'ONEY_SANDBOX', 'ONEY_3X_4X'));
+        return $response->get('card_brand') ==='ONEY_3X_4X';
     }
 
     public static function isSofort($response)
@@ -3176,5 +3157,24 @@ class Payzen extends PaymentModule
         }
 
         return min($sequence_numbers) === (int) $sequence_number;
+    }
+
+    private static function payzenCreateOrderSlip($order, $amount)
+    {
+        $currency = new Currency($order->id_currency);
+        $orderSlip = new OrderSlip();
+        $orderSlip->id_customer = (int) $order->id_customer;
+        $orderSlip->id_order = (int) $order->id;
+        $orderSlip->amount = 0;
+        $orderSlip->shipping_cost = false;
+        $orderSlip->shipping_cost_amount = 0;
+        $orderSlip->conversion_rate = $currency->conversion_rate;
+        $orderSlip->partial = 0;
+        $orderSlip->total_products_tax_excl = 0;
+        $orderSlip->total_products_tax_incl = 0;
+        $orderSlip->total_shipping_tax_excl = $amount;
+        $orderSlip->total_shipping_tax_incl = $amount;
+
+        return $orderSlip->add();
     }
 }

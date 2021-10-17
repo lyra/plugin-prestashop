@@ -105,7 +105,7 @@ $payzen = new Payzen();
 // Search order in db.
 $order_id = Order::getOrderByCartId($cart_id);
 
-if ($order_id === false) {
+if (! $order_id) {
     // Order has not been processed yet.
     $new_state = (int) Payzen::nextOrderState($response);
 
@@ -150,21 +150,20 @@ if ($order_id === false) {
 
     $logger->logInfo("The current state for order corresponding to cart #$cart_id is ($old_state).");
 
-    // Check if  a total refund of order was made.
-    $total_refund = false;
+    // Check if  it is a partial payment.
+    $is_partial_payment = false;
 
-    if ($response->get('operation_type') === 'CREDIT') {
-        $currency = PayzenApi::findCurrency($response->get('currency'));
-        $decimals = $currency->getDecimals();
-        $paid_total = $currency->convertAmountToFloat($response->get('amount'));
+    $currency = PayzenApi::findCurrency($response->get('currency'));
+    $decimals = $currency->getDecimals();
+    $paid_total = $currency->convertAmountToFloat($response->get('amount'));
 
-        if (number_format($order->total_paid_real, $decimals) === number_format($paid_total, $decimals)) {
-            $total_refund = true;
-        }
+    // Check if this is a partial payment.
+    if (number_format($order->total_paid_real, $decimals) !== number_format($paid_total, $decimals)) {
+        $is_partial_payment = true;
     }
 
     $outofstock = Payzen::isOutOfStock($order);
-    $new_state = (int) Payzen::nextOrderState($response, $total_refund, $outofstock);
+    $new_state = (int) Payzen::nextOrderState($response, $outofstock, $old_state, $is_partial_payment);
 
     // Final states.
     $consistent_states = array(
@@ -184,7 +183,12 @@ if ($order_id === false) {
         // No changes, just display a confirmation message.
         $logger->logInfo("No state change for order associated with cart #$cart_id, order remains in state ({$old_state}).");
 
-        $payzen->savePayment($order, $response);
+        // Do not create payment if it is cancelled partial debit payment OR order is in final status PAYZEN_OS_REFUNDED.
+        $force_stop_payment_creation = (Configuration::get('PAYZEN_OS_REFUNDED') == $old_state) ||
+                                       (($response->isCancelledPayment() || ($response->getTransStatus() === 'CANCELLED'))
+                                       && ($response->get('operation_type') === 'DEBIT') && $is_partial_payment);
+
+        $payzen->savePayment($order, $response, $force_stop_payment_creation);
         $payzen->createMessage($order, $response);
 
         if ($response->isAcceptedPayment()) {

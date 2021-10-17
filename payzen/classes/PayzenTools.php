@@ -30,7 +30,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.14.2';
+    private static $PLUGIN_VERSION = '1.15.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -52,7 +52,7 @@ class PayzenTools
     /* Fields lists. */
     public static $multi_lang_fields = array(
         'PAYZEN_REDIRECT_SUCCESS_M', 'PAYZEN_REDIRECT_ERROR_M',
-        'PAYZEN_STD_TITLE', 'PAYZEN_MULTI_TITLE', 'PAYZEN_ONEY_TITLE', 'PAYZEN_ONEY34_TITLE', 'PAYZEN_ANCV_TITLE',
+        'PAYZEN_STD_TITLE', 'PAYZEN_MULTI_TITLE', 'PAYZEN_ONEY34_TITLE', 'PAYZEN_ANCV_TITLE',
         'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_CHOOZEO_TITLE', 'PAYZEN_THEME_CONFIG',
         'PAYZEN_FULLCB_TITLE', 'PAYZEN_OTHER_TITLE', 'PAYZEN_FFIN_TITLE', 'PAYZEN_STD_REST_LBL_REGIST'
     );
@@ -61,21 +61,12 @@ class PayzenTools
 
     public static $group_amount_fields = array(
         'PAYZEN_STD_AMOUNTS', 'PAYZEN_MULTI_AMOUNTS', 'PAYZEN_ANCV_AMOUNTS',
-        'PAYZEN_ONEY_AMOUNTS', 'PAYZEN_ONEY34_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS',
-        'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_CHOOZEO_AMOUNTS', 'PAYZEN_CHOOZEO_OPTIONS',
+        'PAYZEN_ONEY34_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS', 'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_CHOOZEO_AMOUNTS', 'PAYZEN_CHOOZEO_OPTIONS',
         'PAYZEN_FULLCB_AMOUNTS', 'PAYZEN_3DS_MIN_AMOUNT', 'PAYZEN_OTHER_AMOUNTS', 'PAYZEN_FFIN_AMOUNTS'
     );
 
     public static $address_regex = array(
         'oney34' => array(
-            'name' => "#^[A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,63}$#ui",
-            'street' => "#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '.,-]{1,127}$#ui",
-            'zip' => '#^[0-9]{5}$#',
-            'city' => "#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,127}$#ui",
-            'country' => '#^FR|GP|MQ|GF|RE|YT$#i',
-            'phone' => '#^[0-9]{10}$#'
-        ),
-        'oney' => array(
             'name' => "#^[A-ZÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,63}$#ui",
             'street' => "#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '.,-]{1,127}$#ui",
             'zip' => '#^[0-9]{5}$#',
@@ -117,7 +108,6 @@ class PayzenTools
         'STD' => 'Standard',
         'MULTI' => 'Multi',
         'CHOOZEO' => 'Choozeo',
-        'ONEY' => 'Oney',
         'ONEY34' => 'Oney34',
         'FULLCB' => 'Fullcb',
         'FFIN' => 'Franfinance',
@@ -229,6 +219,7 @@ class PayzenTools
         // NB : keys are 32 chars max.
         $params = array(
             array('key' => 'PAYZEN_ENABLE_LOGS', 'default' => 'True', 'label' => 'Logs'),
+            array('key' => 'PAYZEN_ENABLE_CUST_MSG', 'default' => 'True', 'label' => 'Customer service messages'),
 
             array('key' => 'PAYZEN_SITE_ID', 'name' => 'site_id', 'default' => self::getDefault('SITE_ID'), 'label' => 'Site ID'),
             array('key' => 'PAYZEN_KEY_TEST', 'name' => 'key_test', 'default' => self::getDefault('KEY_TEST'),
@@ -318,7 +309,6 @@ class PayzenTools
             array('key' => 'PAYZEN_STD_DELAY', 'default' => '', 'label' => 'Capture delay'),
             array('key' => 'PAYZEN_STD_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_STD_PAYMENT_CARDS', 'default' => '', 'label' => 'Card Types'),
-            array('key' => 'PAYZEN_STD_PROPOSE_ONEY', 'default' => 'False', 'label' => 'Propose FacilyPay Oney'),
             array('key' => 'PAYZEN_STD_AMOUNTS', 'default' => array(), 'label' => 'Standard payment - Customer group amount restriction'),
             array('key' => 'PAYZEN_STD_CARD_DATA_MODE', 'default' => '1', 'label' => 'Card data entry mode'),
             array('key' => 'PAYZEN_STD_REST_THEME', 'default' => 'material', 'label' => 'Custom theme'),
@@ -350,22 +340,6 @@ class PayzenTools
             array('key' => 'PAYZEN_MULTI_CARD_MODE', 'default' => '1', 'label' => 'Card selection mode'),
             array('key' => 'PAYZEN_MULTI_AMOUNTS', 'default' => array(), 'label' => 'Payment in installments - Customer group amount restriction'),
             array('key' => 'PAYZEN_MULTI_OPTIONS', 'default' => array(), 'label' => 'Payment in installments - Payment options'),
-
-            array('key' => 'PAYZEN_ONEY_TITLE',
-                'default' => array(
-                    'en' => 'Payment with FacilyPay Oney (Deprecated)',
-                    'fr' => 'Paiement avec FacilyPay Oney (Déprécié)',
-                    'de' => 'Zahlung via FacilyPay Oney (Überholt)',
-                    'es' => 'Pago con FacilyPay Oney (Obsoleto)'
-                ),
-                'label' => 'Method title'),
-            array('key' => 'PAYZEN_ONEY_ENABLED', 'default' => 'False', 'label' => 'Activation'),
-            array('key' => 'PAYZEN_ONEY_DELAY', 'default' => '', 'label' => 'Capture delay'),
-            array('key' => 'PAYZEN_ONEY_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
-            array('key' => 'PAYZEN_ONEY_AMOUNTS', 'default' => array(), 'label' => 'FacilyPay Oney payment - Customer group amount restriction'),
-            array('key' => 'PAYZEN_ONEY_ENABLE_OPTIONS', 'default' => 'False',
-                'label' => 'Enable options selection'),
-            array('key' => 'PAYZEN_ONEY_OPTIONS', 'default' => array(), 'label' => 'FacilyPay Oney payment - Payment options'),
 
             array('key' => 'PAYZEN_ONEY34_TITLE',
                 'default' => array(
@@ -615,14 +589,6 @@ class PayzenTools
     {
         $cards = PayzenApi::getSupportedCardTypes();
 
-        if (isset($cards['ONEY'])) {
-            unset($cards['ONEY']);
-        }
-
-        if (isset($cards['ONEY_SANDBOX'])) {
-            unset($cards['ONEY_SANDBOX']);
-        }
-
         if (isset($cards['ONEY_3X_4X'])) {
             unset($cards['ONEY_3X_4X']);
         }
@@ -832,6 +798,9 @@ class PayzenTools
             if ($effectiveAmount && $effectiveCurrency) {
                 // Invert only if there is currency conversion.
                 if ($effectiveCurrency !== $response['vads_currency']) {
+                    // Set change_rate.
+                    $response['vads_change_rate'] = Tools::ps_round($effectiveAmount / $response['vads_amount'], 4);
+
                     $response['vads_effective_amount'] = $response['vads_amount'];
                     $response['vads_effective_currency'] = $response['vads_currency'];
                     $response['vads_amount'] = $effectiveAmount;

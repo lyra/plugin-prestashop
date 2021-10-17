@@ -94,3 +94,9 @@ button.kr-popin-button {
     width: 0;
     height: 0;
 }
+
+.kr-form-error span a {
+    all: inherit !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+}

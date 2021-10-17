@@ -68,12 +68,14 @@ $(function() {
     }, 0);
 });
 
-var PAYZEN_DEFAULT_MESSAGES = ['CLIENT_300', 'CLIENT_304', 'CLIENT_502', 'PSP_539']; // Use default messages for these errors.
-var PAYZEN_RECOVERABLE_ERRORS = [
-    'CLIENT_300', 'CLIENT_304', 'CLIENT_502',
-    'PSP_539', 'CLIENT_001', 'CLIENT_101',
-    'CLIENT_301', 'CLIENT_302', 'CLIENT_303',
-    'PSP_003', 'PSP_108', 'ACQ_001'
+// Use default messages for these errors.
+const PAYZEN_DEFAULT_MESSAGES = [
+    'CLIENT_300', 'CLIENT_304', 'CLIENT_502', 'PSP_539'
+];
+
+// Errors requiring page reloading.
+const PAYZEN_EXPIRY_ERRORS = [
+    'PSP_108', 'PSP_136', 'PSP_649'
 ];
 
 var payzenInitRestEvents = function() {
@@ -87,13 +89,6 @@ var payzenInitRestEvents = function() {
             $('#payzen_standard').data('submitted', false);
         }
 
-        // Not recoverable error, reload page after a while.
-        if (PAYZEN_RECOVERABLE_ERRORS.indexOf(e.errorCode) === -1) {
-            setTimeout(function() {
-                window.location.reload();
-            }, 4000);
-        }
-
         var msg = '';
         if (PAYZEN_DEFAULT_MESSAGES.indexOf(e.errorCode) > -1) {
             msg = e.errorMessage;
@@ -102,6 +97,11 @@ var payzenInitRestEvents = function() {
             msg += (endsWithDot ? '' : '.');
         } else {
             msg = payzenTranslate(e.errorCode);
+        }
+
+        // Non recoverable errors, display a link to refresh the page.
+        if (PAYZEN_EXPIRY_ERRORS.indexOf(e.errorCode) > -1) {
+            msg += ' <a href="#" onclick="window.location.reload(); return false;">' + payzenTranslate('RELOAD_LINK') + '</a>';
         }
 
         $('.payzen .kr-form-error').html('<span style="color: red;"><span>' + msg + '</span></span>');
@@ -134,6 +134,7 @@ var payzenTranslate = function(code) {
 
 var PAYZEN_ERROR_MESSAGES = {
     fr: {
+        RELOAD_LINK: 'Veuillez rafraîchir la page.',
         CLIENT_001: 'Le paiement est refusé. Essayez de payer avec une autre carte.',
         CLIENT_101: 'Le paiement est annulé.',
         CLIENT_301: 'Le numéro de carte est invalide. Vérifiez le numéro et essayez à nouveau.',
@@ -145,7 +146,7 @@ var PAYZEN_ERROR_MESSAGES = {
 
         PSP_003: 'Le paiement est refusé. Essayez de payer avec une autre carte.',
         PSP_099: 'Trop de tentatives ont été effectuées. Merci de réessayer plus tard.',
-        PSP_108: 'Le formulaire a expiré. Veuillez rafraîchir la page.',
+        PSP_108: 'Le formulaire a expiré.',
         PSP_999: 'Une erreur est survenue durant le processus de paiement.',
 
         ACQ_001: 'Le paiement est refusé. Essayez de payer avec une autre carte.',
@@ -153,6 +154,7 @@ var PAYZEN_ERROR_MESSAGES = {
     },
 
     en: {
+        RELOAD_LINK: 'Please refresh the page.',
         CLIENT_001: 'Payment is refused. Try to pay with another card.',
         CLIENT_101: 'Payment is cancelled.',
         CLIENT_301: 'The card number is invalid. Please check the number and try again.',
@@ -164,7 +166,7 @@ var PAYZEN_ERROR_MESSAGES = {
 
         PSP_003: 'Payment is refused. Try to pay with another card.',
         PSP_099: 'Too many attempts. Please try again later.',
-        PSP_108: 'The form has expired. Please refresh the page.',
+        PSP_108: 'The form has expired.',
         PSP_999: 'An error has occurred during the payment process.',
 
         ACQ_001: 'Payment is refused. Try to pay with another card.',
@@ -172,6 +174,7 @@ var PAYZEN_ERROR_MESSAGES = {
     },
 
     de: {
+        RELOAD_LINK: 'Bitte aktualisieren Sie die Seite.',
         CLIENT_001: 'Die Zahlung wird abgelehnt. Versuchen Sie, mit einer anderen Karte zu bezahlen.',
         CLIENT_101: 'Die Zahlung wird storniert.',
         CLIENT_301: 'Die Kartennummer ist ungültig. Bitte überprüfen Sie die Nummer und versuchen Sie es erneut.',
@@ -183,7 +186,7 @@ var PAYZEN_ERROR_MESSAGES = {
 
         PSP_003: 'Die Zahlung wird abgelehnt. Versuchen Sie, mit einer anderen Karte zu bezahlen.',
         PSP_099: 'Zu viele Versuche. Bitte Versuchen Sie es später erneut.',
-        PSP_108: 'Das Formular ist abgelaufen. Bitte aktualisieren Sie die Seite.',
+        PSP_108: 'Das Formular ist abgelaufen.',
         PSP_999: 'Ein Fehler ist während dem Zahlungsvorgang unterlaufen.',
 
         ACQ_001: 'Die Zahlung wird abgelehnt. Versuchen Sie, mit einer anderen Karte zu bezahlen.',
@@ -191,6 +194,7 @@ var PAYZEN_ERROR_MESSAGES = {
     },
 
     es: {
+        RELOAD_LINK: 'Por favor, actualice la página.',
         CLIENT_001: 'El pago es rechazado. Intenta pagar con otra tarjeta.',
         CLIENT_101: 'Se cancela el pago.',
         CLIENT_301: 'El número de tarjeta no es válido. Por favor, compruebe el número y vuelva a intentarlo.',
@@ -202,7 +206,7 @@ var PAYZEN_ERROR_MESSAGES = {
 
         PSP_003: 'El pago es rechazado. Intenta pagar con otra tarjeta.',
         PSP_099: 'Demasiados intentos. Por favor, inténtelo de nuevo más tarde.',
-        PSP_108: 'El formulario ha expirado. Por favor, actualice la página.',
+        PSP_108: 'El formulario ha expirado.',
         PSP_999: 'Ocurrió un error en el proceso de pago.',
 
         ACQ_001: 'El pago es rechazado. Intenta pagar con otra tarjeta.',

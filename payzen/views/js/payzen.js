@@ -128,7 +128,6 @@ function payzenDeliveryTypeChanged(key) {
 
 function payzenDeliverySpeedChanged(key) {
     var speed = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_speed').val();
-    var type = $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_type').val();
 
     if (speed === 'PRIORITY') {
         $('#PAYZEN_ONEY_SHIP_OPTIONS_' + key + '_delay').show();
@@ -146,18 +145,6 @@ function payzenRedirectChanged() {
     } else {
         $('#payzen_redirect_settings').hide();
         $('#payzen_redirect_settings select, #payzen_redirect_settings input').attr('disabled', 'disabled');
-    }
-}
-
-function payzenOneyEnableOptionsChanged() {
-    var enable = $('select#PAYZEN_ONEY_ENABLE_OPTIONS option:selected').val();
-
-    if (enable === 'True') {
-        $('#payzen_oney_options_settings').show();
-        $('#payzen_oney_options_settings select, #payzen_oney_options_settings input').removeAttr('disabled');
-    } else {
-        $('#payzen_oney_options_settings').hide();
-        $('#payzen_oney_options_settings select, #payzen_oney_options_settings input').attr('disabled', 'disabled');
     }
 }
 

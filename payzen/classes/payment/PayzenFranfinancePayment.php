@@ -21,7 +21,9 @@ class PayzenFranfinancePayment extends AbstractPayzenPayment
 
     protected $currencies = array('EUR');
     protected $countries = array('FR', 'GP', 'MQ', 'GF', 'RE', 'YT');
+
     protected $needs_cart_data = true;
+    protected $needs_shipping_method_data = true;
 
     public function getCountries()
     {

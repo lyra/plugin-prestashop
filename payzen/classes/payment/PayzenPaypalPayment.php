@@ -18,6 +18,7 @@ class PayzenPaypalPayment extends AbstractPayzenPayment
     protected $tpl_name = 'payment_paypal.tpl';
     protected $logo = 'paypal.png';
     protected $name = 'paypal';
+
     protected $needs_cart_data = true;
 
     /**

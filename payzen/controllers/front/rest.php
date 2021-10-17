@@ -96,7 +96,7 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         // Get order ID by cart ID.
         $order_id = Order::getOrderByCartId($cart_id);
 
-        if ($order_id == false) {
+        if (! $order_id) {
             // Order has not been processed yet.
             $new_state = (int) Payzen::nextOrderState($response);
 
