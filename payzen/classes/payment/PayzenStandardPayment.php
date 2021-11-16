@@ -25,6 +25,47 @@ class PayzenStandardPayment extends AbstractPayzenPayment
     {
         $vars = parent::getTplVars($cart);
 
+        // Get REST JS params.
+        if ($this->isEmbedded()) {
+            // kr_public_key.
+            $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
+            $pub_key = $test_mode ? Configuration::get('PAYZEN_PUBKEY_TEST') : Configuration::get('PAYZEN_PUBKEY_PROD');
+            $vars['payzen_std_rest_kr_public_key'] = $pub_key;
+
+            // URL where to redirect after payment.
+            $return_url = $this->context->link->getModuleLink('payzen', 'rest', array(), true);
+            $vars['payzen_std_rest_return_url'] = $return_url;
+
+            // kr-language, current language or default if not supported.
+            $language = Language::getLanguage((int) $this->context->cart->id_lang);
+            $language_iso_code = Tools::strtolower($language['iso_code']);
+            if (! PayzenApi::isSupportedLanguage($language_iso_code)) {
+                $language_iso_code = Configuration::get('PAYZEN_DEFAULT_LANGUAGE');
+            }
+
+            $vars['payzen_std_rest_kr_language'] = $language_iso_code;
+
+            // kr-label-do-register.
+            $vars['payzen_std_rest_kr_label_do_register'] = Configuration::get('PAYZEN_STD_REST_LBL_REGIST', $language['id_lang']);
+
+            // Placeholder.
+            // kr-placeholder-pan.
+            $rest_placeholders = @unserialize(Configuration::get('PAYZEN_STD_REST_PLACEHLDR'));
+            if ($pan_label = $rest_placeholders['pan'][$language['id_lang']]) {
+                $vars['payzen_std_rest_kr_placeholder_pan'] = $pan_label;
+            }
+
+            // kr-placeholder-expiry.
+            if ($expiry_label = $rest_placeholders['expiry'][$language['id_lang']]) {
+                $vars['payzen_std_rest_kr_placeholder_expiry'] = $expiry_label;
+            }
+
+            // kr-placeholder-security-code.
+            if ($cvv_label = $rest_placeholders['cvv'][$language['id_lang']]) {
+                $vars['payzen_std_rest_kr_placeholder_security_code'] = $cvv_label;
+            }
+        }
+
         if ($this->isFromBackend()) {
             $vars['payzen_std_card_data_mode'] = '1';
             return $vars;
