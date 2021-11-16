@@ -1,3 +1,7 @@
+1.15.1, 2021-11-16:
+- Bug fix: Fix refund of orders with a discount voucher.
+- [embedded] Bug fix: compatibility of embedded payment fields with the option "Move JavaScript to the end" in 1.6.x PrestaShop versions.
+
 1.15.0, 2021-10-17:
 - [embedded] Bug fix: Do not refresh payment page automatically after an unrecoverable error.
 - Bug fix: Consider the "Refunded with PayZen" order status as a final status.
