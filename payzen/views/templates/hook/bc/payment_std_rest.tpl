@@ -26,7 +26,23 @@
     <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
     <div id="payzen_standard_rest_wrapper" style="padding-top: 10px; padding-left: 40px;">
-      <div class="kr-embedded"{if $payzen_std_card_data_mode == '6'} kr-popin{/if}>
+      <div class="kr-embedded"
+          {if $payzen_std_card_data_mode == '6'} kr-popin{/if}
+          kr-public-key="{$payzen_std_rest_kr_public_key|escape:'html':'UTF-8'}"
+          kr-post-url-success="{$payzen_std_rest_return_url|escape:'html':'UTF-8'}"
+          kr-post-url-refused="{$payzen_std_rest_return_url|escape:'html':'UTF-8'}"
+          kr-language="{$payzen_std_rest_kr_language|escape:'html':'UTF-8'}"
+          kr-label-do-register="{$payzen_std_rest_kr_label_do_register|escape:'html':'UTF-8'}"
+          {if isset($payzen_std_rest_kr_placeholder_pan)}
+              kr-placeholder-pan="{$payzen_std_rest_kr_placeholder_pan|escape:'html':'UTF-8'}"
+          {/if}
+          {if isset($payzen_std_rest_kr_placeholder_expiry)}
+              kr-placeholder-expiry="{$payzen_std_rest_kr_placeholder_expiry|escape:'html':'UTF-8'}"
+          {/if}
+          {if isset($payzen_std_rest_kr_placeholder_security_code)}
+              kr-placeholder-security-code="{$payzen_std_rest_kr_placeholder_security_code|escape:'html':'UTF-8'}"
+          {/if}
+      >
         <div class="kr-pan"></div>
         <div class="kr-expiry"></div>
         <div class="kr-security-code"></div>

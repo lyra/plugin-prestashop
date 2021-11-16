@@ -32,7 +32,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.15.0';
+        $this->version = '1.15.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1066,27 +1066,8 @@ class Payzen extends PaymentModule
                                 var PAYZEN_LANGUAGE = "' . $language_iso_code . '";
                               </script>';
 
-                    $html .= '<script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js"
-                                      kr-public-key="' . $pub_key . '"
-                                      kr-post-url-success="' . $return_url . '"
-                                      kr-post-url-refused="' . $return_url . '"
-                                      kr-language="' . $language_iso_code . '"
-                                      kr-label-do-register="' . Configuration::get('PAYZEN_STD_REST_LBL_REGIST', $language['id_lang']) . '"';
-
-                    $rest_placeholders = @unserialize(Configuration::get('PAYZEN_STD_REST_PLACEHLDR'));
-                    if ($pan_label = $rest_placeholders['pan'][$language['id_lang']]) {
-                        $html .= ' kr-placeholder-pan="' . $pan_label . '"';
-                    }
-
-                    if ($expiry_label = $rest_placeholders['expiry'][$language['id_lang']]) {
-                        $html .= ' kr-placeholder-expiry="' . $expiry_label . '"';
-                    }
-
-                    if ($cvv_label = $rest_placeholders['cvv'][$language['id_lang']]) {
-                        $html .= ' kr-placeholder-security-code="' . $cvv_label . '"';
-                    }
-
-                    $html .= '></script>' . "\n";
+                    $html .= '<script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js">
+                              </script>' . "\n";
 
                     // Theme and plugins, should be loaded after the javascript library.
                     $rest_theme = Configuration::get('PAYZEN_STD_REST_THEME') ? Configuration::get('PAYZEN_STD_REST_THEME') : 'material';
@@ -1838,6 +1819,12 @@ class Payzen extends PaymentModule
 
         // Add shipping cost amount.
         $amount += $orderSlipObject->shipping_cost_amount;
+
+        // Case of order with discount.
+        // Check if the merchant choose refund option: "Product(s) price, excluding amount of initial voucher".
+        if ($orderSlipObject->order_slip_type && $orderSlipObject->order_slip_type == 1) {
+            $amount-= $order->total_discounts;
+        }
 
         // If any error during WS refund, redirect to order details to avoid creation of a credit and displaying success message.
         if (! $this->refund($order, $amount)) {
