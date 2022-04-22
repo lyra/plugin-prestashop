@@ -1,4 +1,4 @@
-Copyright © 2014-2021 Lyra Network.
+Copyright © 2014-2022 Lyra Network.
 
 NOTICE OF LICENSE
 

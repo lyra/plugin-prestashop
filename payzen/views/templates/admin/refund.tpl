@@ -57,6 +57,10 @@
             $('.payzen-partial-refund').hide();
         });
 
+        $(document).on('click', '.return-product-display', function() {
+            $('.payzen-partial-refund').hide();
+        });
+
         // Click on credit slip creation checkbox.
         $(document).on('click', '#cancel_product_credit_slip', function() {
             toggleCheckboxDisplay();
