@@ -1,6 +1,9 @@
+1.15.3, 2022-05-05:
+- Update list of supported payment means.
+
 1.15.2, 2022-04-22:
 - [embedded] Bug fix: Improve the compatibility of embedded payment fields with the option "Move JavaScript to the end" in 1.6.x PrestaShop versions.
-- Bug fix: Fix duplication of refund checkbox when returning articles
+- Bug fix: Fix duplication of refund checkbox when returning articles.
 
 1.15.1, 2021-11-16:
 - Bug fix: Fix refund of orders with a discount voucher.
