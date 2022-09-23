@@ -30,6 +30,14 @@ if (PayzenTools::checkRestIpnValidity()) {
         die('<span style="display:none">KO-Invalid IPN request received.' . "\n" . '</span>');
     }
 
+    // Ignore IPN response with "ABANDONED" status.
+    if ($answer['orderStatus'] === 'ABANDONED') {
+        $cartId = $answer['orderDetails']['orderId'];
+        $logger->logWarning('Server call on cancelation' . ($cartId ? ' for cart #' . $cartId : '') . '. No order will be created.');
+
+        die('<span style="display:none">KO-Payment abandoned.' . "\n" . '</span>');
+    }
+
     $save_on_failure &= isset($answer['orderCycle']) && ($answer['orderCycle'] === 'CLOSED');
 
     // Wrap payment result to use traditional order creation tunnel.
