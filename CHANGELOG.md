@@ -1,3 +1,7 @@
+1.15.4, 2022-09-23:
+- [embedded] Bug fix: ignore abandoned payments in IPN calls for payment with embedded fields.
+- Minor fix.
+
 1.15.3, 2022-05-05:
 - Update list of supported payment means.
 

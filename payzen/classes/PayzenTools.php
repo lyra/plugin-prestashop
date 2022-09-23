@@ -30,7 +30,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.15.3';
+    private static $PLUGIN_VERSION = '1.15.4';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -737,21 +737,16 @@ class PayzenTools
         return $url;
     }
 
-    public static function convertRestResult($answer, $isTransaction = false)
+    public static function convertRestResult($answer)
     {
         if (! is_array($answer) || empty($answer)) {
             return array();
         }
 
-        if ($isTransaction) {
+        $transactions = self::getProperty($answer, 'transactions');
+        if (! is_array($transactions) || empty($transactions)) {
             $transaction = $answer;
         } else {
-            $transactions = self::getProperty($answer, 'transactions');
-
-            if (! is_array($transactions) || empty($transactions)) {
-                return array();
-            }
-
             $transaction = $transactions[0];
         }
 
