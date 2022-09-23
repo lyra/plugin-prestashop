@@ -32,7 +32,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.15.3';
+        $this->version = '1.15.4';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -2080,7 +2080,7 @@ class Payzen extends PaymentModule
                 throw new Exception(sprintf($this->l('Unexpected transaction type received (%1$s).'), $transType));
             }
 
-            $responseData = PayzenTools::convertRestResult($refundPaymentResponse['answer'], true);
+            $responseData = PayzenTools::convertRestResult($refundPaymentResponse['answer']);
             $response = new PayzenResponse($responseData, null, null, null);
 
             // Save refund transaction in PrestaShop.
@@ -2124,7 +2124,7 @@ class Payzen extends PaymentModule
                 PayzenTools::checkRestResult($cancelPaymentResponse, array('CANCELLED'));
 
                 // Total refund, update order status as well.
-                $responseData = PayzenTools::convertRestResult($cancelPaymentResponse['answer'], true);
+                $responseData = PayzenTools::convertRestResult($cancelPaymentResponse['answer']);
                 $response = new PayzenResponse($responseData, null, null, null);
 
                 // Save refund transaction in PrestaShop.
@@ -2161,7 +2161,7 @@ class Payzen extends PaymentModule
                     )
                 );
 
-                $responseData = PayzenTools::convertRestResult($updatePaymentResponse['answer'], true);
+                $responseData = PayzenTools::convertRestResult($updatePaymentResponse['answer']);
                 $response = new PayzenResponse($responseData, null, null, null);
 
                 // Save refund transaction in PrestaShop.
