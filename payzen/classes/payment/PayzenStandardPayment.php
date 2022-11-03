@@ -26,7 +26,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $vars = parent::getTplVars($cart);
 
         // For 1.6 versions get if js files loaded at end.
-        if ($this->isEmbedded() && version_compare(_PS_VERSION_, '1.7', '<') && (bool)Configuration::get('PS_JS_DEFER')) {
+        if ($this->isEmbedded() && version_compare(_PS_VERSION_, '1.7', '<') && (bool) Configuration::get('PS_JS_DEFER')) {
             // kr_public_key.
             $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
             if ($pub_key = $test_mode ? Configuration::get('PAYZEN_PUBKEY_TEST') : Configuration::get('PAYZEN_PUBKEY_PROD')) {
@@ -62,6 +62,15 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                 $vars['payzen_set_std_rest_kr_label_do_register'] = $register_card_label;
             }
         }
+
+        // Current language or default if not supported.
+        $language = Language::getLanguage((int) $cart->id_lang);
+        $language_iso_code = Tools::strtolower($language['iso_code']);
+        if (! PayzenApi::isSupportedLanguage($language_iso_code)) {
+            $language_iso_code = Configuration::get('PAYZEN_DEFAULT_LANGUAGE');
+        }
+
+        $vars['payzen_set_std_rest_language'] = $language_iso_code;
 
         if ($this->isFromBackend()) {
             $vars['payzen_std_card_data_mode'] = '1';
@@ -287,7 +296,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         );
 
         // Set Number of attempts in case of rejected payment.
-        if (Configuration::get($this->prefix . 'REST_ATTEMPTS')) {
+        if (Configuration::get($this->prefix . 'REST_ATTEMPTS') !== null) {
             $params['transactionOptions']['cardOptions']['retry'] = Configuration::get($this->prefix . 'REST_ATTEMPTS');
         }
 

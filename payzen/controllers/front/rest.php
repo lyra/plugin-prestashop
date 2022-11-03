@@ -38,7 +38,7 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         } else {
            $json = array(
                'status' => 'error',
-               'message' => $this->l('Error when creating token.')
+               'message' => $this->module->l('Error when creating token.')
             );
         }
 
