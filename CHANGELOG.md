@@ -1,3 +1,7 @@
+1.15.5, 2022-11-03:
+- [embedded] Bug fix: Fix embedded payment fields displaying on PrestaShop 1.6.x versions and older.
+- Minor fix.
+
 1.15.4, 2022-09-23:
 - [embedded] Bug fix: ignore abandoned payments in IPN calls for payment with embedded fields.
 - Minor fix.
