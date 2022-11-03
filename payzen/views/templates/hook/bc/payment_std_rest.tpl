@@ -26,46 +26,46 @@
     <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
     <div id="payzen_standard_rest_wrapper" style="padding-top: 10px; padding-left: 40px;">
-      <div class="kr-embedded"{if $payzen_std_card_data_mode == '6'} kr-popin{/if}>
-        <div class="kr-pan"></div>
-        <div class="kr-expiry"></div>
-        <div class="kr-security-code"></div>
-        <button type="button" class="kr-payment-button"></button>
-
-        <div class="kr-form-error"></div>
-      </div>
+        <div class="kr-embedded"{if $payzen_std_card_data_mode == '6'} kr-popin{/if}
+            kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}"
+            kr-language="{$payzen_set_std_rest_language|escape:'html':'UTF-8'}"
+            {if isset($payzen_set_std_rest_kr_public_key)}kr-public-key="{$payzen_set_std_rest_kr_public_key|escape:'html':'UTF-8'}"{/if}
+            {if isset($payzen_set_std_rest_return_url)}kr-post-url-success="{$payzen_set_std_rest_return_url|escape:'html':'UTF-8'}"{/if}
+            {if isset($payzen_set_std_rest_return_url)}kr-post-url-refused="{$payzen_set_std_rest_return_url|escape:'html':'UTF-8'}"{/if}
+            {if isset($payzen_set_std_rest_kr_placeholder_pan)}kr-placeholder-pan="{$payzen_set_std_rest_kr_placeholder_pan|escape:'html':'UTF-8'}"{/if}
+            {if isset($payzen_set_std_rest_kr_placeholder_expiry)}kr-placeholder-expiry="{$payzen_set_std_rest_kr_placeholder_expiry|escape:'html':'UTF-8'}"{/if}
+            {if isset($payzen_set_std_rest_kr_placeholder_security_code)}kr-placeholder-security-code="{$payzen_set_std_rest_kr_placeholder_security_code|escape:'html':'UTF-8'}"{/if}
+            {if isset($payzen_set_std_rest_kr_label_do_register)}kr-label-do-register="{$payzen_set_std_rest_kr_label_do_register|escape:'html':'UTF-8'}"{/if}
+        >
+            <div class="kr-pan"></div>
+            <div class="kr-expiry"></div>
+            <div class="kr-security-code"></div>
+            <button type="button" class="kr-payment-button"></button>
+            <div class="kr-form-error"></div>
+        </div>
     </div>
 
     <script type="text/javascript">
-      $('#payzen_standard_rest_wrapper').ready(function() {
-        KR.removeForms();
-        KR.setFormConfig({ formToken: "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}", language: PAYZEN_LANGUAGE });
+        var whenDefined = function(context, variableName, cb, interval) {
+            if (interval === null) {
+                interval = 150;
+            }
 
-        {if isset($payzen_set_std_rest_kr_public_key)}
-            KR.setFormConfig({ publicKey: "{$payzen_set_std_rest_kr_public_key|escape:'html':'UTF-8'}"});
-        {/if}
+            var checkVariable = function() {
+                if (context[variableName]) {
+                    cb();
+                } else {
+                    setTimeout(checkVariable, interval);
+                }
+            }
 
-        {if isset($payzen_set_std_rest_return_url)}
-            KR.setFormConfig({ postUrlSuccess: "{$payzen_set_std_rest_return_url|escape:'html':'UTF-8'}"});
-            KR.setFormConfig({ postUrlRefused: "{$payzen_set_std_rest_return_url|escape:'html':'UTF-8'}"});
-        {/if}
+            setTimeout(checkVariable, 0);
+        };
 
-        {if isset($payzen_set_std_rest_kr_placeholder_pan)}
-            KR.setFormConfig({ placeholderPan: "{$payzen_set_std_rest_kr_placeholder_pan|escape:'html':'UTF-8'}"});
-        {/if}
-
-        {if isset($payzen_set_std_rest_kr_placeholder_expiry)}
-            KR.setFormConfig({ placeholderExpiry: "{$payzen_set_std_rest_kr_placeholder_expiry|escape:'html':'UTF-8'}"});
-        {/if}
-
-        {if isset($payzen_set_std_rest_kr_placeholder_security_code)}
-            KR.setFormConfig({ placeholderSecurityCode: "{$payzen_set_std_rest_kr_placeholder_security_code|escape:'html':'UTF-8'}"});
-        {/if}
-
-        {if isset($payzen_set_std_rest_kr_label_do_register)}
-            KR.setFormConfig({ labelDoRegister: "{$payzen_set_std_rest_kr_label_do_register|escape:'html':'UTF-8'}"});
-        {/if}
-      });
+        whenDefined(window, 'KR', function() {
+            KR.setFormConfig({ formToken: "{$payzen_rest_identifier_token|escape:'html':'UTF-8'}", language: "{$payzen_set_std_rest_language|escape:'html':'UTF-8'}" });
+            KR.onFormCreated(payzenInitRestEvents);
+        });
     </script>
 
     {if $payzen_is_valid_std_identifier}
