@@ -32,7 +32,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.15.5';
+        $this->version = '1.15.6';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1751,9 +1751,10 @@ class Payzen extends PaymentModule
 
         // If any error during WS refund/cancel redirect to order details to avoid display success message.
         if (! $this->refund($order, $order->total_paid_real)) {
-            if (Tools::isSubmit('token')) {
+            if (version_compare(_PS_VERSION_, '1.7.7', '<')) {
                 // PrestaShop versions < 1.7.7.
-                Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . Tools::getValue('token'));
+                $token = Tools::getValue('token') ? Tools::getValue('token') : Tools::getAdminTokenLite('AdminOrders');
+                Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . $token);
             } else {
                 // Display warning to customer if any for PrestaShop versions >= 1.7.7.
                 if (isset($this->context->cookie->payzenRefundWarn)) {
@@ -1767,7 +1768,7 @@ class Payzen extends PaymentModule
 
                 Tools::redirectAdmin($url_admin_order);
             }
-        } elseif (! Tools::isSubmit('token') && isset($this->context->cookie->payzenRefundWarn)) {
+        } elseif (version_compare(_PS_VERSION_, '1.7.7', '>=') && isset($this->context->cookie->payzenRefundWarn)) {
             // Display warning to customer if any for Prestashop versions >= 1.7.7.
             $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
             unset($this->context->cookie->payzenRefundWarn);
@@ -1855,17 +1856,21 @@ class Payzen extends PaymentModule
                 foreach ($id_order_details as $id_order_detail => $quantity) {
                     // Update order detail.
                     $order_detail = new OrderDetail($id_order_detail);
-                    $order_detail->product_quantity_refunded -= $quantity;
-                    $order_detail->update();
+
+                    if ($order_detail->product_quantity_refunded && is_int($order_detail->product_quantity_refunded)) {
+                        $order_detail->product_quantity_refunded -= (int) $quantity;
+                        $order_detail->update();
+                    }
 
                     // Update product available quantity.
                     StockAvailable::updateQuantity($order_detail->product_id, $order_detail->product_attribute_id, -$quantity, $order->id_shop);
                 }
             }
 
-            if (Tools::isSubmit('token')) {
+            if (version_compare(_PS_VERSION_, '1.7.7', '<')) {
                 // Prestashop versions < 1.7.7.
-                Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . Tools::getValue('token'));
+                $token = Tools::getValue('token') ? Tools::getValue('token') : Tools::getAdminTokenLite('AdminOrders');
+                Tools::redirectAdmin(AdminController::$currentIndex . '&id_order=' . $order->id . '&vieworder&token=' . $token);
             } else {
                 // Display warning to customer if any for Prestashop versions >= 1.7.7.
                 if (isset($this->context->cookie->payzenRefundWarn)) {
@@ -1879,7 +1884,7 @@ class Payzen extends PaymentModule
 
                 Tools::redirectAdmin($url_admin_order);
             }
-        } elseif (! Tools::isSubmit('token') && isset($this->context->cookie->payzenRefundWarn)) {
+        } elseif (version_compare(_PS_VERSION_, '1.7.7', '>=') && isset($this->context->cookie->payzenRefundWarn)) {
             // Display warning to customer if any for Prestashop versions >= 1.7.7.
             $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
             unset($this->context->cookie->payzenRefundWarn);
