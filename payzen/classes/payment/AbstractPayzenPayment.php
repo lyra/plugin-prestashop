@@ -200,12 +200,11 @@ abstract class AbstractPayzenPayment
         $class_name = '\PrestaShop\PrestaShop\Core\Payment\PaymentOption';
         $option = new $class_name();
         $option->setCallToActionText($this->getTitle((int) $cart->id_lang))
-               ->setModuleName('payzen');
+            ->setModuleName('payzen');
 
         if (file_exists(_PS_MODULE_DIR_ . 'payzen/views/img/' . $this->logo)) {
             $option->setLogo($this->getLogo());
         }
-
 
         if (! $this->hasForm()) {
             $option->setAction($this->context->link->getModuleLink('payzen', 'redirect', array(), true));
@@ -473,8 +472,8 @@ abstract class AbstractPayzenPayment
                 // Build query to get product default category.
                 $sql = 'SELECT `id_category_default` FROM `' . _DB_PREFIX_ . 'product` WHERE `id_product` = ' .
                     (int) $product['id_product'];
-                $db_category = Db::getInstance()->getValue($sql);
 
+                $db_category = Db::getInstance()->getValue($sql);
                 $category = $oney_categories[$db_category];
             }
 
@@ -488,7 +487,7 @@ abstract class AbstractPayzenPayment
                 $product['id_product'],
                 $category,
                 number_format($product['rate'], 4, '.', '')
-            );
+           );
         }
     }
 
@@ -604,10 +603,39 @@ abstract class AbstractPayzenPayment
                     $country = $ps_country->iso_code;
                     break;
 
-                case (self::isColissimoRelay($carrier_id) && $delivery_address->company /* Relay point. */):
+                case (self::isSoColissimoLiberteRelay($carrier_id)):
+                    // Get relay point internal id.
+                    $sql = 'SELECT prid FROM `' . _DB_PREFIX_ . 'socolissimo_delivery_info`
+                            WHERE id_cart = ' . (int) $cart->id;
+
+                    $prid = Db::getInstance()->getValue($sql);
+                    if (! $prid) {
+                        break;
+                    }
+
+                    // Get relay point address.
+                    $sql = 'SELECT * FROM `' . _DB_PREFIX_ . 'so_retrait`
+                            WHERE id = ' . (int) $prid;
+
+                    $relaypoint_address = Db::getInstance()->getRow($sql);
+                    if (! $relaypoint_address) {
+                        break;
+                    }
+
+                    $address = $relaypoint_address['adresse1'] . (isset($relaypoint_address['adresse2']) ? ' ' . $relaypoint_address['adresse2'] : '');
+                    $address = $isOney34 ? $address : $relaypoint_address['libelle'] . ' ' . $address; // Relay point address.
+                    $relay_point_name = $isOney34 ? $relaypoint_address['libelle'] : null; // Relay point name.
+
+                    $city = $relaypoint_address['commune'];
+                    $zipcode = $relaypoint_address['code_postal'];
+                    $country = $payzen_request->get('ship_to_country');
+
+                    break;
+
+                case (self::isColissimoRelay($carrier_id) && $delivery_address->company):
                     $address = $delivery_address->address1 . ' ' . $delivery_address->address2;
                     $address = $isOney34 ? $address : $delivery_address->company . ' ' . $address; // Relay point address.
-                    $relay_point_name = $isOney34 ? $delivery_address->company: null; // Relay point name.
+                    $relay_point_name = $isOney34 ? $delivery_address->company : null; // Relay point name.
 
                     // Already set address.
                     $city = $payzen_request->get('ship_to_city');
@@ -635,7 +663,7 @@ abstract class AbstractPayzenPayment
                     $country = $payzen_request->get('ship_to_country');
                     break;
 
-                // Can implement more specific relay point carriers logic here.
+                    // Can implement more specific relay point carriers logic here.
 
                 default:
                     break;
@@ -713,7 +741,8 @@ abstract class AbstractPayzenPayment
     {
         return self::isTntRelayPoint($carrier_id) || self::isNewMondialRelay($carrier_id)
             || self::isMondialRelay($carrier_id) || self::isDpdFranceRelais($carrier_id)
-            || self::isColissimoRelay($carrier_id) || self::isChronoPostRelay($carrier_id);
+            || self::isColissimoRelay($carrier_id) || self::isChronoPostRelay($carrier_id)
+            || self::isSoColissimoLiberteRelay($carrier_id);
     }
 
     private static function isTntRelayPoint($carrier_id)
@@ -765,13 +794,27 @@ abstract class AbstractPayzenPayment
             return false;
         }
 
-        // SoColissimo is not selected as shipping method.
+        // SoColissimo is selected as shipping method.
         return (Configuration::get('SOCOLISSIMO_CARRIER_ID') == $carrier_id);
+    }
+
+    private static function isSoColissimoLiberteRelay($carrier_id)
+    {
+        // SoColissimo Liberté relay points not available.
+        if (! Configuration::get('SOLIBERTE_BPR_ID') && ! Configuration::get('SOLIBERTE_A2P_ID') &&
+            ! Configuration::get('SOLIBERTE_CIT_ID')) {
+                return false;
+        }
+
+        // SoColissimo Liberté is selected as shipping method.
+        return (Configuration::get('SOLIBERTE_BPR_ID') == $carrier_id)
+            || (Configuration::get('SOLIBERTE_A2P_ID') == $carrier_id)
+            || (Configuration::get('SOLIBERTE_CIT_ID') == $carrier_id);
     }
 
     private static function isChronoPostRelay($carrier_id)
     {
-        if (file_exists($fileName = _PS_MODULE_DIR_ . 'chronopost/chronopost.php')) {
+        if (file_exists($fileName = _PS_MODULE_DIR_ . 'chronopost' . DIRECTORY_SEPARATOR . 'chronopost.php')) {
             require_once($fileName);
 
             return Chronopost::isRelais($carrier_id);
@@ -782,13 +825,13 @@ abstract class AbstractPayzenPayment
 
     private function getChronopostRelayPointAddress($chronopostRelayId)
     {
-        include_once _PS_MODULE_DIR_ . 'chronopost/libraries/PointRelaisServiceWSService.php';
+        include_once _PS_MODULE_DIR_ . 'chronopost' . DIRECTORY_SEPARATOR . 'libraries'  . DIRECTORY_SEPARATOR . 'PointRelaisServiceWSService.php';
 
         // Fetch BT object
         $ws = new PointRelaisServiceWSService();
-
         $p = new rechercheBtAvecPFParIdChronopostA2Pas();
         $p->id = $chronopostRelayId;
+
         return $ws->rechercheBtAvecPFParIdChronopostA2Pas($p)->return;
     }
 
@@ -843,7 +886,7 @@ abstract class AbstractPayzenPayment
         return 'is' . ucfirst($this->name) . 'ValidAlias';
     }
 
-	protected static function getCcTypeImageSrc($card)
+    protected static function getCcTypeImageSrc($card)
     {
         return PayzenTools::getDefault('LOGO_URL') . strtolower($card) . '.png';
     }

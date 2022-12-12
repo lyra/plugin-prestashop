@@ -1,3 +1,8 @@
+1.15.6, 2022-12-12:
+- [oney] Compatibility with SoColissimo Liberté relay points.
+- Improve refund errors management.
+- Improve refund button display for PrestaShop 1.5.x.
+
 1.15.5, 2022-11-03:
 - [embedded] Bug fix: Fix embedded payment fields displaying on PrestaShop 1.6.x versions and older.
 - Minor fix.
