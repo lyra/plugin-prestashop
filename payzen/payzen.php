@@ -13,6 +13,7 @@ if (! defined('_PS_VERSION_')) {
 }
 
 require_once(_PS_MODULE_DIR_ . 'payzen/autoload.php');
+require_once(_PS_MODULE_DIR_ . 'payzen/classes/sdk-autoload.php');
 
 /**
  * Payment module main class.
@@ -32,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.15.6';
+        $this->version = '1.15.7';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -531,7 +532,7 @@ class Payzen extends PaymentModule
      */
     private function postProcess()
     {
-        $request = new PayzenRequest(); // New instance of PayzenRequest for parameters validation.
+        $request = new Lyranetwork\Payzen\Sdk\Form\Request(); // New instance of Lyranetwork\Payzen\Sdk\Form\Request for parameters validation.
 
         // Load and validate from request.
         foreach (PayzenTools::getAdminParameters() as $param) {
@@ -792,7 +793,7 @@ class Payzen extends PaymentModule
                         'es' => 'Pago con %s'
                     );
 
-                    $cards = PayzenApi::getSupportedCardTypes();
+                    $cards = Lyranetwork\Payzen\Sdk\Form\Api::getSupportedCardTypes();
 
                     // Add extra means of payment to supported payment means.
                     $extra_cards = @unserialize(Configuration::get('PAYZEN_EXTRA_PAYMENT_MEANS'));
@@ -844,7 +845,7 @@ class Payzen extends PaymentModule
 
                 $value = serialize($value);
             } elseif ($key === 'PAYZEN_EXTRA_PAYMENT_MEANS') {
-                $used_cards = array_keys(PayzenApi::getSupportedCardTypes());
+                $used_cards = array_keys(Lyranetwork\Payzen\Sdk\Form\Api::getSupportedCardTypes());
                 if (! is_array($value) || empty($value)) {
                     $value = array();
                 } else {
@@ -902,7 +903,7 @@ class Payzen extends PaymentModule
                 }
             }
 
-            // Validate with PayzenRequest.
+            // Validate with Lyranetwork\Payzen\Sdk\Form\Request.
             if ($name && ($name !== 'theme_config')) {
                 $values = is_array($value) ? $value : array($value); // To check multilingual fields.
                 $error = false;
@@ -1058,7 +1059,7 @@ class Payzen extends PaymentModule
                     // Current language or default if not supported.
                     $language = Language::getLanguage((int) $this->context->cart->id_lang);
                     $language_iso_code = Tools::strtolower($language['iso_code']);
-                    if (! PayzenApi::isSupportedLanguage($language_iso_code)) {
+                    if (! Lyranetwork\Payzen\Sdk\Form\Api::isSupportedLanguage($language_iso_code)) {
                         $language_iso_code = Configuration::get('PAYZEN_DEFAULT_LANGUAGE');
                     }
 
@@ -1545,7 +1546,7 @@ class Payzen extends PaymentModule
         foreach ($currencies as $currency) {
             if ($cart_currency->id == $currency['id_currency']) {
                 // Cart currency is allowed for this module.
-                return PayzenApi::findCurrencyByAlphaCode($cart_currency->iso_code) != null;
+                return Lyranetwork\Payzen\Sdk\Form\Api::findCurrencyByAlphaCode($cart_currency->iso_code) != null;
             }
         }
 
@@ -1912,7 +1913,7 @@ class Payzen extends PaymentModule
 
         // Get currency.
         $orderCurrency = new Currency((int) $order->id_currency);
-        $currency = PayzenApi::findCurrencyByAlphaCode($orderCurrency->iso_code);
+        $currency = Lyranetwork\Payzen\Sdk\Form\Api::findCurrencyByAlphaCode($orderCurrency->iso_code);
         $amount = Tools::ps_round($amount, $currency->getDecimals());
         $amountInCents = $currency->convertAmountToInteger($amount);
 
@@ -2007,16 +2008,16 @@ class Payzen extends PaymentModule
     {
         $amount = $currency->convertAmountToFloat($amountInCents, $currency->getDecimals());
         $successStatuses = array_merge(
-            PayzenApi::getSuccessStatuses(),
-            PayzenApi::getPendingStatuses()
+            Lyranetwork\Payzen\Sdk\Form\Api::getSuccessStatuses(),
+            Lyranetwork\Payzen\Sdk\Form\Api::getPendingStatuses()
         );
 
         $transStatus = $transaction['detailedStatus'];
         $uuid = $transaction['uuid'];
         $commentText = $this->getUserInfo();
 
-        /** @var PayzenRest $client */
-        $client = new PayzenRest(
+        /** @var Lyranetwork\Payzen\Sdk\Rest\Api $client */
+        $client = new Lyranetwork\Payzen\Sdk\Rest\Api(
             Configuration::get('PAYZEN_REST_SERVER_URL'),
             Configuration::get('PAYZEN_SITE_ID'),
             $this->getPrivateKey()
@@ -2086,7 +2087,7 @@ class Payzen extends PaymentModule
             }
 
             $responseData = PayzenTools::convertRestResult($refundPaymentResponse['answer']);
-            $response = new PayzenResponse($responseData, null, null, null);
+            $response = new Lyranetwork\Payzen\Sdk\Form\Response($responseData, null, null, null);
 
             // Save refund transaction in PrestaShop.
             $refundedAmount += $real_refund_amount;
@@ -2130,7 +2131,7 @@ class Payzen extends PaymentModule
 
                 // Total refund, update order status as well.
                 $responseData = PayzenTools::convertRestResult($cancelPaymentResponse['answer']);
-                $response = new PayzenResponse($responseData, null, null, null);
+                $response = new Lyranetwork\Payzen\Sdk\Form\Response($responseData, null, null, null);
 
                 // Save refund transaction in PrestaShop.
                 $this->savePayment($order, $response, true);
@@ -2167,7 +2168,7 @@ class Payzen extends PaymentModule
                 );
 
                 $responseData = PayzenTools::convertRestResult($updatePaymentResponse['answer']);
-                $response = new PayzenResponse($responseData, null, null, null);
+                $response = new Lyranetwork\Payzen\Sdk\Form\Response($responseData, null, null, null);
 
                 // Save refund transaction in PrestaShop.
                 $this->createMessage($order, $response);
@@ -2211,8 +2212,8 @@ class Payzen extends PaymentModule
      */
     private function getPaymentDetails($order)
     {
-        /** @var PayzenRest $client */
-        $client = new PayzenRest(
+        /** @var Lyranetwork\Payzen\Sdk\Rest\Api $client */
+        $client = new Lyranetwork\Payzen\Sdk\Rest\Api(
             Configuration::get('PAYZEN_REST_SERVER_URL'),
             Configuration::get('PAYZEN_SITE_ID'),
             $this->getPrivateKey()
@@ -2287,7 +2288,7 @@ class Payzen extends PaymentModule
      *
      * @param Cart $cart
      * @param int $state
-     * @param PayzenResponse $response
+     * @param Lyranetwork\Payzen\Sdk\Form\Response $response
      * @return Order
      */
     public function saveOrder($cart, $state, $response)
@@ -2297,7 +2298,7 @@ class Payzen extends PaymentModule
         // Retrieve customer from cart.
         $customer = new Customer((int) $cart->id_customer);
 
-        $currency = PayzenApi::findCurrency($response->get('currency'));
+        $currency = Lyranetwork\Payzen\Sdk\Form\Api::findCurrency($response->get('currency'));
         $decimals = $currency->getDecimals();
 
         // PrestaShop id_currency from currency iso num code.
@@ -2373,7 +2374,7 @@ class Payzen extends PaymentModule
      *
      * @param Order $order
      * @param int $order_state
-     * @param PayzenResponse $response
+     * @param Lyranetwork\Payzen\Sdk\Form\Response $response
      */
     public function setOrderState($order, $order_state, $response)
     {
@@ -2392,7 +2393,7 @@ class Payzen extends PaymentModule
      * Create private message to information about order payment.
      *
      * @param Order $order
-     * @param PayzenResponse $response
+     * @param Lyranetwork\Payzen\Sdk\Form\Response $response
      */
     public function createMessage($order, $response)
     {
@@ -2427,7 +2428,7 @@ class Payzen extends PaymentModule
         // Authorized amount.
         $msg_authorized_amount = '';
         if ($authorized_amount = $response->get('authorized_amount')) {
-            $currency = PayzenApi::findCurrencyByNumCode($response->get('currency'));
+            $currency = Lyranetwork\Payzen\Sdk\Form\Api::findCurrencyByNumCode($response->get('currency'));
             $msg_authorized_amount = "\n" . $this->l('Authorized amount: ') . $currency->convertAmountToFloat($authorized_amount) . ' ' . $currency->getAlpha3();
         }
 
@@ -2500,13 +2501,13 @@ class Payzen extends PaymentModule
      * Save payment information.
      *
      * @param Order $order
-     * @param PayzenResponse $response
+     * @param Lyranetwork\Payzen\Sdk\Form\Response $response
      */
     public function savePayment($order, $response, $force_stop_payment_creation = false)
     {
         $payments = $order->getOrderPayments();
 
-        $currency = PayzenApi::findCurrency($response->get('currency'));
+        $currency = Lyranetwork\Payzen\Sdk\Form\Api::findCurrency($response->get('currency'));
         $decimals = $currency->getDecimals();
 
         // Delete payments created by default and cancelled payments.
@@ -2822,7 +2823,7 @@ class Payzen extends PaymentModule
             );
 
             // Perform REST request to check identifier.
-            $client = new PayzenRest(
+            $client = new Lyranetwork\Payzen\Sdk\Rest\Api(
                 Configuration::get('PAYZEN_REST_SERVER_URL'),
                 Configuration::get('PAYZEN_SITE_ID'),
                 $this->getPrivateKey()
@@ -2942,8 +2943,8 @@ class Payzen extends PaymentModule
     public static function filterTransactions($trs)
     {
         $successful_states = array_merge(
-            PayzenApi::getSuccessStatuses(),
-            PayzenApi::getPendingStatuses()
+            Lyranetwork\Payzen\Sdk\Form\Api::getSuccessStatuses(),
+            Lyranetwork\Payzen\Sdk\Form\Api::getPendingStatuses()
         );
 
         return $trs->{'operation_type'} === 'DEBIT' && in_array($trs->{'trans_status'}, $successful_states);

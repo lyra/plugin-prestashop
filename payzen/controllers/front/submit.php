@@ -11,6 +11,8 @@
 /**
  * This controller manages return from payment gateway.
  */
+use Lyranetwork\Payzen\Sdk\Form\Response as PayzenResponse;
+
 class PayzenSubmitModuleFrontController extends ModuleFrontController
 {
     public $ssl = true;

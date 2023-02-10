@@ -12,6 +12,9 @@ if (! defined('_PS_VERSION_')) {
     exit;
 }
 
+use Lyranetwork\Payzen\Sdk\Form\Api as PayzenApi;
+use Lyranetwork\Payzen\Sdk\Rest\Api as PayzenRest;
+
 class PayzenStandardPayment extends AbstractPayzenPayment
 {
     protected $prefix = 'PAYZEN_STD_';

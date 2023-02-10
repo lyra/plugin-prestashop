@@ -12,6 +12,8 @@ if (! defined('_PS_VERSION_')) {
     exit;
 }
 
+use Lyranetwork\Payzen\Sdk\Form\Api as PayzenApi;
+
 class PayzenOtherPayment extends AbstractPayzenPayment
 {
     protected $prefix = 'PAYZEN_OTHER_';

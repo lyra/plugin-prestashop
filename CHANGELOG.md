@@ -1,3 +1,7 @@
+1.15.7, 2023-02-10:
+- Added field for online module documentation.
+- Added new transaction statuses PENDING and PARTIALLY_AUTHORISED.
+
 1.15.6, 2022-12-12:
 - [oney] Compatibility with SoColissimo Liberté relay points.
 - Improve refund errors management.

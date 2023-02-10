@@ -75,8 +75,8 @@
 
       {if !empty($payzen_doc_files)}
         <div style="padding: 5px;"><span style="color: red; font-weight: bold; text-transform: uppercase;">{l s='Click to view the module configuration documentation :' mod='payzen'}</span>
-        {foreach from=$payzen_doc_files key="file" item="lang"}
-          <a style="margin-left: 10px; font-weight: bold; text-transform: uppercase;" href="../modules/payzen/installation_doc/{$file|escape:'html':'UTF-8'}" target="_blank">{$lang|escape:'html':'UTF-8'}</a>
+        {foreach from=$payzen_doc_files key="lang" item="url"}
+          <a style="margin-left: 10px; font-weight: bold; text-transform: uppercase;" href="{$url|escape:'html':'UTF-8'}" target="_blank">{$lang|escape:'html':'UTF-8'}</a>
         {/foreach}
         </div>
       {/if}

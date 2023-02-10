@@ -8,6 +8,8 @@
  * @license   https://opensource.org/licenses/afl-3.0.php Academic Free License (AFL 3.0)
  */
 
+use Lyranetwork\Payzen\Sdk\Form\Response as PayzenResponse;
+
 class PayzenRestModuleFrontController extends ModuleFrontController
 {
     public $ssl = true;

@@ -12,6 +12,9 @@ if (! defined('_PS_VERSION_')) {
     exit;
 }
 
+use Lyranetwork\Payzen\Sdk\Form\Api as PayzenApi;
+use Lyranetwork\Payzen\Sdk\Form\Request as PayzenRequest;
+
 abstract class AbstractPayzenPayment
 {
     const PAYZEN_CART_MAX_NB_PRODUCTS = 85;
