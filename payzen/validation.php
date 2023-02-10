@@ -11,6 +11,8 @@
 /**
  * Instant payment notification file. Wait for payment gateway confirmation, then validate order.
  */
+use Lyranetwork\Payzen\Sdk\Form\Api as PayzenApi;
+use Lyranetwork\Payzen\Sdk\Form\Response as PayzenResponse;
 
 require_once dirname(dirname(dirname(__FILE__))) . '/config/config.inc.php';
 require_once dirname(__FILE__) . '/payzen.php';

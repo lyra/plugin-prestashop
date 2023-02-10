@@ -12,6 +12,8 @@ if (! defined('_PS_VERSION_')) {
     exit;
 }
 
+use Lyranetwork\Payzen\Sdk\Form\Api as PayzenApi;
+
 /**
  * Class that renders payment module administration interface.
  */
@@ -56,9 +58,6 @@ class PayzenHelperForm
         );
 
         // Get documentation links.
-        $doc_files = array();
-        $filenames = glob(_PS_MODULE_DIR_ . 'payzen/installation_doc/' . PayzenTools::getDocPattern());
-
         $doc_languages = array(
             'fr' => 'Français',
             'en' => 'English',
@@ -67,11 +66,8 @@ class PayzenHelperForm
             // Complete when other languages are managed.
         );
 
-        foreach ($filenames as $filename) {
-            $base_filename = basename($filename, '.pdf');
-            $lang = Tools::substr($base_filename, -2); // Extract language code.
-
-            $doc_files[$base_filename . '.pdf'] = $doc_languages[$lang];
+        foreach (PayzenApi::getOnlineDocUri() as $lang => $docUri) {
+            $doc_files[$doc_languages[$lang]] = $docUri . 'prestashop/sitemap.html';
         }
 
         $placeholders = self::getArrayConfig('PAYZEN_STD_REST_PLACEHLDR');
