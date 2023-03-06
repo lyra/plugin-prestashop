@@ -327,7 +327,7 @@ abstract class AbstractPayzenPayment
         $request->set('cust_id', $cust->id);
 
         $cust_title = new Gender((int) $cust->id_gender);
-        $request->set('cust_title', $cust_title->name[$this->context->language->id]);
+        $request->set('cust_title', $cust_title->name ? $cust_title->name[$this->context->language->id] : "");
 
         $phone = $billing_address->phone ? $billing_address->phone : $billing_address->phone_mobile;
         $cell_phone = $billing_address->phone_mobile ? $billing_address->phone_mobile : $billing_address->phone;

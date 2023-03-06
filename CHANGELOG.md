@@ -1,3 +1,6 @@
+1.15.8, 2023-03-06:
+- Compatibility with PrestaShop 8.x and PHP 8.
+
 1.15.7, 2023-02-10:
 - Added field for online module documentation.
 - Added new transaction statuses PENDING and PARTIALLY_AUTHORISED.

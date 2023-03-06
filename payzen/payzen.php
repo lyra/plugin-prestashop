@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.15.7';
+        $this->version = '1.15.8';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -93,14 +93,27 @@ class Payzen extends PaymentModule
             }
         }
 
+        if (version_compare(_PS_VERSION_, '8.0', '>=')) {
+            if (! $this->registerHook('displayHeader') || ! $this->registerHook('displayPaymentReturn')) {
+                $this->logger->logWarning('One or more hooks necessary for the module could not be saved.');
+                $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
+
+                $installError = true;
+            }
+        } elseif (! $this->registerHook('header') || ! $this->registerHook('paymentReturn') || ! $this->registerHook('adminOrder')) { // Deprecated in PS 8.x.
+            $this->logger->logWarning('One or more hooks necessary for the module could not be saved.');
+            $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
+
+            $installError = true;
+        }
+
         // Install hooks.
-        if (! $this->registerHook('header') || ! $this->registerHook('paymentReturn')
-            || ! $this->registerHook('adminOrder') || ! $this->registerHook('actionObjectOrderSlipAddBefore')
-            || ! $this->registerHook('actionProductCancel')
+        if (! $this->registerHook('actionObjectOrderSlipAddBefore')
             || ! $this->registerHook('actionOrderStatusUpdate')
             || ! $this->registerHook('actionOrderStatusPostUpdate')
             || ! $this->registerHook('actionAdminCarrierWizardControllerSaveBefore')
-            || ! $this->registerHook('actionAdminCarriersOptionsModifier')) {
+            || ! $this->registerHook('actionAdminCarriersOptionsModifier')
+            || ! $this->registerHook('actionAdminControllerSetMedia')) {
             $this->logger->logWarning('One or more hooks necessary for the module could not be saved.');
             $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
 
@@ -588,9 +601,12 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
-                        if (! is_numeric($option['count'])
-                                || ! is_numeric($option['period'])
-                                || ($option['first'] && (! is_numeric($option['first']) || $option['first'] < 0 || $option['first'] > 100))) {
+                        if (($option['min_amount'] && (! is_numeric($option['min_amount']) || $option['min_amount'] < 0))
+                            || ($option['max_amount'] && (! is_numeric($option['max_amount']) || $option['max_amount'] < 0))
+                            || ($option['min_amount'] && $option['max_amount'] && $option['min_amount'] > $option['max_amount'])
+                            || ! is_numeric($option['count'])
+                            || ! is_numeric($option['period'])
+                            || ($option['first'] && (! is_numeric($option['first']) || $option['first'] < 0 || $option['first'] > 100))) {
                             unset($value[$id]); // Error, do not save this option.
                             $error = true;
                         } else {
@@ -713,12 +729,12 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
-                        if ($option['min_amount'] && ! is_numeric($option['min_amount']) || $option['min_amount'] < 0) {
+                        if ($option['min_amount'] && (! is_numeric($option['min_amount']) || $option['min_amount'] < 0)) {
                             $value[$id]['min_amount'] = ''; // Error, reset incorrect value.
                             $error = true;
                         }
 
-                        if ($option['max_amount'] && ! is_numeric($option['max_amount']) || $option['max_amount'] < 0) {
+                        if ($option['max_amount'] && (! is_numeric($option['max_amount']) || $option['max_amount'] < 0)) {
                             $value[$id]['max_amount'] = ''; // Error, reset incorrect value.
                             $error = true;
                         }
@@ -753,12 +769,12 @@ class Payzen extends PaymentModule
                             $value[$id]['enabled'] = 'False';
                         }
 
-                        if ($option['min_amount'] && ! is_numeric($option['min_amount']) || $option['min_amount'] < 0) {
+                        if ($option['min_amount'] && (! is_numeric($option['min_amount']) || $option['min_amount'] < 0)) {
                             $value[$id]['min_amount'] = ''; // Error, reset incorrect value.
                             $error = true;
                         }
 
-                        if ($option['max_amount'] && ! is_numeric($option['max_amount']) || $option['max_amount'] < 0) {
+                        if ($option['max_amount'] && (! is_numeric($option['max_amount']) || $option['max_amount'] < 0)) {
                             $value[$id]['max_amount'] = ''; // Error, reset incorrect value.
                             $error = true;
                         }
@@ -811,11 +827,9 @@ class Payzen extends PaymentModule
                             $used_cards[] = $option['code'];
                         }
 
-                        if (($option['min_amount'] && ! is_numeric($option['min_amount']))
-                            || $option['min_amount'] < 0
-                            || ($option['max_amount'] && ! is_numeric($option['max_amount']))
-                            || $option['max_amount'] < 0
-                            || ($option['min_amount'] && ($option['max_amount'] && $option['min_amount'] > $option['max_amount']))
+                        if (($option['min_amount'] && (! is_numeric($option['min_amount']) || $option['min_amount'] < 0))
+                            || ($option['max_amount'] && (! is_numeric($option['max_amount']) || $option['max_amount'] < 0))
+                            || ($option['min_amount'] && $option['max_amount'] && $option['min_amount'] > $option['max_amount'])
                             || ($option['capture'] && ! is_numeric($option['capture']))) {
                             unset($value[$id]); // Error, do not save this option.
                             $error = true;
@@ -1127,6 +1141,17 @@ class Payzen extends PaymentModule
 
             return $html;
         }
+    }
+
+    /**
+     * Payment method selection page header for PrestaShop 8.
+     *
+     * @param array $params
+     * @return string|void
+     */
+    public function hookDisplayHeader($params)
+    {
+        return $this->hookHeader($params);
     }
 
     protected function useMobileTheme()
@@ -1596,6 +1621,16 @@ class Payzen extends PaymentModule
         $this->context->smarty->assign($array);
 
         return $this->display(__FILE__, 'payment_return.tpl');
+    }
+
+    /**
+     * Manage payement gateway response.
+     *
+     * @param array $params
+     */
+    public function hookDisplayPaymentReturn($params)
+    {
+        return $this->hookPaymentReturn($params);
     }
 
     /**
@@ -2283,6 +2318,11 @@ class Payzen extends PaymentModule
         }
     }
 
+    public function hookActionAdminControllerSetMedia()
+    {
+        $this->addJs('support.js');
+    }
+
     /**
      * Save order and transaction info.
      *
@@ -2399,7 +2439,7 @@ class Payzen extends PaymentModule
     {
         $msg_brand_choice = '';
         if ($response->get('brand_management')) {
-            $brand_info = Tools::jsonDecode($response->get('brand_management'));
+            $brand_info = $this->jsonDecode($response->get('brand_management'));
             $msg_brand_choice .= "\n";
 
             if (isset($brand_info->userChoice) && $brand_info->userChoice) {
@@ -2459,6 +2499,15 @@ class Payzen extends PaymentModule
 
         // Mark message as read to archive it.
         Message::markAsReaded($msg->id, 0);
+    }
+
+    private function jsonDecode($parameter)
+    {
+        if (method_exists('Tools', 'jsonDecode')) {
+            Tools::jsonDecode($parameter);
+        } else {
+            json_decode($parameter, false, 512, 0);
+        }
     }
 
     private function getThreedsStatus($status)
@@ -2556,7 +2605,7 @@ class Payzen extends PaymentModule
         $option_id = ($response->getExtInfo('option_id') ? $response->getExtInfo('option_id') : '');
 
         if ($response->get('card_brand') === 'MULTI') {
-            $sequences = Tools::jsonDecode($response->get('payment_seq'));
+            $sequences = $this->jsonDecode($response->get('payment_seq'));
             $transactions = array_filter($sequences->transactions, 'Payzen::filterTransactions');
 
             $last_trs = end($transactions); // Last transaction.

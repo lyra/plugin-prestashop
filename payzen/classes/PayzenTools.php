@@ -31,9 +31,9 @@ class PayzenTools
     private static $SIGN_ALGO = 'SHA-256';
     private static $LANGUAGE = 'fr';
 
-    private static $CMS_IDENTIFIER = 'PrestaShop_1.5-1.7';
+    private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.15.7';
+    private static $PLUGIN_VERSION = '1.15.8';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
