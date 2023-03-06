@@ -51,6 +51,9 @@
         // For Prestashop >= 1.7.7.0.
         $('div#historyTabContent').parent().append(payzenContactSupportDetails);
 
+        // For PrestaShop 1.5.
+        $('form#formAddPayment').parent().append(payzenContactSupportDetails);
+
         $('contact-support').on('sendmail', function(e) {
             var data = e.originalEvent.detail;
             data.payzen_mail_origine = 'order';
