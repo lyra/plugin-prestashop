@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.15.8';
+    private static $PLUGIN_VERSION = '1.15.9';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -940,7 +940,7 @@ class PayzenTools
         Context::getContext()->customer = new Customer((int) $cart->id_customer);
         Context::getContext()->customer->logged = 1;
 
-        Context::getContext()->cart = $cart = new Cart((int) $cart->id); // Reload cart to take into nto account customer group.
+        Context::getContext()->cart = $cart = new Cart((int) $cart->id); // Reload cart to take customer group into account.
 
         $address = new Address((int) $cart->id_address_invoice);
         Context::getContext()->country = new Country((int) $address->id_country);
