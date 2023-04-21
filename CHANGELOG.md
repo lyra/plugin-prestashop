@@ -1,3 +1,6 @@
+1.15.9, 2023-04-21:
+- Bug fix: Fix error related to products special price in iframe payment mode.
+
 1.15.8, 2023-03-06:
 - Compatibility with PrestaShop 8.x and PHP 8.
 

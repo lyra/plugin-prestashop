@@ -76,14 +76,22 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
             Configuration::get('PAYZEN_SIGN_ALGO')
         );
 
-        $cart_id = $this->currentCart->id;
-
         // Check the authenticity of the request.
         if (! $response->isAuthentified()) {
             $ip = Tools::getRemoteAddr();
             $this->logger->logError("{$ip} tries to access module/payzen/submit page without valid signature with parameters: " . print_r($_REQUEST, true));
             $this->logger->logError('Signature algorithm selected in module settings must be the same as one selected in gateway Back Office.');
 
+            Tools::redirectLink('index.php');
+        }
+
+        $cart_id = $this->currentCart->id;
+
+        // Rebuild context.
+        try {
+            PayzenTools::rebuildContext($this->currentCart);
+        } catch (Exception $e) {
+            $this->logger->logError("Error while rebuilding context for cart #{$cart_id}: {$e->getMessage()}.");
             Tools::redirectLink('index.php');
         }
 
