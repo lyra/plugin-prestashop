@@ -1,3 +1,6 @@
+1.15.10, 2023-06-02:
+- Bug fix: Fix error related to split payment.
+
 1.15.9, 2023-04-21:
 - Bug fix: Fix error related to products special price in iframe payment mode.
 

@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.15.9';
+        $this->version = '1.15.10';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -2504,9 +2504,9 @@ class Payzen extends PaymentModule
     private function jsonDecode($parameter)
     {
         if (method_exists('Tools', 'jsonDecode')) {
-            Tools::jsonDecode($parameter);
+            return Tools::jsonDecode($parameter);
         } else {
-            json_decode($parameter, false, 512, 0);
+            return json_decode($parameter, false, 512, 0);
         }
     }
 
