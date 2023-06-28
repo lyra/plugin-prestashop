@@ -1,3 +1,6 @@
+1.15.11, 2023-06-28:
+- Bug fix: Fix refund on of an order with a discount voucher.
+
 1.15.10, 2023-06-02:
 - Bug fix: Fix error related to split payment.
 
