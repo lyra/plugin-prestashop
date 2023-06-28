@@ -78,6 +78,23 @@
         }
     });
 
+    // Hide "Amount of you choosing" button to avoid confusion.
+    $(document).on('click', '#doPartialRefundPayzen', function() {
+        if ($('#doPartialRefundPayzen').is(':checked')) {
+            $("#lab_refund_3").parent('div').hide();
+        } else {
+            $("#lab_refund_3").parent('div').show();
+        }
+    });
+
+    $(document).on('click', '#doStandardRefundPayzen', function() {
+        if ($('#doStandardRefundPayzen').is(':checked')) {
+            $("#lab_refund_total_3").parent('div').hide();
+        } else {
+            $("#lab_refund_total_3").parent('div').show();
+        }
+    });
+
     // Do not allow refund if no credit slip is generated or if a voucher is generated.
     function toggleStandardCheckboxDisplay() {
         if ($('#generateCreditSlip').is(':checked')

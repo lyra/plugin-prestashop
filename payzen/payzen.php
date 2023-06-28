@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.15.10';
+        $this->version = '1.15.11';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1878,8 +1878,18 @@ class Payzen extends PaymentModule
 
         // Case of order with discount.
         // Check if the merchant choose refund option: "Product(s) price, excluding amount of initial voucher".
-        if ($orderSlipObject->order_slip_type && $orderSlipObject->order_slip_type == 1) {
-            $amount-= $order->total_discounts;
+        if (version_compare(_PS_VERSION_, '1.7.7', '<')) {
+            $order_slip_type = Tools::isSubmit('refund_voucher_off') ? Tools::getValue('refund_voucher_off') : 0;
+        } else {
+            $cancel_product = Tools::isSubmit('cancel_product') ? Tools::getValue('cancel_product') : null;
+            $order_slip_type = $cancel_product && isset($cancel_product['voucher_refund_type']) ? $cancel_product['voucher_refund_type'] : 0;
+        }
+
+        $update_order_slip = false;
+
+        if ($order_slip_type == 1) {
+            $amount -= $order->total_discounts;
+            $update_order_slip = true;
         }
 
         // If any error during WS refund, redirect to order details to avoid creation of a credit and displaying success message.
@@ -1924,6 +1934,13 @@ class Payzen extends PaymentModule
             // Display warning to customer if any for Prestashop versions >= 1.7.7.
             $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
             unset($this->context->cookie->payzenRefundWarn);
+        }
+
+        if ($update_order_slip) {
+            $this->logger->logWarning("Updated order slip for order #{$order_id}.");
+            $orderSlipObject->order_slip_type = 1;
+            $orderSlipObject->amount = $amount;
+            $orderSlipObject->total_products_tax_incl -= $order->total_discounts;
         }
 
         return true;
