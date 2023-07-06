@@ -100,3 +100,7 @@ button.kr-popin-button {
     text-decoration: underline !important;
     cursor: pointer !important;
 }
+
+.kr-smart-form[kr-single-payment-button] {
+    max-width: 100%;
+}

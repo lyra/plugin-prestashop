@@ -82,6 +82,11 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
         $entry_mode = $this->getEntryMode();
         $vars['payzen_std_card_data_mode'] = $entry_mode;
+        $vars['payzen_std_rest_popin_mode'] = Configuration::get('PAYZEN_STD_REST_POPIN_MODE');
+        $vars['payzen_std_rest_theme'] = Configuration::get('PAYZEN_STD_REST_THEME');
+        $vars['payzen_std_smartform_compact_mode'] = Configuration::get('PAYZEN_STD_SF_COMPACT_MODE');
+        $vars['payzen_std_smartform_payment_means_grouping_threshold'] = Configuration::get('PAYZEN_STD_SF_THRESHOLD') ?
+            Configuration::get('PAYZEN_STD_SMARTFORM_PAYMENT_MEANS_GROUPING_THRESHOLD') : 'False';
 
         // Payment by identifier.
         $vars['payzen_is_valid_std_identifier'] = false;
@@ -280,12 +285,13 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                     'deliveryCompanyName' => $this->getEscapedVar($request, 'ship_to_delivery_company_name'),
                     'shippingMethod' => $this->getEscapedVar($request, 'ship_to_type'),
                     'shippingSpeed' => $this->getEscapedVar($request, 'ship_to_speed')
+                ),
+                'shoppingCart' => array(
+                    'cartItemInfo' => $this->getCartData($request)
                 )
             ),
             'transactionOptions' => array(
                 'cardOptions' => array(
-                    'captureDelay' => $this->getEscapedVar($request, 'capture_delay'),
-                    'manualValidation' => ($this->getEscapedVar($request, 'validation_mode') === '1') ? 'YES' : 'NO',
                     'paymentSource' => 'EC'
                 )
             ),
@@ -298,9 +304,22 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             )
         );
 
+        $validationMode = Configuration::get('PAYZEN_STD_VALIDATION');
+        if ($validationMode !== "") {
+            $validationMode = ($validationMode === '-1') ? Configuration::get('PAYZEN_VALIDATION_MODE') : $validationMode;
+
+            if ($validationMode !== "") {
+                $params['transactionOptions']['cardOptions']['manualValidation'] = ($validationMode === '1') ? 'YES' : 'NO';
+            }
+        }
+
         // Set Number of attempts in case of rejected payment.
         if (Configuration::get($this->prefix . 'REST_ATTEMPTS') !== null) {
             $params['transactionOptions']['cardOptions']['retry'] = Configuration::get($this->prefix . 'REST_ATTEMPTS');
+        }
+
+        if ($this->getEntryMode() === PayzenTools::MODE_EMBEDDED) {
+            $params['transactionOptions']['cardOptions']['captureDelay'] = $this->getEscapedVar($request, 'capture_delay');
         }
 
         if ($use_identifier) {
@@ -314,6 +333,11 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         }
 
         $params['formAction'] = $this->getEscapedVar($request, 'page_action');
+
+        if ($this->isSmartform()) {
+            // Filter payment means when creating the payment token.
+            $params['paymentMethods'] = $this->getPaymentMeansForSmartform($cart);
+        }
 
         $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
         $key = $test_mode ? Configuration::get('PAYZEN_PRIVKEY_TEST') : Configuration::get('PAYZEN_PRIVKEY_PROD');
@@ -355,6 +379,30 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         return $value;
     }
 
+    private function getCartData($request)
+    {
+        $nbProducts = $this->getEscapedVar($request, "nb_products");
+        if (! $nbProducts) {
+            return array();
+        }
+
+        $products = array();
+        for($index = 0; $index < $nbProducts; ++$index) {
+            $product = array(
+                "productLabel" => $this->getEscapedVar($request, "product_label" . $index),
+                "productType" => $this->getEscapedVar($request, "product_type" . $index),
+                "productRef" => $this->getEscapedVar($request, "product_ref" . $index),
+                "productQty" => $this->getEscapedVar($request, "product_qty" . $index),
+                "productAmount" => $this->getEscapedVar($request, "product_amount" . $index),
+                "productVat" => $this->getEscapedVar($request, "product_vat" . $index)
+            );
+
+            array_push($products, $product);
+        }
+
+        return $products;
+    }
+
     public function hasForm()
     {
         if ($this->getEntryMode() === PayzenTools::MODE_FORM) {
@@ -382,10 +430,32 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
         $embedded = array(
             PayzenTools::MODE_EMBEDDED,
-            PayzenTools::MODE_POPIN
+            PayzenTools::MODE_SMARTFORM,
+            PayzenTools::MODE_SMARTFORM_EXT_WITH_LOGOS,
+            PayzenTools::MODE_SMARTFORM_EXT_WITHOUT_LOGOS
         );
 
         return in_array($this->getEntryMode(), $embedded);
+    }
+
+    /**
+     * Check if the Smartform payment fields option is choosen.
+     *
+     * @return boolean
+     */
+    public function isSmartform()
+    {
+        if ($this->isFromBackend()) {
+            return false;
+        }
+
+        $smartform = array(
+            PayzenTools::MODE_SMARTFORM,
+            PayzenTools::MODE_SMARTFORM_EXT_WITH_LOGOS,
+            PayzenTools::MODE_SMARTFORM_EXT_WITHOUT_LOGOS
+        );
+
+        return in_array($this->getEntryMode(), $smartform);
     }
 
     public function isOneClickActive()
@@ -395,5 +465,36 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         }
 
         return Configuration::get($this->prefix . '1_CLICK_PAYMENT') === 'True';
+    }
+
+    private function getPaymentMeansForSmartform($cart)
+    {
+        $paymentCards = Configuration::get('PAYZEN_STD_PAYMENT_CARDS');
+
+        // If "ALL" is selected, let the gateway manage the payment means to display.
+        if (empty($paymentCards)) {
+            return array();
+        }
+
+        // Get standard payments means.
+        $stdPaymentMeans = explode(';', $paymentCards);
+
+        // Get other payment means that are embedded.
+        $otherEmbeddedPaymentMeans = array();
+
+        if (Configuration::get('PAYZEN_OTHER_ENABLED') === 'True') {
+            $otherPaymentMeans = @unserialize(Configuration::get('PAYZEN_OTHER_PAYMENT_MEANS'));
+            $amount = $cart->getOrderTotal();
+            foreach ($otherPaymentMeans as $key => $option) {
+                if (isset($option['embedded']) && ($option['embedded'] === 'True')
+                    && ! (! empty($option['min_amount']) && $option['min_amount'] != 0 && $amount < $option['min_amount'])
+                    && ! (! empty($option['max_amount']) && $option['max_amount'] != 0 && $amount > $option['max_amount'])) {
+                        array_push($otherEmbeddedPaymentMeans, $option['code']);
+                }
+            }
+        }
+
+        // Merge standard and other payment means.
+        return array_merge($stdPaymentMeans, $otherEmbeddedPaymentMeans);
     }
 }

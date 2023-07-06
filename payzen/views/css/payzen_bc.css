@@ -99,6 +99,10 @@ label.payzen_label {
 }
 
 .checker, .checker+label {
-  display: inline-block;
-  vertical-align: middle;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.kr-smart-form[kr-single-payment-button] {
+    max-width: 100%;
 }

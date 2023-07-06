@@ -13,7 +13,7 @@
 
 {if {$payzen_ffin_options|@count} == 0}
   <div class="payment_module payzen {$payzen_tag|escape:'html':'UTF-8'}">
-    <a href="javascript: $('#payzen_franfinance').submit();" title="{l s='Click here to pay with FullCB' mod='payzen'}">
+    <a href="javascript: $('#payzen_franfinance').submit();" title="{l s='Click here to pay with FranFinance' mod='payzen'}">
       <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
 
       <form action="{$link->getModuleLink('payzen', 'redirect', array(), true)|escape:'html':'UTF-8'}" method="post" id="payzen_franfinance">

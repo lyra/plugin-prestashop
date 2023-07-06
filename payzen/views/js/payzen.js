@@ -49,6 +49,18 @@ function payzenAddOneyOption(first, suffix) {
     $(rowTpl).insertBefore('#payzen_oney' + suffix + '_option_add');
 }
 
+function payzenOneyOptionChanged(key, suffix) {
+    var type = $('#PAYZEN_ONEY' + suffix + '_OPTIONS_' + key + '_card_type').val();
+
+    if (type === 'ONEY_PAYLATER') {
+        $('#PAYZEN_ONEY' + suffix + '_OPTIONS_' + key + '_count').css('opacity', '0.5');;
+        $('#PAYZEN_ONEY' + suffix + '_OPTIONS_' + key + '_count').attr('disabled', 'disabled');
+    } else {
+        $('#PAYZEN_ONEY' + suffix + '_OPTIONS_' + key + '_count').css('opacity', '1');
+        $('#PAYZEN_ONEY' + suffix + '_OPTIONS_' + key + '_count').removeAttr('disabled');
+    }
+}
+
 function payzenDeleteOneyOption(key, suffix) {
     $('#payzen_oney' + suffix + '_option_' + key).remove();
 

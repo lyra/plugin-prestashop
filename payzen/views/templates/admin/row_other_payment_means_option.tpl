@@ -85,10 +85,12 @@
         name="PAYZEN_OTHER_PAYMENT_MEANS[{$key|escape:'html':'UTF-8'}][capture]"
         value="{$option.capture|default:''|escape:'html':'UTF-8'}"
         style="width: 50px;"
-        type="text">
+        type="text"
+        {if ($PAYZEN_STD_CARD_DATA_MODE === '7' || $PAYZEN_STD_CARD_DATA_MODE === '8' || $PAYZEN_STD_CARD_DATA_MODE === '9') && isset($option.embedded) && $option.embedded === 'True'} disabled {/if}>
   </td>
   <td>
-    <select id="PAYZEN_OTHER_PAYMENT_MEANS_{$key|escape:'html':'UTF-8'}_validation" name="PAYZEN_OTHER_PAYMENT_MEANS[{$key|escape:'html':'UTF-8'}][validation]" style="width: 165px;">
+    <select id="PAYZEN_OTHER_PAYMENT_MEANS_{$key|escape:'html':'UTF-8'}_validation" name="PAYZEN_OTHER_PAYMENT_MEANS[{$key|escape:'html':'UTF-8'}][validation]" style="width: 165px;"
+        {if ($PAYZEN_STD_CARD_DATA_MODE === '7' || $PAYZEN_STD_CARD_DATA_MODE === '8' || $PAYZEN_STD_CARD_DATA_MODE === '9') && isset($option.embedded) && $option.embedded === 'True'} disabled {/if}>
         <option value="-1"{if isset($option.validation) && $option.validation === '-1'} selected="selected"{/if}>{l s='Module general configuration' mod='payzen'}</option>
         {foreach from=$validation_mode_options key="validation_key" item="validation_option"}
             <option value="{$validation_key|escape:'html':'UTF-8'}"{if isset($option.validation) && $option.validation === (string)$validation_key} selected="selected"{/if}>{$validation_option|escape:'html':'UTF-8'}</option>
@@ -101,6 +103,15 @@
         type="checkbox"
         {if isset($option.cart) && $option.cart === 'True'}checked{/if}
         value="True">
+  </td>
+  <td class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED" {if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'} style="display: none;"{/if}>
+    <input id="PAYZEN_OTHER_PAYMENT_MEANS_{$key|escape:'html':'UTF-8'}_embedded" name="PAYZEN_OTHER_PAYMENT_MEANS[{$key|escape:'html':'UTF-8'}][embedded]"
+        style="width: 100%;"
+        type="checkbox"
+        {if isset($option.embedded) && $option.embedded === 'True'}checked{/if}
+        value="True"
+        class="{$key|escape:'html':'UTF-8'}"
+        onchange="javascript: onEmbeddedCheckboxChange(this)">
   </td>
   <td>
     <button type="button" onclick="javascript: payzenDeleteOtherPaymentMeansOption({$key|escape:'html':'UTF-8'});">{l s='Delete' mod='payzen'}</button>

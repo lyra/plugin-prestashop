@@ -161,13 +161,16 @@ class PayzenOtherPayment extends AbstractPayzenPayment
         $enabled_options = array();
         $billing_address = new Address((int) $cart->id_address_invoice);
         $billing_country = new Country((int) $billing_address->id_country);
+        $data_entry_mode = Configuration::get('PAYZEN_STD_CARD_DATA_MODE');
 
         foreach ($other_payment_means as $key => $option) {
             $min = $option['min_amount'];
             $max = $option['max_amount'];
             $countries = isset($option['countries']) ? $option['countries'] : array(); // Authorized countries for this option.
 
-            if ((empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)
+            if ((! isset($option['embedded']) || ! $option['embedded']
+                || ($data_entry_mode !== '9' && $data_entry_mode !== '8' && $data_entry_mode !== '7' && $option['embedded']))
+                && (empty($min) || $amount >= $min) && (empty($max) || $amount <= $max)
                 && (empty($countries) || in_array($billing_country->iso_code, $countries))) {
                 $enabled_options[$key] = $option;
             }

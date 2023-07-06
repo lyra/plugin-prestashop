@@ -554,6 +554,7 @@ abstract class AbstractPayzenPayment
                     $relay_point_name = $isOney34 ? $row['name'] : null; // Relay point name.
                     $city = $row['city'];
                     $zipcode = $row['zipcode'];
+
                     break;
 
                 case self::isNewMondialRelay($carrier_id):
@@ -586,6 +587,7 @@ abstract class AbstractPayzenPayment
                     $city = $row['MR_Selected_Ville'];
                     $zipcode = $row['MR_Selected_CP'];
                     $country = $row['MR_Selected_Pays'];
+
                     break;
 
                 case self::isDpdFranceRelais($carrier_id):
@@ -604,6 +606,7 @@ abstract class AbstractPayzenPayment
 
                     $ps_country = new Country((int) $row['id_country']);
                     $country = $ps_country->iso_code;
+
                     break;
 
                 case (self::isSoColissimoLiberteRelay($carrier_id)):
@@ -644,11 +647,11 @@ abstract class AbstractPayzenPayment
                     $city = $payzen_request->get('ship_to_city');
                     $zipcode = $payzen_request->get('ship_to_zip');
                     $country = $payzen_request->get('ship_to_country');
+
                     break;
 
                 case (self::isChronoPostRelay($carrier_id)):
-                    $sql = 'SELECT id_pr FROM `' . _DB_PREFIX_ . 'chrono_cart_relais`
-                            WHERE id_cart = ' . (int) $cart->id;
+                    $sql = 'SELECT id_pr FROM `' . _DB_PREFIX_ . 'chrono_cart_relais` WHERE id_cart = ' . (int) $cart->id;
                     $id_pr = Db::getInstance()->getValue($sql);
 
                     if (! $id_pr) {
@@ -664,6 +667,7 @@ abstract class AbstractPayzenPayment
                     $city = $relaypoint_address->localite;
                     $zipcode = $relaypoint_address->codePostal;
                     $country = $payzen_request->get('ship_to_country');
+
                     break;
 
                     // Can implement more specific relay point carriers logic here.
@@ -830,7 +834,7 @@ abstract class AbstractPayzenPayment
     {
         include_once _PS_MODULE_DIR_ . 'chronopost' . DIRECTORY_SEPARATOR . 'libraries'  . DIRECTORY_SEPARATOR . 'PointRelaisServiceWSService.php';
 
-        // Fetch BT object
+        // Fetch BT object.
         $ws = new PointRelaisServiceWSService();
         $p = new rechercheBtAvecPFParIdChronopostA2Pas();
         $p->id = $chronopostRelayId;

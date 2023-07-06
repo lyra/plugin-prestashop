@@ -45,7 +45,7 @@ class PayzenAncvPayment extends AbstractPayzenPayment
         $request = parent::prepareRequest($cart, $data);
 
         // Override with ANCV card.
-        $request->set('payment_cards', 'E_CV;CVCO');
+        $request->set('payment_cards', 'CVCO');
 
         return $request;
     }
