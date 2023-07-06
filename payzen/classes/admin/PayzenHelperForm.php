@@ -62,7 +62,9 @@ class PayzenHelperForm
             'fr' => 'Français',
             'en' => 'English',
             'es' => 'Español',
-            'de' => 'Deutsch'
+            'de' => 'Deutsch',
+            'br' => 'Português',
+            'pt' => 'Português'
             // Complete when other languages are managed.
         );
 
@@ -138,6 +140,10 @@ class PayzenHelperForm
                 'False' => $payzen->l('No', 'payzenhelperform'),
                 'True' => $payzen->l('Yes', 'payzenhelperform')
             ),
+            'payzen_std_rest_theme_options' => array(
+                'classic' => $payzen->l('Classic', 'payzenhelperform'),
+                'neon' => $payzen->l('Neon', 'payzenhelperform')
+            ),
             'payzen_delivery_type_options' => array(
                 'PACKAGE_DELIVERY_COMPANY' => $payzen->l('Delivery company', 'payzenhelperform'),
                 'RECLAIM_IN_SHOP' => $payzen->l('Reclaim in shop', 'payzenhelperform'),
@@ -168,7 +174,9 @@ class PayzenHelperForm
                 '2' => $payzen->l('Card type selection on merchant site', 'payzenhelperform'),
                 '4' => $payzen->l('Payment page integrated to checkout process (iframe mode)', 'payzenhelperform'),
                 '5' => $payzen->l('Embedded payment fields on merchant site (REST API)', 'payzenhelperform'),
-                '6' => $payzen->l('Embedded payment fields in a pop-in (REST API)', 'payzenhelperform')
+                '7' => $payzen->l('Embedded Smartform on merchant site (REST API)', 'payzenhelperform'),
+                '8' => $payzen->l('Embedded Smartform extended on merchant site with logos (REST API)', 'payzenhelperform'),
+                '9' => $payzen->l('Embedded Smartform extended on merchant site without logos (REST API)', 'payzenhelperform')
             ),
             'payzen_countries_options' => array(
                 '1' => $payzen->l('All Allowed Countries', 'payzenhelperform'),
@@ -207,6 +215,11 @@ class PayzenHelperForm
                 '3' => '3x',
                 '4' => '4x'
             ),
+            'oney_cards' => array(
+                'ONEY_3X_4X' => $payzen->l('Payment in 3 or 4 times Oney', 'payzenhelperform'),
+                'ONEY_10X_12X' => $payzen->l('Payment in 10 or 12 times Oney', 'payzenhelperform'),
+                'ONEY_PAYLATER' => 'Pay Later Oney'
+            ),
             'fees_options' => array(
                 '-1' => $payzen->l('Bank Back Office configuration', 'payzenhelperform'),
                 '0' => $payzen->l('Without fees', 'payzenhelperform'),
@@ -219,15 +232,12 @@ class PayzenHelperForm
                 'max_amount' => '',
                 'validation' => '-1',
                 'capture' => '',
-                'cart' => 'False'
+                'cart' => 'False',
+                'embedded' => 'False'
             ),
             'payzen_default_extra_payment_means_option' => array(
                 'code' => '',
                 'title' => ''
-            ),
-            'payzen_std_rest_theme_options' => array(
-                'classic' =>  'Classic',
-                'material' => 'Material'
             ),
 
             'prestashop_categories' => Category::getCategories((int) $context->language->id, true, false),
@@ -307,7 +317,11 @@ class PayzenHelperForm
                                             explode(';', Configuration::get('PAYZEN_STD_PAYMENT_CARDS')),
             'PAYZEN_STD_CARD_DATA_MODE' => Configuration::get('PAYZEN_STD_CARD_DATA_MODE') ?
                                             Configuration::get('PAYZEN_STD_CARD_DATA_MODE') : '1',
-            'PAYZEN_STD_REST_THEME' => Configuration::get('PAYZEN_STD_REST_THEME'),
+            'PAYZEN_STD_REST_POPIN_MODE' => Configuration::get('PAYZEN_STD_REST_POPIN_MODE'),
+            'PAYZEN_STD_REST_THEME' => Configuration::get('PAYZEN_STD_REST_THEME') ?
+                                        Configuration::get('PAYZEN_STD_REST_THEME') : 'classic',
+            'PAYZEN_STD_SF_COMPACT_MODE' => Configuration::get('PAYZEN_STD_SF_COMPACT_MODE'),
+            'PAYZEN_STD_SF_THRESHOLD' => Configuration::get('PAYZEN_STD_SF_THRESHOLD'),
             'PAYZEN_STD_REST_PLACEHLDR' => $placeholders,
             'PAYZEN_STD_REST_LBL_REGIST' => self::getLangConfig('PAYZEN_STD_REST_LBL_REGIST'),
             'PAYZEN_STD_REST_ATTEMPTS' => Configuration::get('PAYZEN_STD_REST_ATTEMPTS'),
@@ -389,7 +403,9 @@ class PayzenHelperForm
 
         if (! PayzenTools::$plugin_features['embedded']) {
             unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_EMBEDDED]);
-            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_POPIN]);
+            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM]);
+            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM_EXT_WITH_LOGOS]);
+            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM_EXT_WITHOUT_LOGOS]);
         }
 
         return $tpl_vars;

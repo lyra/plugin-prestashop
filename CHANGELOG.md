@@ -1,3 +1,14 @@
+1.16.0, 2023-07-06:
+- [embedded] Smartform integration.
+- [embedded] Send shopping cart content for payment with embedded fields.
+- [embedded] Bug fix: Fix error related to validation mode.
+- [oney] Added 10x 12x Oney and Paylater means of payment.
+- [ancv] Bug fix: Fix error related to split payments with ANCV card.
+- Compatibility of contact support component with PrestaShop 1.7.x and higher.
+- Added Portuguese translation.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.15.11, 2023-06-28:
 - Bug fix: Fix refund on of an order with a discount voucher.
 

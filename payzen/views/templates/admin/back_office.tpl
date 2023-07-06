@@ -46,18 +46,49 @@
         } else {
           $('#PAYZEN_REST_SETTINGS').hide();
           $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
+          toggleEmbeddedCheckbox(false);
         }
-
         break;
       case '5':
-      case '6':
         $('#PAYZEN_REST_SETTINGS').show();
+        $('#PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS').hide();
         $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+        toggleEmbeddedCheckbox(false);
         break;
+      case '7':
+      case '8':
+      case '9':
+       $('#PAYZEN_REST_SETTINGS').show();
+       $('#PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS').show();
+       $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+       toggleEmbeddedCheckbox(true);
+       break;
       default:
         $('#PAYZEN_REST_SETTINGS').hide();
         $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+        toggleEmbeddedCheckbox(false);
     }
+  }
+
+  function toggleEmbeddedCheckbox(show) {
+    if (show) {
+      $('.PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED').show();
+      $('input').filter(function(){ return this.id.match(/PAYZEN_OTHER_PAYMENT_MEANS_\d*_embedded/); }).parent().show();
+    } else {
+      $('.PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED').hide();
+      $('input').filter(function(){ return this.id.match(/PAYZEN_OTHER_PAYMENT_MEANS_\d*_embedded/); }).parent().hide();
+      $('select').filter(function(){ return this.id.match(/PAYZEN_OTHER_PAYMENT_MEANS_\d*_validation/); }).prop("disabled", false);
+      $('input').filter(function(){ return this.id.match(/PAYZEN_OTHER_PAYMENT_MEANS_\d*_capture/); }).prop("disabled", false);
+    }
+  }
+</script>
+
+<script type="text/javascript">
+  function onEmbeddedCheckboxChange(checkbox) {
+    var embeddedMode = checkbox.checked;
+    var key = checkbox.className;
+    $("#PAYZEN_OTHER_PAYMENT_MEANS_" + key + "_capture").prop("disabled", embeddedMode);
+    $("#PAYZEN_OTHER_PAYMENT_MEANS_" + key + "_validation").prop("disabled", embeddedMode);
   }
 </script>
 
@@ -203,7 +234,7 @@
 
         <section style="display: none; padding-top: 15px;">
           <p style="font-size: .85em; color: #7F7F7F;">
-           {l s='Configure this section if you are using order operations from Prestashop Back Office or if you are using embedded payment fields or popin modes.' mod='payzen'}
+           {l s='Configure this section if you are using order operations from Prestashop Back Office or if you are using embedded payment fields or Smartform modes.' mod='payzen'}
           </p>
           <label for="PAYZEN_PRIVKEY_TEST">{l s='Test password' mod='payzen'}</label>
           <div class="margin-form">
@@ -224,7 +255,7 @@
           <p></p>
 
           <p style="font-size: .85em; color: #7F7F7F;">
-           {l s='Configure this section only if you are using embedded payment fields or popin modes.' mod='payzen'}
+           {l s='Configure this section only if you are using embedded payment fields or Smartform modes.' mod='payzen'}
           </p>
           <p></p>
 
@@ -459,7 +490,7 @@
           <span class="ui-icon ui-icon-triangle-1-e" style="display: inline-block; vertical-align: middle;"></span>
           {l s='ADDITIONAL OPTIONS' mod='payzen'}
         </legend>
-        <p style="font-size: .85em; color: #7F7F7F;">{l s='Configure this section if you use advanced risk assessment module or if you have a Oney 3x/4x contract.' mod='payzen'}</p>
+        <p style="font-size: .85em; color: #7F7F7F;">{l s='Configure this section if you use advanced risk assessment module or if you have an Oney contract.' mod='payzen'}</p>
 
         <section style="display: none; padding-top: 15px;">
           <label for="PAYZEN_SEND_CART_DETAIL">{l s='Send shopping cart details' mod='payzen'}</label>
@@ -736,7 +767,7 @@
       <fieldset>
         <legend>{l s='ADVANCED OPTIONS' mod='payzen'}</legend>
 
-        <label for="PAYZEN_STD_CARD_DATA_MODE">{l s='Card data entry mode' mod='payzen'}</label>
+        <label for="PAYZEN_STD_CARD_DATA_MODE">{l s='Payment data entry mode' mod='payzen'}</label>
         <div class="margin-form">
           <select id="PAYZEN_STD_CARD_DATA_MODE" name="PAYZEN_STD_CARD_DATA_MODE" onchange="javascript: payzenCardEntryChanged();">
             {foreach from=$payzen_card_data_mode_options key="key" item="option"}
@@ -744,7 +775,7 @@
             {/foreach}
           </select>
           <input type="hidden" id="PAYZEN_STD_CARD_DATA_MODE_OLD" name="PAYZEN_STD_CARD_DATA_MODE_OLD" value="{$PAYZEN_STD_CARD_DATA_MODE|escape:'html':'UTF-8'}"/>
-          <p>{l s='Select how the card data will be entered. Attention, to use bank data acquisition on the merchant site, you must ensure that you have subscribed to this option with your bank.' mod='payzen'}</p>
+          <p>{l s='Select how the payment data will be entered. Attention, to use bank data acquisition on the merchant site, you must ensure that you have subscribed to this option with your bank.' mod='payzen'}</p>
         </div>
 
         <div id="PAYZEN_STD_CANCEL_IFRAME_MENU" {if $PAYZEN_STD_CARD_DATA_MODE !== '4'} style="display: none;"{/if}>
@@ -759,18 +790,48 @@
           </div>
         </div>
 
-        <div id="PAYZEN_REST_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE != '5' && $PAYZEN_STD_CARD_DATA_MODE != '6'} style="display: none;"{/if}>
+        <div id="PAYZEN_REST_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE !== '5' && $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'} style="display: none;"{/if}>
+          <p></p>
+          <label for="PAYZEN_STD_REST_POPIN_MODE">{l s='Display in a pop-in' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_STD_REST_POPIN_MODE" name="PAYZEN_STD_REST_POPIN_MODE">
+                {foreach from=$payzen_yes_no_options key="key" item="option"}
+                    <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_REST_POPIN_MODE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+            </select>
+            <p>{l s='This option allows to display the embedded payment fields or the Smartform in a pop-in.' mod='payzen'}</p>
+          </div>
+          <p></p>
+          <p></p>
           <label for="PAYZEN_STD_REST_THEME">{l s='Theme' mod='payzen'}</label>
           <div class="margin-form">
             <select id="PAYZEN_STD_REST_THEME" name="PAYZEN_STD_REST_THEME">
-              {foreach from=$payzen_std_rest_theme_options key="key" item="option"}
-                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_REST_THEME === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-              {/foreach}
+                {foreach from=$payzen_std_rest_theme_options key="key" item="option"}
+                    <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_REST_THEME === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
             </select>
-            <p>{l s='Select a theme to use to display embedded payment fields. For more customization, you can edit module template manually.' mod='payzen'}</p>
+            <p>{l s='Select a theme to use to display the embedded payment fields or the Smartform.' mod='payzen'}</p>
           </div>
           <p></p>
-
+          <div id="PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'} style="display: none;"{/if}>
+            <label for="PAYZEN_STD_SF_COMPACT_MODE">{l s='Compact mode' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_STD_SF_COMPACT_MODE" name="PAYZEN_STD_SF_COMPACT_MODE">
+                  {foreach from=$payzen_yes_no_options key="key" item="option"}
+                      <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_SF_COMPACT_MODE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                  {/foreach}
+              </select>
+              <p>{l s='This option allows to display the Smartform in a compact mode.' mod='payzen'}</p>
+            </div>
+            <p></p>
+            <label for="PAYZEN_STD_SF_THRESHOLD">{l s='Payment means grouping threshold' mod='payzen'}</label>
+            <div class="margin-form">
+              <input type="text" id="PAYZEN_STD_SF_THRESHOLD" name="PAYZEN_STD_SF_THRESHOLD" value="{$PAYZEN_STD_SF_THRESHOLD|escape:'html':'UTF-8'}" style="width: 150px;" />
+              <p>{l s='Number of means of payment from which they will be grouped.' mod='payzen'}</p>
+            </div>
+            <p></p>
+          </div>
+          <p></p>
           <label for="PAYZEN_STD_REST_PLACEHLDR">{l s='Custom fields placeholders' mod='payzen'}</label>
           <div class="margin-form">
             <table class="table" cellspacing="0" cellpadding="10">
@@ -835,14 +896,12 @@
             <p>{l s='Label displayed to invite buyers to register their card data.' mod='payzen'}</p>
           </div>
           <p></p>
-
-          <label for="PAYZEN_STD_REST_ATTEMPTS">{l s='Payment attempts number' mod='payzen'}</label>
+          <label for="PAYZEN_STD_REST_ATTEMPTS">{l s='Payment attempts number for cards' mod='payzen'}</label>
           <div class="margin-form">
             <input type="text" id="PAYZEN_STD_REST_ATTEMPTS" name="PAYZEN_STD_REST_ATTEMPTS" value="{$PAYZEN_STD_REST_ATTEMPTS|escape:'html':'UTF-8'}" style="width: 150px;" />
-            <p>{l s='Maximum number of payment retries after a failed payment (between 0 and 9). If blank, the gateway default value is 3.' mod='payzen'}</p>
+            <p>{l s='Maximum number of payment by cards retries after a failed payment (between 0 and 2). If blank, the gateway default value is 2.' mod='payzen'}</p>
           </div>
           <p></p>
-
         </div>
 
         <div id="PAYZEN_STD_1_CLICK_PAYMENT_MENU">
@@ -855,9 +914,7 @@
             </select>
             <p>{l s='This option allows to pay orders without re-entering bank data at each payment. The "payment by token" option should be enabled on your %s store to use this feature.' sprintf='PayZen' mod='payzen'}</p>
           </div>
-
         </div>
-
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>
@@ -1011,7 +1068,7 @@
                   {/if}
                   <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Period' mod='payzen'}</th>
-                  <th style="font-size: 10px;">{l s='1st payment' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='1st installment' mod='payzen'}</th>
                   <th style="font-size: 10px;"></th>
                 </tr>
               </thead>
@@ -1042,9 +1099,9 @@
               {if in_array('CB', $payzen_multi_payment_cards_options)}
                 <b>{l s='Contract' mod='payzen'} : </b>{l s='ID of the contract to use with the option (Leave blank preferably).' mod='payzen'}<br />
               {/if}
-              <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of payments.' mod='payzen'}<br />
-              <b>{l s='Period' mod='payzen'} : </b>{l s='Delay (in days) between payments.' mod='payzen'}<br />
-              <b>{l s='1st payment' mod='payzen'} : </b>{l s='Amount of first payment, in percentage of total amount. If empty, all payments will have the same amount.' mod='payzen'}<br />
+              <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of installments.' mod='payzen'}<br />
+              <b>{l s='Period' mod='payzen'} : </b>{l s='Delay (in days) between installments.' mod='payzen'}<br />
+              <b>{l s='1st installment' mod='payzen'} : </b>{l s='Amount of first installment, in percentage of total amount. If empty, all installments will have the same amount.' mod='payzen'}<br />
               <b>{l s='Do not forget to click on « Save » button to save your modifications.' mod='payzen'}</b>
             </p>
           </div>
@@ -1214,7 +1271,7 @@
 
     {if $payzen_plugin_features['oney']}
       <h4 style="font-weight: bold; margin-bottom: 0; overflow: hidden; line-height: unset !important;">
-        <a href="#">{l s='PAYMENT IN 3 OR 4 TIMES ONEY' mod='payzen'}</a>
+        <a href="#">{l s='ONEY PAYMENT' mod='payzen'}</a>
       </h4>
       <div>
         <fieldset>
@@ -1334,6 +1391,7 @@
                 <tr>
                   <th style="font-size: 10px;">{l s='Label' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Code' mod='payzen'}</th>
+                  <th style="font-size: 10px;">{l s='Means of payment' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Min amount' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Max amount' mod='payzen'}</th>
                   <th style="font-size: 10px;">{l s='Count' mod='payzen'}</th>
@@ -1365,9 +1423,10 @@
               {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
               <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend (the %c and %r patterns will be respectively replaced by payments count and option rate).' mod='payzen'}<br />
               <b>{l s='Code' mod='payzen'} : </b>{l s='The option code as defined in your Oney contract.' mod='payzen'}<br />
+              <b>{l s='Means of payment' mod='payzen'} : </b>{l s='Choose the means of payment you want to propose.' mod='payzen'}<br />
               <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />
-              <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of payments.' mod='payzen'}<br />
+              <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of installments.' mod='payzen'}<br />
               <b>{l s='Rate' mod='payzen'} : </b>{l s='The interest rate in percentage.' mod='payzen'}<br />
               <b>{l s='Do not forget to click on « Save » button to save your modifications.' mod='payzen'}</b>
             </p>
@@ -1504,7 +1563,7 @@
             <p>
               {l s='Click on « Add » button to configure one or more payment options.' mod='payzen'}<br />
               <b>{l s='Label' mod='payzen'} : </b>{l s='The option label to display on the frontend (the %c pattern will be replaced by payments count).' mod='payzen'}<br />
-              <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of payments.' mod='payzen'}<br />
+              <b>{l s='Count' mod='payzen'} : </b>{l s='Total number of installments.' mod='payzen'}<br />
               <b>{l s='Fees' mod='payzen'} : </b>{l s='Enable or disables fees application.' mod='payzen'}<br />
               <b>{l s='Min amount' mod='payzen'} : </b>{l s='Minimum amount to enable the payment option.' mod='payzen'}<br />
               <b>{l s='Max amount' mod='payzen'} : </b>{l s='Maximum amount to enable the payment option.' mod='payzen'}<br />
@@ -2179,6 +2238,7 @@
               <th style="font-size: 10px;">{l s='Capture' mod='payzen'}</th>
               <th style="font-size: 10px;">{l s='Validation mode' mod='payzen'}</th>
               <th style="font-size: 10px;">{l s='Cart data' mod='payzen'}</th>
+              <th style="font-size: 10px; {if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'} display: none;{/if}" class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED">{l s='Integrated mode' mod='payzen'}</th>
               <th style="font-size: 10px;"></th>
             </tr>
           </thead>
@@ -2220,6 +2280,7 @@
             <b>{l s='Capture' mod='payzen'} : </b>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}<br />
             <b>{l s='Validation mode' mod='payzen'} : </b>{l s='If manual is selected, you will have to confirm payments manually in your bank Back Office.' mod='payzen'}<br />
             <b>{l s='Cart data' mod='payzen'} : </b>{l s='If you disable this option, the shopping cart details will not be sent to the gateway. Attention, in some cases, this option has to be enabled. For more information, refer to the module documentation.' mod='payzen'}<br />
+            <b style="{if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'}display: none;{/if}" class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED">{l s='Integrated mode' mod='payzen'} : </b><span style="{if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'}display: none;{/if}" class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED">{l s='If you enable this option, the payment mean will be displayed in the Smartform. Attention, not all available payment means are supported by the Smartform. For more information, refer to the module documentation.' mod='payzen'}</span><br />
             <b>{l s='Do not forget to click on « Save » button to save your modifications.' mod='payzen'}</b>
           </p>
         </div>

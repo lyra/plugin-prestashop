@@ -72,9 +72,17 @@
         if ($('#generateDiscountRefund').is(':checked')) {
             $('.payzen-partial-refund input').attr('disabled', 'disabled');
             $('.payzen-partial-refund').hide();
+
+            $('#doPartialRefundPayzen').attr('disabled', 'disabled');
+            $('#doPartialRefundPayzen').hide();
+            $('label[for="doPartialRefundPayzen"]').hide();
         } else {
             $('.payzen-partial-refund input').removeAttr('disabled');
             $('.payzen-partial-refund').show();
+
+            $('#doPartialRefundPayzen').removeAttr('disabled');
+            $('#doPartialRefundPayzen').show();
+            $('label[for="doPartialRefundPayzen"]').show();
         }
     });
 

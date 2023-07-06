@@ -46,7 +46,7 @@
             <td><strong>{$smarty.now|date_format:'%d/%m/%Y'|escape:'html':'UTF-8'}</strong></td>
           </tr>
           <tr>
-            <td>{{l s='Followed by %s payments' mod='payzen'}|sprintf:{$option.funding_count|escape:'html':'UTF-8'}}</td>
+            <td>{{l s='Followed by %s installments' mod='payzen'}|sprintf:{$option.funding_count|escape:'html':'UTF-8'}}</td>
             <td></td>
           </tr>
           {section name=row start=1 loop=$option.count step=1}

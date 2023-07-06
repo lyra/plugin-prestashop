@@ -23,7 +23,7 @@ class PayzenTools
     private static $GATEWAY_URL = 'https://secure.payzen.eu/vads-payment/';
     private static $REST_URL = 'https://api.payzen.eu/api-payment/';
     private static $STATIC_URL = 'https://static.payzen.eu/static/';
-	private static $LOGO_URL = 'https://secure.payzen.eu/static/latest/images/type-carte/';
+    private static $LOGO_URL = 'https://secure.payzen.eu/static/latest/images/type-carte/';
     private static $SITE_ID = '12345678';
     private static $KEY_TEST = '1111111111111111';
     private static $KEY_PROD = '2222222222222222';
@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.15.11';
+    private static $PLUGIN_VERSION = '1.16.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -50,7 +50,9 @@ class PayzenTools
     const MODE_LOCAL_TYPE = '2';
     const MODE_IFRAME = '4';
     const MODE_EMBEDDED = '5';
-    const MODE_POPIN = '6';
+    const MODE_SMARTFORM = '7';
+    const MODE_SMARTFORM_EXT_WITH_LOGOS = '8';
+    const MODE_SMARTFORM_EXT_WITHOUT_LOGOS = '9';
 
     /* Fields lists. */
     public static $multi_lang_fields = array(
@@ -75,7 +77,7 @@ class PayzenTools
             'zip' => '#^[0-9]{5}$#',
             'city' => "#^[A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ/ '-]{1,127}$#ui",
             'country' => '#^FR|GP|MQ|GF|RE|YT$#i',
-            'phone' => '#^[0-9]{10}$#'
+            'phone' => "#^(\(\+(33|34)\)|00(33|34)|\+(33|34)|(33|34)|\+(33|34)\(0\)|0)[0-9]{9}$#"
         ),
         'fullcb' => array(
             'name' => "#^[A-Za-z0-9àâçèéêîôùû]+([ \-']?[A-Za-z0-9àâçèéêîôùû]+)*$#",
@@ -119,6 +121,10 @@ class PayzenTools
         'PAYPAL' => 'Paypal',
         'SOFORT' => 'Sofort',
         'OTHER' => 'Other'
+    );
+
+    public static $oney_cards = array(
+        'ONEY_3X_4X', 'ONEY_10X_12X', 'ONEY_PAYLATER'
     );
 
     public static function getDefault($name)
@@ -256,7 +262,9 @@ class PayzenTools
                     'en' => 'RESPONSIVE_MODEL=',
                     'fr' => 'RESPONSIVE_MODEL=',
                     'de' => 'RESPONSIVE_MODEL=',
-                    'es' => 'RESPONSIVE_MODEL='
+                    'es' => 'RESPONSIVE_MODEL=',
+                    'br' => 'RESPONSIVE_MODEL=',
+                    'pt' => 'RESPONSIVE_MODEL='
                 ),
                 'label' => 'Theme configuration'),
             array('key' => 'PAYZEN_SHOP_NAME', 'name' => 'shop_name', 'default' => '', 'label' => 'Shop name'),
@@ -273,7 +281,9 @@ class PayzenTools
                     'en' => 'Redirection to shop in few seconds...',
                     'fr' => 'Redirection vers la boutique dans quelques instants...',
                     'de' => 'Weiterleitung zum Shop in Kürze...',
-                    'es' => 'Redirección a la tienda en unos momentos...'
+                    'es' => 'Redirección a la tienda en unos momentos...',
+                    'br' => 'Redirecionamento para a loja em poucos segundos...',
+                    'pt' => 'Redirecionamento para a loja em poucos segundos...'
                 ),
                 'label' => 'Redirection message on success'),
             array('key' => 'PAYZEN_REDIRECT_ERROR_T', 'name' => 'redirect_error_timeout', 'default' => '5',
@@ -283,7 +293,9 @@ class PayzenTools
                     'en' => 'Redirection to shop in few seconds...',
                     'fr' => 'Redirection vers la boutique dans quelques instants...',
                     'de' => 'Weiterleitung zum Shop in Kürze...',
-                    'es' => 'Redirección a la tienda en unos momentos...'
+                    'es' => 'Redirección a la tienda en unos momentos...',
+                    'br' => 'Redirecionamento para a loja em poucos segundos...',
+                    'pt' => 'Redirecionamento para a loja em poucos segundos...'
                 ),
                 'label' => 'Redirection message on failure'),
             array('key' => 'PAYZEN_RETURN_MODE', 'name' => 'return_mode', 'default' => 'GET',
@@ -305,7 +317,9 @@ class PayzenTools
                     'en' => 'Payment by credit card',
                     'fr' => 'Paiement par carte bancaire',
                     'de' => 'Zahlung mit EC-/Kreditkarte',
-                    'es' => 'Pago con tarjeta de crédito'
+                    'es' => 'Pago con tarjeta de crédito',
+                    'br' => 'Pagamento por cartão',
+                    'pt' => 'Pagamento por cartão'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_STD_ENABLED', 'default' => 'True', 'label' => 'Activation'),
@@ -313,18 +327,23 @@ class PayzenTools
             array('key' => 'PAYZEN_STD_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_STD_PAYMENT_CARDS', 'default' => '', 'label' => 'Card Types'),
             array('key' => 'PAYZEN_STD_AMOUNTS', 'default' => array(), 'label' => 'Standard payment - Customer group amount restriction'),
-            array('key' => 'PAYZEN_STD_CARD_DATA_MODE', 'default' => '1', 'label' => 'Card data entry mode'),
-            array('key' => 'PAYZEN_STD_REST_THEME', 'default' => 'material', 'label' => 'Custom theme'),
+            array('key' => 'PAYZEN_STD_CARD_DATA_MODE', 'default' => '1', 'label' => 'Payment data entry mode'),
+            array('key' => 'PAYZEN_STD_REST_POPIN_MODE', 'default' => '', 'label' => 'Display in a pop-in'),
+            array('key' => 'PAYZEN_STD_REST_THEME', 'default' => 'neon', 'label' => 'Theme'),
+            array('key' => 'PAYZEN_STD_SF_COMPACT_MODE', 'default' => '', 'label' => 'Compact mode'),
+            array('key' => 'PAYZEN_STD_SF_THRESHOLD', 'default' => '', 'label' => 'Number of means of payment from which they will be grouped.'),
             array('key' => 'PAYZEN_STD_REST_PLACEHLDR', 'default' => array(), 'label' => 'Custom field placeholders'),
             array('key' => 'PAYZEN_STD_REST_LBL_REGIST',
                 'default' => array(
                     'en' => 'Register my card',
                     'fr' => 'Enregistrer ma carte',
                     'de' => 'Registriere meine Karte',
-                    'es' => 'Registrar mi tarjeta'
+                    'es' => 'Registrar mi tarjeta',
+                    'br' => 'Salvar meu cartão',
+                    'pt' => 'Salvar meu cartão'
                 ),
                 'label' => 'Register card label'),
-            array('key' => 'PAYZEN_STD_REST_ATTEMPTS', 'default' => '', 'label' => 'Payment attempts number'),
+            array('key' => 'PAYZEN_STD_REST_ATTEMPTS', 'default' => '', 'label' => 'Payment attempts number for cards'),
             array('key' => 'PAYZEN_STD_1_CLICK_PAYMENT', 'default' => 'False', 'label' => 'Payment by token'),
             array('key' => 'PAYZEN_STD_CANCEL_IFRAME', 'default' => 'False', 'label' => 'Cancel payment in iframe mode'),
 
@@ -333,7 +352,9 @@ class PayzenTools
                     'en' => 'Payment by credit card in installments',
                     'fr' => 'Paiement par carte bancaire en plusieurs fois',
                     'de' => 'Ratenzahlung mit EC-/Kreditkarte',
-                    'es' => 'Pago con tarjeta de crédito en cuotas'
+                    'es' => 'Pago con tarjeta de crédito en cuotas',
+                    'br' => 'Pagamento por cartão de crédito em várias parcelas',
+                    'pt' => 'Pagamento por cartão de crédito em várias parcelas'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_MULTI_ENABLED', 'default' => 'False', 'label' => 'Activation'),
@@ -346,33 +367,44 @@ class PayzenTools
 
             array('key' => 'PAYZEN_ONEY34_TITLE',
                 'default' => array(
-                    'en' => 'Payment in 3 or 4 times Oney',
-                    'fr' => 'Paiement en 3 ou 4 fois Oney',
-                    'de' => 'Zahlung im 3 oder 4 mal Oney',
-                    'es' => 'Pago en 3 o 4 veces Oney'
+                    'en' => 'Payment with Oney',
+                    'fr' => 'Paiement avec Oney',
+                    'de' => 'Zahlung via Oney',
+                    'es' => 'Pago con Oney',
+                    'br' => 'Pagamento com Oney',
+                    'pt' => 'Pagamento com Oney'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_ONEY34_ENABLED', 'default' => 'False', 'label' => 'Activation'),
             array('key' => 'PAYZEN_ONEY34_DELAY', 'default' => '', 'label' => 'Capture delay'),
             array('key' => 'PAYZEN_ONEY34_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
-            array('key' => 'PAYZEN_ONEY34_AMOUNTS', 'default' => array(), 'label' => 'Payment in 3 or 4 times Oney - Customer group amount restriction'),
-            array('key' => 'PAYZEN_ONEY34_OPTIONS', 'default' => array(), 'label' => 'Payment in 3 or 4 times Oney - Payment options'),
+            array('key' => 'PAYZEN_ONEY34_AMOUNTS', 'default' => array(), 'label' => 'Oney payment - Customer group amount restriction'),
+            array('key' => 'PAYZEN_ONEY34_OPTIONS', 'default' => array(), 'label' => 'Oney payment - Payment options'),
 
             array('key' => 'PAYZEN_FFIN_TITLE',
                 'default' => array(
                     'en' => 'Payment with FranFinance',
                     'fr' => 'Paiement avec FranFinance',
                     'de' => 'Zahlung via FranFinance',
-                    'es' => 'Pago con FranFinance'
+                    'es' => 'Pago con FranFinance',
+                    'br' => 'Pagamento com FranFinance',
+                    'pt' => 'Pagamento com FranFinance'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_FFIN_ENABLED', 'default' => 'False', 'label' => 'Activation'),
-            array('key' => 'PAYZEN_FFIN_AMOUNTS', 'default' => array(), 'label' => 'Payment in 3 or 4 times Oney - Customer group amount restriction'),
+            array('key' => 'PAYZEN_FFIN_AMOUNTS', 'default' => array(), 'label' => 'FranFinance payment - Customer group amount restriction'),
             array('key' => 'PAYZEN_FFIN_OPTIONS',
                 'default' => array(
                     '3X' => array(
                         'label' => self::convertIsoArrayToIdArray(
-                            array('en' => 'Payment in 3 times', 'fr' => 'Paiement en 3 fois', 'de' => 'Zahlung in 3 mal', 'es' => 'Pago en 3 veces')
+                            array(
+                                'en' => 'Payment in 3 times',
+                                'fr' => 'Paiement en 3 fois',
+                                'de' => 'Zahlung in 3 mal',
+                                'es' => 'Pago en 3 veces',
+                                'br' => 'Pagamento em 3 vezes',
+                                'pt' => 'Pagamento em 3 vezes'
+                            )
                         ),
                         'count' => '3',
                         'fees' => '-1',
@@ -381,7 +413,14 @@ class PayzenTools
                     ),
                     '4X' => array(
                         'label' => self::convertIsoArrayToIdArray(
-                            array('en' => 'Payment in 4 times', 'fr' => 'Paiement en 4 fois', 'de' => 'Zahlung in 4 mal', 'es' => 'Pago en 4 veces')
+                            array(
+                                'en' => 'Payment in 4 times',
+                                'fr' => 'Paiement en 4 fois',
+                                'de' => 'Zahlung in 4 mal',
+                                'es' => 'Pago en 4 veces',
+                                'br' => 'Pagamento em 4 vezes',
+                                'pt' => 'Pagamento em 4 vezes'
+                            )
                         ),
                         'count' => '4',
                         'fees' => '-1',
@@ -396,12 +435,12 @@ class PayzenTools
                     'en' => 'Payment with Full CB',
                     'fr' => 'Paiement avec Full CB',
                     'de' => 'Zahlung via Full CB',
-                    'es' => 'Pago con Full CB'
+                    'es' => 'Pago con Full CB',
+                    'br' => 'Pagamento com Full CB',
+                    'pt' => 'Pagamento com Full CB'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_FULLCB_ENABLED', 'default' => 'False', 'label' => 'Activation'),
-            array('key' => 'PAYZEN_FULLCB_DELAY', 'default' => '', 'label' => 'Capture delay'),
-            array('key' => 'PAYZEN_FULLCB_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_FULLCB_AMOUNTS',
                 'default' => array(
                     array('min_amount' => '100', 'max_amount' => '1500')
@@ -414,7 +453,14 @@ class PayzenTools
                     'FULLCB3X' => array(
                         'enabled' => 'True',
                         'label' => self::convertIsoArrayToIdArray(
-                            array('en' => 'Payment in 3 times', 'fr' => 'Paiement en 3 fois', 'de' => 'Zahlung in 3 mal', 'es' => 'Pago en 3 veces')
+                            array(
+                                'en' => 'Payment in 3 times',
+                                'fr' => 'Paiement en 3 fois',
+                                'de' => 'Zahlung in 3 mal',
+                                'es' => 'Pago en 3 veces',
+                                'br' => 'Pagamento em 3 vezes',
+                                'pt' => 'Pagamento em 3 vezes'
+                            )
                         ),
                         'min_amount' => '',
                         'max_amount' => '',
@@ -425,7 +471,14 @@ class PayzenTools
                     'FULLCB4X' => array(
                         'enabled' => 'True',
                         'label' => self::convertIsoArrayToIdArray(
-                            array('en' => 'Payment in 4 times', 'fr' => 'Paiement en 4 fois', 'de' => 'Zahlung in 4 mal', 'es' => 'Pago en 4 veces')
+                            array(
+                                'en' => 'Payment in 4 times',
+                                'fr' => 'Paiement en 4 fois',
+                                'de' => 'Zahlung in 4 mal',
+                                'es' => 'Pago en 4 veces',
+                                'br' => 'Pagamento em 4 vezes',
+                                'pt' => 'Pagamento em 4 vezes'
+                            )
                         ),
                         'min_amount' => '',
                         'max_amount' => '',
@@ -441,7 +494,9 @@ class PayzenTools
                     'en' => 'Payment with ANCV',
                     'fr' => 'Paiement avec ANCV',
                     'de' => 'Zahlung via ANCV',
-                    'es' => 'Pago con ANCV'
+                    'es' => 'Pago con ANCV',
+                    'br' => 'Pagamento com ANCV',
+                    'pt' => 'Pagamento com ANCV'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_ANCV_ENABLED', 'default' => 'False', 'label' => 'Activation'),
@@ -454,7 +509,9 @@ class PayzenTools
                     'en' => 'Payment with SEPA',
                     'fr' => 'Paiement avec SEPA',
                     'de' => 'Zahlung via SEPA',
-                    'es' => 'Pago con SEPA'
+                    'es' => 'Pago con SEPA',
+                    'br' => 'Pagamento com SEPA',
+                    'pt' => 'Pagamento com SEPA'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_SEPA_ENABLED', 'default' => 'False', 'label' => 'Activation'),
@@ -469,7 +526,9 @@ class PayzenTools
                     'en' => 'Payment with SOFORT Banking',
                     'fr' => 'Paiement avec SOFORT Banking',
                     'de' => 'Zahlung via SOFORT Banking',
-                    'es' => 'Pago con SOFORT Banking'
+                    'es' => 'Pago con SOFORT Banking',
+                    'br' => 'Pagamento com SOFORT Banking',
+                    'pt' => 'Pagamento com SOFORT Banking'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_SOFORT_ENABLED', 'default' => 'False', 'label' => 'Activation'),
@@ -480,7 +539,9 @@ class PayzenTools
                     'en' => 'Payment with PayPal',
                     'fr' => 'Paiement avec PayPal',
                     'de' => 'Zahlung via  PayPal',
-                    'es' => 'Pago con PayPal'
+                    'es' => 'Pago con PayPal',
+                    'br' => 'Pagamento com PayPal',
+                    'pt' => 'Pagamento com PayPal'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_PAYPAL_ENABLED', 'default' => 'False', 'label' => 'Activation'),
@@ -493,7 +554,9 @@ class PayzenTools
                     'en' => 'Payment with Choozeo without fees',
                     'fr' => 'Paiement avec Choozeo sans frais',
                     'de' => 'Zahlung mit Choozeo ohne zusätzliche',
-                    'es' => 'Pago con Choozeo sin gastos'
+                    'es' => 'Pago con Choozeo sin gastos',
+                    'br' => 'Pagamento com Choozeo sem custo',
+                    'pt' => 'Pagamento com Choozeo sem custo'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_CHOOZEO_ENABLED', 'default' => 'False', 'label' => 'Activation'),
@@ -523,7 +586,9 @@ class PayzenTools
                     'en' => 'Other payment means',
                     'fr' => 'Autres moyens de paiement',
                     'de' => 'Anderen Zahlungsmittel',
-                    'es' => 'Otros medios de pago'
+                    'es' => 'Otros medios de pago',
+                    'br' => 'Outros meios de pagamento',
+                    'pt' => 'Outros meios de pagamento'
                 ),
                 'label' => 'Method title'),
             array('key' => 'PAYZEN_OTHER_AMOUNTS', 'default' => array(), 'label' => 'Other payment means - Customer group amount restriction'),
@@ -592,8 +657,10 @@ class PayzenTools
     {
         $cards = PayzenApi::getSupportedCardTypes();
 
-        if (isset($cards['ONEY_3X_4X'])) {
-            unset($cards['ONEY_3X_4X']);
+        foreach ($cards as $key) {
+            if (in_array($key, self::$oney_cards)) {
+                 unset($cards[$key]);
+            }
         }
 
         return $cards;
@@ -990,7 +1057,9 @@ class PayzenTools
             '2' => 'MERCHANT',
             '4' => 'IFRAME',
             '5' => 'REST',
-            '6' => 'POPIN'
+            '7' => 'SMARTFORM',
+            '8' => 'SMARTFORM_EXT_WITH_LOGOS',
+            '9' => 'SMARTFORM_EXT_WITHOUT_LOGOS'
         );
     }
 }

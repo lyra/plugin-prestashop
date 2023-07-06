@@ -26,6 +26,15 @@
         type="text">
   </td>
   <td>
+    <select id="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS_{$key|escape:'html':'UTF-8'}_card_type"
+        name="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS[{$key|escape:'html':'UTF-8'}][card_type]"
+        onchange="javascript: payzenOneyOptionChanged({$key|escape:'html':'UTF-8'}, {$suffix|escape:'html':'UTF-8'});">
+        {foreach from=$oney_cards key="card_key" item="card_option"}
+            <option value="{$card_key|escape:'html':'UTF-8'}"{if isset($option.card_type) && $option.card_type === (string)$card_key} selected="selected"{/if}>{$card_option|escape:'html':'UTF-8'}</option>
+        {/foreach}
+    </select>
+  </td>
+  <td>
     <input id="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS_{$key|escape:'html':'UTF-8'}_min_amount"
         name="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS[{$key|escape:'html':'UTF-8'}][min_amount]"
         value="{$option.min_amount|escape:'html':'UTF-8'}"
@@ -43,8 +52,8 @@
     <input id="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS_{$key|escape:'html':'UTF-8'}_count"
         name="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS[{$key|escape:'html':'UTF-8'}][count]"
         value="{$option.count|escape:'html':'UTF-8'}"
-        style="width: 55px;"
-        type="text">
+        style="width: 55px; {if $option.card_type == 'ONEY_PAYLATER'} opacity: 0.5 !important;{/if}"
+        type="text" {if $option.card_type == 'ONEY_PAYLATER'} disabled="disabled"{/if}>
   </td>
   <td>
     <input id="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS_{$key|escape:'html':'UTF-8'}_rate"
