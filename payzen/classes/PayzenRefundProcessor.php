@@ -32,12 +32,61 @@ class PayzenRefundProcessor implements RefundProcessor
     /**
      * Action to do after sucessful refund process.
      *
+     * @throws Exception
      */
     public function doOnSuccess($operationResponse, $operationType)
     {
+        // Retrieve Order from its Id.
         $cartId = (int) $operationResponse['orderDetails']['orderId'];
         $orderId = Order::getOrderByCartId($cartId);
         $order = new Order($orderId);
+
+        // Retrieve order currency.
+        $orderCurrency = new Currency((int) $order->id_currency);
+        $currency = Lyranetwork\Payzen\Sdk\Form\Api::findCurrencyByAlphaCode($orderCurrency->iso_code);
+
+        // Total amount paid by the client.
+        $orderAmount = Tools::ps_round($order->total_paid, $currency->getDecimals());
+        $orderAmountInCents = $currency->convertAmountToInteger($orderAmount);
+
+        $orderDetails = OrderDetail::getList($orderId);
+        $orderRefundedAmount = 0;
+        foreach($orderDetails as $orderDetail){
+            // Retrieve the amount already refunded in PrestaShop.
+            if (version_compare(_PS_VERSION_, '1.6', '<=')) {
+                $orderRefundedAmount += Tools::ps_round($orderDetail["product_quantity_refunded"] * $orderDetail["total_price_tax_incl"], $currency->getDecimals());
+            } else {
+                $orderRefundedAmount += Tools::ps_round($orderDetail["total_refunded_tax_incl"], $currency->getDecimals());
+            }
+        }
+
+        $orderRefundedAmountInCents = $currency->convertAmountToInteger($orderRefundedAmount);
+
+        // Sum of refund request amount and amount already refunded in PrestaShop.
+        $refundAmount = $operationResponse['amount'] + $orderRefundedAmountInCents;
+
+        // Amount refunded on the Back Office.
+        $transRefundedAmount = 0;
+        if (isset($operationResponse['refundedAmount']) && $operationResponse['refundedAmount']) {
+            $transRefundedAmount = $operationResponse['refundedAmount'];
+        }
+
+        if (isset($operationResponse['refundedAmountMulti']) && $operationResponse['refundedAmountMulti']) {
+            $refundAmount = $operationResponse['refundedAmountMulti'] + $orderRefundedAmountInCents;
+        }
+
+        if ($operationType == 'frac_update') {
+            if ($transRefundedAmount == $refundAmount && $refundAmount == $orderAmountInCents) {
+                $this->context->cookie->payzenSplitPaymentUpdateRefundStatus = "True";
+                $order->setCurrentState((int) Configuration::get('PAYZEN_OS_REFUNDED'));
+            } elseif(! ($transRefundedAmount == $refundAmount && $transRefundedAmount < $orderAmountInCents)){
+                $msg = sprintf($this->translate('Refund of split payment is not supported. Please, consider making necessary changes in %1$s Back Office.'), 'PayZen');
+
+                throw new \Exception($msg);
+            }
+
+            return;
+        }
 
         $responseData = PayzenTools::convertRestResult($operationResponse);
         $response = new PayzenResponse($responseData, null, null, null);
@@ -46,16 +95,8 @@ class PayzenRefundProcessor implements RefundProcessor
         $this->payzen->createMessage($order, $response);
         $this->payzen->savePayment($order, $response, $operationType === 'cancel');
 
-        $transAmount = $order->total_paid;
-
-        $orderCurrency = new Currency((int) $order->id_currency);
-        $currency = Lyranetwork\Payzen\Sdk\Form\Api::findCurrencyByAlphaCode($orderCurrency->iso_code);
-        $transAmount = Tools::ps_round($transAmount, $currency->getDecimals());
-        $amountInCents = $currency->convertAmountToInteger($transAmount);
-        $refundedAmount = $operationResponse['amount'];
-
         $isManualUpdateRefundStatus = isset($this->context->cookie->payzenManualUpdateToManagedRefundStatuses) && ($this->context->cookie->payzenManualUpdateToManagedRefundStatuses === 'True');
-        if (!$isManualUpdateRefundStatus && $refundedAmount == $amountInCents) {
+        if (!$isManualUpdateRefundStatus && $refundAmount == $orderAmountInCents) {
             $order->setCurrentState((int) Configuration::get('PAYZEN_OS_REFUNDED'));
         }
     }
@@ -104,7 +145,7 @@ class PayzenRefundProcessor implements RefundProcessor
      * Translate given message.
      *
      */
-    public function Translate($message)
+    public function translate($message)
     {
         return $this->payzen->l($message);
     }

@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.16.0';
+        $this->version = '1.16.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -709,7 +709,7 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
-                        if (! is_numeric($option['count']) && ($option['card_type'] !== 'ONEY_PAYLATER') || ! is_numeric($option['rate']) || empty($option['code'])) {
+                        if ((isset($option['count']) && ! is_numeric($option['count'])) && ($option['card_type'] !== 'ONEY_PAYLATER') || ! is_numeric($option['rate']) || empty($option['code'])) {
                             unset($value[$id]); // Error, do not save this option.
                             $error = true;
                         } else {
@@ -1813,9 +1813,10 @@ class Payzen extends PaymentModule
             return;
         }
 
-        if ($order->total_paid_real <= 0) {
+        if ($order->total_paid_real <= 0 || $this->context->cookie->payzenSplitPaymentUpdateRefundStatus === "True") {
             // Order already cancelled or refunded.
             $this->logger->logInfo("Order #{$order->id} was already cancelled or refunded.");
+            unset($this->context->cookie->payzenSplitPaymentUpdateRefundStatus);
             return;
         }
 
@@ -2465,6 +2466,12 @@ class Payzen extends PaymentModule
 
             if ($response->get('operation_type') === 'CREDIT') {
                 if (version_compare(_PS_VERSION_, '1.7.7', '>=')) {
+                    if ($order->total_paid_real <= 0) {
+                        // Order already cancelled or refunded.
+                        $this->logger->logInfo("Order #{$order->id} was already cancelled or refunded.");
+                        return;
+                    }
+
                     // Workarround for PrestaShop 1.7.7.x, payments with negative amounts not accepted.
                     // Create a credit slip if it is not already created from BO PrestaShop.
                     if (! Tools::isSubmit('doPartialRefundPayzen') && ! Tools::isSubmit('doStandardRefundPayzen')) {
@@ -2745,8 +2752,13 @@ class Payzen extends PaymentModule
 
     public static function nextOrderState($response, $outofstock = false, $old_state = null, $is_partial_payment = false)
     {
-        // PAYZEN_OS_REFUNDED is a final state no state change.
-        if (Configuration::get('PAYZEN_OS_REFUNDED') == $old_state) {
+        $final_states = array(
+            Configuration::get('PAYZEN_OS_REFUNDED'),
+            Configuration::get('PS_OS_CANCELED')
+        );
+
+        // They are final states, no state change.
+        if (in_array($old_state, $final_states)) {
             return $old_state;
         }
 
