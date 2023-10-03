@@ -51,9 +51,9 @@
   <td>
     <input id="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS_{$key|escape:'html':'UTF-8'}_count"
         name="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS[{$key|escape:'html':'UTF-8'}][count]"
-        value="{$option.count|escape:'html':'UTF-8'}"
-        style="width: 55px; {if $option.card_type == 'ONEY_PAYLATER'} opacity: 0.5 !important;{/if}"
-        type="text" {if $option.card_type == 'ONEY_PAYLATER'} disabled="disabled"{/if}>
+        value="{$option.count|default:''|escape:'html':'UTF-8'}"
+        style="width: 55px; {if isset($option.card_type) && $option.card_type == 'ONEY_PAYLATER'} opacity: 0.5 !important;{/if}"
+        type="text" {if isset($option.card_type) && $option.card_type == 'ONEY_PAYLATER'} disabled="disabled"{/if}>
   </td>
   <td>
     <input id="PAYZEN_ONEY{$suffix|escape:'html':'UTF-8'}_OPTIONS_{$key|escape:'html':'UTF-8'}_rate"

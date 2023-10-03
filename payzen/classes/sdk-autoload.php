@@ -11,11 +11,11 @@ spl_autoload_register('payzenSdkAutoload', true, true);
 
 function payzenSdkAutoload($className)
 {
-    if (empty($className) || strpos($className, 'Lyranetwork\\Payzen\\Sdk\\') !== 0) {
+    if (empty($className) || strpos($className, 'Lyranetwork\\Payzen\\Sdk') !== 0) {
         // Not Payzen SDK classes.
         return;
     }
 
-    $className = str_replace('\\', DIRECTORY_SEPARATOR, $className);
-    include_once $className . '.php';
+    $className = str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $className);
+    include_once dirname(__FILE__) . DIRECTORY_SEPARATOR . $className . '.php';
 }

@@ -485,6 +485,7 @@ $_MODULE['<{payzen}prestashop>payzen_dd367f5fbbdba105ab71cdcf4f7cf366'] = 'O val
 $_MODULE['<{payzen}prestashop>payzen_8e83bfe58eb12afb591a7f99f01e6d35'] = 'Não é possível reembolsar uma transação com pagamento pendente.';
 $_MODULE['<{payzen}prestashop>payzen_d67793cb999383fca646b7954ab67137'] = 'Ocorreu um erro durante o reembolso do pedido #%1$s. Favor consultar os logs de PayZen para maiores detalhes.';
 $_MODULE['<{payzen}prestashop>payzen_0ad207a47022c5ba4d99d915d39a06a7'] = 'Não é possível reembolsar o pedido #%1$s.';
+$_MODULE['<{payzen}prestashop>payzen_7f1405a4460380a57ee6e8cd0d049ae3'] = 'Reembolso de pagamento fracionado não é suportado. Não esqueça de fazer as modificações necessárias no Back Office %1$s.';
 $_MODULE['<{payzen}prestashop>payment_std_rest_4c561c57168fbd2c6a31ad79170183cf'] = 'Clique no botão « Pagar » para digitar as informações sobre o pagamento em modo popin';
 $_MODULE['<{payzen}prestashop>back_office_40844e29d3d1c9aca36a6c15e702808a'] = 'Adicionar meios de pagamento';
 $_MODULE['<{payzen}prestashop>back_office_004bf6c9a40003140292e97330236c53'] = 'Ação';
