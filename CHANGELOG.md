@@ -1,3 +1,10 @@
+1.16.1, 2023-10-03:
+- Bug fix: Fix PHP error related to undefined index.
+- Bug fix: Fix order status upon refund when it is already refunded or canceled.
+- Handle refund of a split payment.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.16.0, 2023-07-06:
 - [embedded] Smartform integration.
 - [embedded] Send shopping cart content for payment with embedded fields.

@@ -92,20 +92,44 @@ class Api {
         $this->refundProcessor->log("Start refund of {$amount} {$orderInfo->getOrderCurrencySign()} for order #{$orderInfo->getOrderId()} on payment gateway.", 'INFO');
 
         try {
-            // Get payment details.
-            $getPaymentDetails = $this->getPaymentDetails($orderInfo);
+            // Get payment details of all transactions, including ones in unpaid status to manage refund of split payment.
+            $getPaymentDetails = $this->getPaymentDetails($orderInfo, true);
+
             if (count($getPaymentDetails) > 1) {
                 // Payment in installments, refund the desired amount from last installment to first one.
-                // Check if we can refund $amount.
+                // Check if we can refund amount.
                 $refundableAmount = 0;
+                $transactionRefundedAmount = 0;
+                $split = true;
+
                 foreach ($getPaymentDetails as $key => $transaction) {
-                    // Get the refundable amount of each transaction.
+                    // Get the refundable and the already refunded amount of each transaction.
                     $transactionRefundableAmount = $this->getTransactionRefundableAmount($transaction, $orderInfo->getOrderCurrencyIsoCode());
+                    $transactionRefundedAmount += $this->getTransactionRefundedAmount($transaction, $orderInfo->getOrderCurrencyIsoCode());
                     $getPaymentDetails[$key]['transactionRefundableAmount'] = $transactionRefundableAmount;
                     $refundableAmount += $transactionRefundableAmount;
+
+                    if (isset($transaction['metadata']['module_id']) && $transaction['metadata']['module_id'] == "multi") {
+                        $split = false;
+                    }
                 }
 
-                if ($amountInCents > $refundableAmount) {
+                if ($split) {
+                    if (! $transactionRefundedAmount || $transactionRefundedAmount == 0) {
+                        $msg = sprintf($this->refundProcessor->translate('Refund of split payment is not supported. Please, consider making necessary changes in %1$s Back Office.'), 'PayZen');
+                        throw new \Exception($msg);
+                    }
+
+                    $response = array(
+                        'orderDetails' => array(
+                            'orderId' => $orderInfo->getOrderId()
+                        ),
+                        'amount' => $amountInCents,
+                        'refundedAmount' => $transactionRefundedAmount
+                    );
+
+                    $this->refundProcessor->doOnSuccess($response, "frac_update");
+                } elseif ($amountInCents > $refundableAmount) {
                     // Unable to refund more than the sum of the refundable amount of each installment.
                     $msg = sprintf(
                         $this->refundProcessor->translate('Remaining amount (%1$s %2$s) is less than requested refund amount (%3$s %2$s).'),
@@ -113,16 +137,29 @@ class Api {
                         $orderInfo->getOrderCurrencySign(),
                         $amount
                     );
+
                     throw new \Exception($msg);
                 } else {
+                    // Extract paid transactions to manage normal refund.
+                    $getPaymentDetailsPaid = array_filter(
+                        $getPaymentDetails,
+                        function ($trx) {
+                            return $trx["status"] !== "UNPAID";
+                        }
+                    );
+
                     $AmountStillToRefund = $amountInCents;
-                    foreach ($getPaymentDetails as $transaction) {
+                    $refundedAmount = 0;
+                    foreach ($getPaymentDetailsPaid as $transaction) {
                         if ($transaction['transactionRefundableAmount'] > 0) {
-                            $transactionAmounRefund = min($transaction['transactionRefundableAmount'], $AmountStillToRefund);
-                            $AmountStillToRefund -= $transactionAmounRefund;
+                            $transactionAmountRefund = min($transaction['transactionRefundableAmount'], $AmountStillToRefund);
+                            $AmountStillToRefund -= $transactionAmountRefund;
+
+                            $refundedAmount += $transactionAmountRefund;
+                            $transaction['refundedAmount'] = $refundedAmount;
 
                             // Do not update order status till we refund all the amount.
-                            $this->refundFromOneTransaction($orderInfo, $transactionAmounRefund, $transaction, $currency);
+                            $this->refundFromOneTransaction($orderInfo, $transactionAmountRefund, $transaction, $currency);
 
                             if ($AmountStillToRefund == 0) {
                                 break;
@@ -131,8 +168,16 @@ class Api {
                     }
                 }
             } else {
+                // Extract paid transactions to manage normal refund.
+                $getPaymentDetailsPaid = array_filter(
+                    $getPaymentDetails,
+                    function ($trx) {
+                        return $trx["status"] !== "UNPAID";
+                    }
+                );
+
                 // Standard payment, refund on the only transaction.
-                $this->refundFromOneTransaction($orderInfo, $amountInCents, reset($getPaymentDetails), $currency);
+                $this->refundFromOneTransaction($orderInfo, $amountInCents, reset($getPaymentDetailsPaid), $currency);
             }
 
             return true;
@@ -174,9 +219,10 @@ class Api {
      * Get payment details for the passed order info.
      *
      * @param \Lyranetwork\Payzen\Sdk\Refund\OrderInfo $orderInfo
+     * @param boolean $unpaid to include or not unpaid transactions
      * @return array
      */
-    private function getPaymentDetails($orderInfo)
+    private function getPaymentDetails($orderInfo, $unpaid = false)
     {
         /**
          * @var Lyranetwork\Payzen\Sdk\Rest\Api $client
@@ -199,8 +245,7 @@ class Api {
         $transBySequence = array();
         foreach ($getOrderResponse['answer']['transactions'] as $transaction) {
             $sequenceNumber = $transaction['transactionDetails']['sequenceNumber'];
-            // Unpaid transactions are not considered.
-            if ($transaction['status'] !== 'UNPAID') {
+            if (($transaction['status'] !== 'UNPAID' || $unpaid) && $transaction['detailedStatus'] !== 'REFUSED') {
                 $transBySequence[$sequenceNumber] = $transaction;
             }
         }
@@ -223,37 +268,71 @@ class Api {
 
             throw new \Lyranetwork\Payzen\Sdk\Refund\WsException($errorMessage, $answer['errorCode']);
         } elseif (! empty($expectedStatuses) && ! in_array($answer['detailedStatus'], $expectedStatuses, true)) {
-            throw new \Exception(sprintf($this->refundProcessor->translate('Unexpected transaction type received (%1$s).'), $answer['detailedStatus']));
+            throw new \Exception(sprintf($this->refundProcessor->translate('Unexpected transaction status received (%1$s).'), $answer['detailedStatus']));
         }
     }
 
-    private function getTransactionRefundableAmount($transaction, $orderCurrencyIsoCode)
+    private function getTransactionRefundedAmount($transaction, $orderCurrencyIsoCode)
     {
+        $refundedAmount = 0;
         if ($transaction['detailedStatus'] === 'CAPTURED') {
             // Get transaction amount and already refunded amount.
             if ($orderCurrencyIsoCode !== $transaction['currency']) {
-                $transAmount = $transaction['transactionDetails']['effectiveAmount'];
                 $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['effectiveRefundAmount'];
             } else {
-                $transAmount = $transaction['amount'];
                 $refundedAmount = $transaction['transactionDetails']['cardDetails']['captureResponse']['refundAmount'];
             }
 
             if (empty($refundedAmount)) {
                 $refundedAmount = 0;
             }
+        } elseif ($transaction['detailedStatus'] === 'CANCELLED') {
+            // Get transaction amount and already refunded amount.
+            if ($orderCurrencyIsoCode !== $transaction['currency']) {
+                $refundedAmount = $transaction['transactionDetails']['effectiveAmount'];
+            } else {
+                $refundedAmount = $transaction['amount'];
+            }
 
-            $refundedableAmount = $transAmount - $refundedAmount;
+            if (empty($refundedAmount)) {
+                $refundedAmount = 0;
+            }
+        }
+
+        return $refundedAmount;
+    }
+
+    private function getTransactionRefundableAmount($transaction, $orderCurrencyIsoCode)
+    {
+        $refundedAmount = $this->getTransactionRefundedAmount($transaction, $orderCurrencyIsoCode);
+        if ($transaction['detailedStatus'] === 'CAPTURED') {
+            // Get transaction amount and already refunded amount.
+            if ($orderCurrencyIsoCode !== $transaction['currency']) {
+                $transAmount = $transaction['transactionDetails']['effectiveAmount'];
+            } else {
+                $transAmount = $transaction['amount'];
+            }
+
+            $refundableAmount = $transAmount - $refundedAmount;
         } else {
-            $refundedableAmount = ($orderCurrencyIsoCode !== $transaction['currency']) ?
+            $refundableAmount = ($orderCurrencyIsoCode !== $transaction['currency']) ?
                 $transaction['transactionDetails']['effectiveAmount'] : $transaction['amount'];
         }
 
-        return $refundedableAmount;
+        return $refundableAmount;
     }
 
     private function refundFromOneTransaction($orderInfo, $amountInCents, $transaction, $currency)
     {
+        if (! $transaction) {
+            $msg = sprintf(
+                $this->refundProcessor->translate("No paid transaction found for order ID [%s]"),
+                $orderInfo->getOrderId()
+            );
+
+            throw new \Exception($msg);
+        }
+
         $amount = $currency->convertAmountToFloat($amountInCents, $currency->getDecimals());
         $successStatuses = array_merge(
             PayzenApi::getSuccessStatuses(),
@@ -335,6 +414,8 @@ class Api {
                 throw new \Exception(sprintf($this->refundProcessor->translate('Unexpected transaction type received (%1$s).'), $transType));
             }
 
+            $refundPaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+
             // Refund success do after refund function.
             $this->refundProcessor->log("Online refund $amount {$orderInfo->getOrderCurrencySign()} for transaction with uuid #$uuid for order #{$orderInfo->getOrderId()} is successful.", 'INFO');
             $this->refundProcessor->doOnSuccess($refundPaymentResponse['answer'], 'refund');
@@ -362,6 +443,8 @@ class Api {
                 $cancelPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
                 self::checkRestResult($cancelPaymentResponse, array('CANCELLED'));
 
+                $cancelPaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+
                 // Refund success do after refund function.
                 $this->refundProcessor->log("Online transaction with uuid #$uuid cancel for order #{$orderInfo->getOrderId()} is successful.", 'INFO');
                 $this->refundProcessor->doOnSuccess($cancelPaymentResponse['answer'], 'cancel');
@@ -388,6 +471,8 @@ class Api {
                         'WAITING_AUTHORISATION_TO_VALIDATE'
                     )
                 );
+
+                $updatePaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
 
                 // Refund success do after refund function.
                 $this->refundProcessor->log("Online transaction with uuid #$uuid update for order #{$orderInfo->getOrderId()} is successful.", 'INFO');
