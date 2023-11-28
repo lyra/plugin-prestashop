@@ -33,11 +33,15 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.16.1';
+        $this->version = '1.16.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
-        $this->is_eu_compatible = 1;
+
+        if (property_exists($this, 'is_eu_compatible')) {
+            $this->is_eu_compatible = 1;
+        }
+
         $this->need_instance = 1;
 
         $this->logger = PayzenTools::getLogger();
@@ -1082,62 +1086,58 @@ class Payzen extends PaymentModule
             $html = '';
 
             $standard = new PayzenStandardPayment();
-            if ($standard->isAvailable($this->context->cart)) {
-                if ($standard->isEmbedded()) {
-                    $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
-                    $pub_key = $test_mode ? Configuration::get('PAYZEN_PUBKEY_TEST') :
-                        Configuration::get('PAYZEN_PUBKEY_PROD');
+            if ($standard->isAvailable($this->context->cart) && $standard->isEmbedded()) {
+                $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
+                $pub_key = $test_mode ? Configuration::get('PAYZEN_PUBKEY_TEST') : Configuration::get('PAYZEN_PUBKEY_PROD');
 
-                    // URL where to redirect after payment.
-                    $return_url = $this->context->link->getModuleLink('payzen', 'rest', array(), true);
+                // URL where to redirect after payment.
+                $return_url = $this->context->link->getModuleLink('payzen', 'rest', array(), true);
 
-                    // Current language or default if not supported.
-                    $language = Language::getLanguage((int) $this->context->cart->id_lang);
-                    $language_iso_code = $language['language_code'] ?
-                        Tools::substr($language['language_code'], 0, 2) : $language['iso_code'];
-                    $language_iso_code = Tools::strtolower($language_iso_code);
-                    if (! Lyranetwork\Payzen\Sdk\Form\Api::isSupportedLanguage($language_iso_code)) {
-                        $language_iso_code = Configuration::get('PAYZEN_DEFAULT_LANGUAGE');
-                    }
-
-                    $html .= '<script>
-                                var PAYZEN_LANGUAGE = "' . $language_iso_code . '";
-                              </script>';
-
-                    $html .= '<script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js"
-                                      kr-public-key="' . $pub_key . '"
-                                      kr-post-url-success="' . $return_url . '"
-                                      kr-post-url-refused="' . $return_url . '"
-                                      kr-language="' . $language_iso_code . '"
-                                      kr-label-do-register="' . Configuration::get('PAYZEN_STD_REST_LBL_REGIST', $language['id_lang']) . '"';
-
-                    $rest_placeholders = @unserialize(Configuration::get('PAYZEN_STD_REST_PLACEHLDR'));
-                    if ($pan_label = $rest_placeholders['pan'][$language['id_lang']]) {
-                        $html .= ' kr-placeholder-pan="' . $pan_label . '"';
-                    }
-
-                    if ($expiry_label = $rest_placeholders['expiry'][$language['id_lang']]) {
-                        $html .= ' kr-placeholder-expiry="' . $expiry_label . '"';
-                    }
-
-                    if ($cvv_label = $rest_placeholders['cvv'][$language['id_lang']]) {
-                        $html .= ' kr-placeholder-security-code="' . $cvv_label . '"';
-                    }
-
-                    $html .= '></script>' . "\n";
-
-                    // Theme and plugins, should be loaded after the javascript library.
-                    $rest_theme = Configuration::get('PAYZEN_STD_REST_THEME');
-                    $html .= '<link rel="stylesheet" href="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '-reset.css">
-                              <script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '.js"></script>';
-
-                    $this->context->smarty->assign('payzen_rest_theme', $rest_theme);
-
-                    $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
-
-                    Media::addJsDef(array('payzen' => array('restUrl' => $return_url, 'pageType' => $page)));
-                    $this->addJS('rest.js');
+                // Current language or default if not supported.
+                $language = Language::getLanguage((int) $this->context->cart->id_lang);
+                $language_iso_code = $language['language_code'] ? Tools::substr($language['language_code'], 0, 2) : $language['iso_code'];
+                $language_iso_code = Tools::strtolower($language_iso_code);
+                if (! Lyranetwork\Payzen\Sdk\Form\Api::isSupportedLanguage($language_iso_code)) {
+                    $language_iso_code = Configuration::get('PAYZEN_DEFAULT_LANGUAGE');
                 }
+
+                $html .= '<script>
+                            var PAYZEN_LANGUAGE = "' . $language_iso_code . '";
+                          </script>';
+
+                $html .= '<script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js"
+                                  kr-public-key="' . $pub_key . '"
+                                  kr-post-url-success="' . $return_url . '"
+                                  kr-post-url-refused="' . $return_url . '"
+                                  kr-language="' . $language_iso_code . '"
+                                  kr-label-do-register="' . Configuration::get('PAYZEN_STD_REST_LBL_REGIST', $language['id_lang']) . '"';
+
+                $rest_placeholders = @unserialize(Configuration::get('PAYZEN_STD_REST_PLACEHLDR'));
+                if ($pan_label = $rest_placeholders['pan'][$language['id_lang']]) {
+                    $html .= ' kr-placeholder-pan="' . $pan_label . '"';
+                }
+
+                if ($expiry_label = $rest_placeholders['expiry'][$language['id_lang']]) {
+                    $html .= ' kr-placeholder-expiry="' . $expiry_label . '"';
+                }
+
+                if ($cvv_label = $rest_placeholders['cvv'][$language['id_lang']]) {
+                    $html .= ' kr-placeholder-security-code="' . $cvv_label . '"';
+                }
+
+                $html .= '></script>' . "\n";
+
+                // Theme and plugins, should be loaded after the javascript library.
+                $rest_theme = Configuration::get('PAYZEN_STD_REST_THEME');
+                $html .= '<link rel="stylesheet" href="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '-reset.css">
+                          <script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '.js"></script>';
+
+                $this->context->smarty->assign('payzen_rest_theme', $rest_theme);
+
+                $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
+
+                Media::addJsDef(array('payzen' => array('restUrl' => $return_url, 'pageType' => $page)));
+                $this->addJS('rest.js');
             }
 
             // Add backward compatibility module CSS.
@@ -1947,7 +1947,7 @@ class Payzen extends PaymentModule
 
         $update_order_slip = false;
 
-        if ($order_slip_type == 1) {
+        if (($order_slip_type == 1) && ($order->total_discounts > 0)) {
             $amount -= $order->total_discounts;
             $update_order_slip = true;
         }

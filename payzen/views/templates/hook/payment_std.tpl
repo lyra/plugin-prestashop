@@ -56,3 +56,24 @@
     {/if}
   {/if}
 </form>
+
+<script type="text/javascript">
+  window.onload = function(e) {
+    options = document.getElementsByClassName('payment-option');
+    if ((typeof options !== null) && (options.length == 1)) {
+      document.getElementById('pay-with-payment-option-1-form').classList.add('payzen-show-options');
+
+      let element = document.getElementById('payment-option-1-additional-information');
+      if (element !== null) {
+        document.getElementById('payment-option-1-additional-information').classList.add('payzen-show-options');
+      }
+    } else {
+      document.getElementById('pay-with-payment-option-1-form').classList.remove('payzen-show-options');
+
+      let element = document.getElementById('payment-option-1-additional-information');
+      if (element !== null) {
+        document.getElementById('payment-option-1-additional-information').classList.remove('payzen-show-options');
+      }
+    }
+  };
+</script>

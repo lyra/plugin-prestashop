@@ -322,6 +322,7 @@ class PayzenHelperForm
                                         Configuration::get('PAYZEN_STD_REST_THEME') : 'classic',
             'PAYZEN_STD_SF_COMPACT_MODE' => Configuration::get('PAYZEN_STD_SF_COMPACT_MODE'),
             'PAYZEN_STD_SF_THRESHOLD' => Configuration::get('PAYZEN_STD_SF_THRESHOLD'),
+            'PAYZEN_STD_SF_DISPLAY_TITLE' => Configuration::get('PAYZEN_STD_SF_DISPLAY_TITLE'),
             'PAYZEN_STD_REST_PLACEHLDR' => $placeholders,
             'PAYZEN_STD_REST_LBL_REGIST' => self::getLangConfig('PAYZEN_STD_REST_LBL_REGIST'),
             'PAYZEN_STD_REST_ATTEMPTS' => Configuration::get('PAYZEN_STD_REST_ATTEMPTS'),

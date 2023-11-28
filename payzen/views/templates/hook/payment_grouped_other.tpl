@@ -29,3 +29,14 @@
     {assign var=first value=false}
   {/foreach}
 </form>
+
+<script type="text/javascript">
+  window.onload = function(e) {
+    options = document.getElementsByClassName('payment-option');
+    if ((typeof options !== null) && (options.length == 1)) {
+      document.getElementById('pay-with-payment-option-1-form').classList.add('payzen-show-options');
+    } else {
+      document.getElementById('pay-with-payment-option-1-form').classList.remove('payzen-show-options');
+    }
+  };
+</script>

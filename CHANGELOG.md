@@ -1,3 +1,11 @@
+1.16.2, 2023-11-28:
+- Bug fix: Fix order slip amount.
+- [embedded] Send capture delay parameter for Smartform modes.
+- [embedded] Added possibility to display/hide payment method title on checkout page for Smartform modes.
+- Compatibility with PrestaShop 8.1.x and higher.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.16.1, 2023-10-03:
 - Bug fix: Fix PHP error related to undefined index.
 - Bug fix: Fix order status upon refund when it is already refunded or canceled.
