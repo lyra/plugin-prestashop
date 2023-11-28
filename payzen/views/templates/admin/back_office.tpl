@@ -101,7 +101,7 @@
 
       <div style="padding: 5px;">{l s='Developed by' mod='payzen'} <b><a href="https://www.lyra.com/" target="_blank">Lyra Network</a></b></div>
       <div style="padding: 5px;">{l s='Contact us' mod='payzen'} <span style="display: inline-table;"><b>{$payzen_formatted_support_email|unescape:'html':'UTF-8'}</b></span></div>
-      <div style="padding: 5px;">{l s='Module version' mod='payzen'} <b>{if $smarty.const._PS_HOST_MODE_|defined}Cloud{/if}{$payzen_plugin_version|escape:'html':'UTF-8'}</b></div>
+      <div style="padding: 5px;">{l s='Module version' mod='payzen'} <b>{if $smarty.const._PS_HOST_MODE_}Cloud{/if}{$payzen_plugin_version|escape:'html':'UTF-8'}</b></div>
       <div style="padding: 5px;">{l s='Gateway version' mod='payzen'} <b>{$payzen_gateway_version|escape:'html':'UTF-8'}</b></div>
 
       {if !empty($payzen_doc_files)}
@@ -828,6 +828,16 @@
             <div class="margin-form">
               <input type="text" id="PAYZEN_STD_SF_THRESHOLD" name="PAYZEN_STD_SF_THRESHOLD" value="{$PAYZEN_STD_SF_THRESHOLD|escape:'html':'UTF-8'}" style="width: 150px;" />
               <p>{l s='Number of means of payment from which they will be grouped.' mod='payzen'}</p>
+            </div>
+            <p></p>
+            <label for="PAYZEN_STD_SF_DISPLAY_TITLE">{l s='Display title' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_STD_SF_DISPLAY_TITLE" name="PAYZEN_STD_SF_DISPLAY_TITLE">
+                  {foreach from=$payzen_yes_no_options key="key" item="option"}
+                      <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_SF_DISPLAY_TITLE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                  {/foreach}
+              </select>
+              <p>{l s='Display payment method title when it is the only one activated.' mod='payzen'}</p>
             </div>
             <p></p>
           </div>

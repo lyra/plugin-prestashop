@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.16.1';
+    private static $PLUGIN_VERSION = '1.16.2';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -331,7 +331,8 @@ class PayzenTools
             array('key' => 'PAYZEN_STD_REST_POPIN_MODE', 'default' => '', 'label' => 'Display in a pop-in'),
             array('key' => 'PAYZEN_STD_REST_THEME', 'default' => 'neon', 'label' => 'Theme'),
             array('key' => 'PAYZEN_STD_SF_COMPACT_MODE', 'default' => '', 'label' => 'Compact mode'),
-            array('key' => 'PAYZEN_STD_SF_THRESHOLD', 'default' => '', 'label' => 'Number of means of payment from which they will be grouped.'),
+            array('key' => 'PAYZEN_STD_SF_THRESHOLD', 'default' => '', 'label' => 'Payment means grouping threshold'),
+            array('key' => 'PAYZEN_STD_SF_DISPLAY_TITLE', 'default' => 'True', 'label' => 'Display title'),
             array('key' => 'PAYZEN_STD_REST_PLACEHLDR', 'default' => array(), 'label' => 'Custom field placeholders'),
             array('key' => 'PAYZEN_STD_REST_LBL_REGIST',
                 'default' => array(
@@ -1049,6 +1050,19 @@ class PayzenTools
         }
 
         return implode(' / ', $installedModules);
+    }
+
+    public static function getActivePaymentMethods()
+    {
+        $activePaymentMethods = array();
+        foreach (PaymentModule::getInstalledPaymentModules() as $payment) {
+            $module = Module::getInstanceByName($payment['name']);
+            if (Validate::isLoadedObject($module) && $module->active) {
+                $activePaymentMethods[$module->name] = $module->displayName;
+            }
+        }
+
+        return $activePaymentMethods;
     }
 
     public static function getCardDataEntryModes() {

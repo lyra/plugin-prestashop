@@ -40,7 +40,17 @@
 </section>
 
 <script type="text/javascript">
-  $(document).ready(function(){
+  $(document).ready(function() {
+    $paymentOptions = $('.payment-option');
+    if ($paymentOptions && $paymentOptions.length == 1) {
+      $('#payment-option-1-additional-information').addClass('payzen-show-options');
+      {if $payzen_std_display_title != 'True'}
+        $('#payment-option-1-container').hide();
+      {/if}
+    } else {
+      $('#payment-option-1-additional-information').removeClass('payzen-show-options');
+    }
+
     {if $payzen_std_rest_popin_mode != 'True'}
       KR.setFormConfig({ form: { smartform: { singlePaymentButton: { visibility: false } } } });
     {/if}

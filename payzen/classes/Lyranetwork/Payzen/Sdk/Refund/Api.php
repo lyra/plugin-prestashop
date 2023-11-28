@@ -120,12 +120,14 @@ class Api {
                         throw new \Exception($msg);
                     }
 
+                    $refundTransactions = $this->getRefundDetails($orderInfo, false);
                     $response = array(
                         'orderDetails' => array(
                             'orderId' => $orderInfo->getOrderId()
                         ),
                         'amount' => $amountInCents,
-                        'refundedAmount' => $transactionRefundedAmount
+                        'refundedAmount' => $transactionRefundedAmount,
+                        'refundTransactions' => $refundTransactions
                     );
 
                     $this->refundProcessor->doOnSuccess($response, "frac_update");
@@ -252,6 +254,43 @@ class Api {
 
         ksort($transBySequence);
         return array_reverse($transBySequence);
+    }
+
+    /**
+     * Get refund details for the passed order info.
+     *
+     * @param \Lyranetwork\Payzen\Model\Api\Refund\OrderInfo $orderInfo
+     * @param boolean $unpaid to include or not unpaid transactions
+     * @return array
+     */
+    private function getRefundDetails($orderInfo, $unpaid = false)
+    {
+        /**
+         * @var Lyranetwork\Payzen\Model\Api\Rest\Api $client
+         * */
+        $client = new PayzenRest(
+            $this->restServerUrl,
+            $this->siteId,
+            $this->privateKey
+        );
+
+        $requestData = array(
+            'orderId' => $orderInfo->getOrderRemoteId(),
+            'operationType' => 'CREDIT'
+        );
+
+        $getOrderResponse = $client->post('V4/Order/Get', json_encode($requestData));
+        self::checkRestResult($getOrderResponse);
+
+        $transactions = array();
+        foreach ($getOrderResponse['answer']['transactions'] as $transaction) {
+            $uuid = $transaction['uuid'];
+            if (($transaction['status'] !== 'UNPAID' || $unpaid) && $transaction['detailedStatus'] !== 'REFUSED') {
+                $transactions[$uuid] = $transaction;
+            }
+        }
+
+        return $transactions;
     }
 
     // Check REST WS response.
@@ -414,7 +453,9 @@ class Api {
                 throw new \Exception(sprintf($this->refundProcessor->translate('Unexpected transaction type received (%1$s).'), $transType));
             }
 
-            $refundPaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+            if (isset($transaction['refundedAmount'])) { // For payment in installment refund.
+                $refundPaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+            }
 
             // Refund success do after refund function.
             $this->refundProcessor->log("Online refund $amount {$orderInfo->getOrderCurrencySign()} for transaction with uuid #$uuid for order #{$orderInfo->getOrderId()} is successful.", 'INFO');
@@ -443,7 +484,9 @@ class Api {
                 $cancelPaymentResponse = $client->post('V4/Transaction/CancelOrRefund', json_encode($requestData));
                 self::checkRestResult($cancelPaymentResponse, array('CANCELLED'));
 
-                $cancelPaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+                if (isset($transaction['refundedAmount'])) { // For payment in installment refund.
+                    $cancelPaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+                }
 
                 // Refund success do after refund function.
                 $this->refundProcessor->log("Online transaction with uuid #$uuid cancel for order #{$orderInfo->getOrderId()} is successful.", 'INFO');
@@ -472,7 +515,9 @@ class Api {
                     )
                 );
 
-                $updatePaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+                if (isset($transaction['refundedAmount'])) { // For payment in installment refund.
+                    $updatePaymentResponse['answer']['refundedAmountMulti'] = $transaction['refundedAmount'];
+                }
 
                 // Refund success do after refund function.
                 $this->refundProcessor->log("Online transaction with uuid #$uuid update for order #{$orderInfo->getOrderId()} is successful.", 'INFO');
