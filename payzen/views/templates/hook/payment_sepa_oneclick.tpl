@@ -50,6 +50,13 @@
   }
 
   window.onload = function() {
+    options = $('#payment-option');
+    if ((typeof options !== null) && (options.length == 1)) {
+      $('#payment-option-1-additional-information').addClass('payzen-show-options');
+    } else {
+      $('#payment-option-1-additional-information').removeClass('payzen-show-options');
+    }
+
     $("input[data-module-name=payzen]").change(function() {
       if ($(this).is(':checked')) {
         payzenSepaOneclickPaymentSelect(1);

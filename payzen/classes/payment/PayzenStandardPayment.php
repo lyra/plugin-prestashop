@@ -87,6 +87,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $vars['payzen_std_smartform_compact_mode'] = Configuration::get('PAYZEN_STD_SF_COMPACT_MODE');
         $vars['payzen_std_smartform_payment_means_grouping_threshold'] = Configuration::get('PAYZEN_STD_SF_THRESHOLD') ?
             Configuration::get('PAYZEN_STD_SMARTFORM_PAYMENT_MEANS_GROUPING_THRESHOLD') : 'False';
+        $vars['payzen_std_display_title'] = $this->displayTitle();
 
         // Payment by identifier.
         $vars['payzen_is_valid_std_identifier'] = false;
@@ -162,6 +163,23 @@ class PayzenStandardPayment extends AbstractPayzenPayment
     {
         // Get data entry mode.
         return Configuration::get($this->prefix . 'CARD_DATA_MODE');
+    }
+
+    private function displayTitle()
+    {
+        if (! $this->isSmartform()) {
+            return 'True';
+        }
+
+        if ($this->isSmartform() && Configuration::get('PAYZEN_STD_REST_POPIN_MODE') === 'True') {
+            return 'True';
+        }
+
+        if (sizeOf(PayzenTools::getActivePaymentMethods()) > 1) {
+            return 'True';
+        }
+
+        return Configuration::get('PAYZEN_STD_SF_DISPLAY_TITLE');
     }
 
     private function checkSsl()
@@ -292,6 +310,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             ),
             'transactionOptions' => array(
                 'cardOptions' => array(
+                    'captureDelay' => $this->getEscapedVar($request, 'capture_delay'), // In case of Smartform, only payment means supporting capture delay will be shown.
                     'paymentSource' => 'EC'
                 )
             ),
@@ -316,10 +335,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         // Set Number of attempts in case of rejected payment.
         if (Configuration::get($this->prefix . 'REST_ATTEMPTS') !== null) {
             $params['transactionOptions']['cardOptions']['retry'] = Configuration::get($this->prefix . 'REST_ATTEMPTS');
-        }
-
-        if ($this->getEntryMode() === PayzenTools::MODE_EMBEDDED) {
-            $params['transactionOptions']['cardOptions']['captureDelay'] = $this->getEscapedVar($request, 'capture_delay');
         }
 
         if ($use_identifier) {

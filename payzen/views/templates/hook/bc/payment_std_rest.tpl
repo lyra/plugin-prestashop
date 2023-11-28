@@ -23,7 +23,7 @@
         {/if}
     {/if}
   >
-    <img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}
+    <div id="payzen_std_title"><img class="logo" src="{$payzen_logo|escape:'html':'UTF-8'}" />{$payzen_title|escape:'html':'UTF-8'}</div>
 
     {if $payzen_std_card_data_mode == '5'}
         <div id="payzen_standard_rest_wrapper" style="padding-top: 10px; padding-left: 40px;">
@@ -53,6 +53,15 @@
     {/if}
 
     <script type="text/javascript">
+        $(document).ready(function(){
+            {if $payzen_std_display_title != 'True'}
+                $paymentOptions = $('.payment_module');
+                if ($paymentOptions && $paymentOptions.length == 1) {
+                    $('#payzen_std_title').hide();
+                }
+            {/if}
+        });
+
         var whenDefined = function(context, variableName, cb, interval) {
             if (interval === null) {
                 interval = 150;
