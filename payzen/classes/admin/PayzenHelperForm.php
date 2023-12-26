@@ -239,6 +239,12 @@ class PayzenHelperForm
                 'code' => '',
                 'title' => ''
             ),
+            'payzen_sepa_mandate_mode_options' => array(
+                'PAYMENT' => $payzen->l('One-off SEPA direct debit', 'payzenhelperform'),
+                'REGISTER_PAY' => $payzen->l('Register a recurrent SEPA mandate with direct debit', 'payzenhelperform'),
+                'REGISTER' => $payzen->l('Register a recurrent SEPA mandate without direct debit', 'payzenhelperform')
+            ),
+            'payzen_extra_options' => self::getExtraConfig(),
 
             'prestashop_categories' => Category::getCategories((int) $context->language->id, true, false),
             'prestashop_languages' => Language::getLanguages(false),
@@ -252,11 +258,6 @@ class PayzenHelperForm
                 Carrier::ALL_CARRIERS
             ),
             'prestashop_groups' => self::getAuthorizedGroups(),
-            'payzen_sepa_mandate_mode_options' => array(
-                'PAYMENT' => $payzen->l('One-off SEPA direct debit', 'payzenhelperform'),
-                'REGISTER_PAY' => $payzen->l('Register a recurrent SEPA mandate with direct debit', 'payzenhelperform'),
-                'REGISTER' => $payzen->l('Register a recurrent SEPA mandate without direct debit', 'payzenhelperform')
-            ),
 
             'PAYZEN_ENABLE_LOGS' => Configuration::get('PAYZEN_ENABLE_LOGS'),
             'PAYZEN_ENABLE_CUST_MSG' => Configuration::get('PAYZEN_ENABLE_CUST_MSG'),
@@ -291,6 +292,10 @@ class PayzenHelperForm
             'PAYZEN_SHOP_URL' => Configuration::get('PAYZEN_SHOP_URL'),
 
             'PAYZEN_3DS_MIN_AMOUNT' => self::getArrayConfig('PAYZEN_3DS_MIN_AMOUNT'),
+
+            'PAYZEN_DOCUMENT' => Configuration::get('PAYZEN_DOCUMENT'),
+            'PAYZEN_NUMBER' => Configuration::get('PAYZEN_NUMBER'),
+            'PAYZEN_NEIGHBORHOOD' => Configuration::get('PAYZEN_NEIGHBORHOOD'),
 
             'PAYZEN_REDIRECT_ENABLED' => Configuration::get('PAYZEN_REDIRECT_ENABLED'),
             'PAYZEN_REDIRECT_SUCCESS_T' => Configuration::get('PAYZEN_REDIRECT_SUCCESS_T'),
@@ -402,8 +407,11 @@ class PayzenHelperForm
                 array() : explode(';', Configuration::get('PAYZEN_' . $key . '_COUNTRY_LST'));
         }
 
-        if (! PayzenTools::$plugin_features['embedded']) {
-            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_EMBEDDED]);
+        if (! PayzenTools::$plugin_features['embedded'] || ! PayzenTools::$plugin_features['smartform']) {
+            if (! PayzenTools::$plugin_features['embedded']) {
+                unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_EMBEDDED]);
+            }
+
             unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM]);
             unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM_EXT_WITH_LOGOS]);
             unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM_EXT_WITHOUT_LOGOS]);
@@ -466,5 +474,23 @@ class PayzenHelperForm
             WHERE gl.`id_lang` = ' . (int) $context->language->id;
 
         return Db::getInstance()->executeS($sql);
+    }
+
+    private static function getExtraConfig()
+    {
+        $fields[''] = '-- Select custom field --';
+        $customer = Db::getInstance()->executeS("SHOW COLUMNS FROM `" . _DB_PREFIX_ . "customer`");
+        foreach ($customer as $k => $v) {
+            $input = _DB_PREFIX_ . 'customer.' . $v['Field'];
+            $fields[$input] = $input;
+        }
+
+        $address = Db::getInstance()->executeS("SHOW COLUMNS FROM `" . _DB_PREFIX_ . "address`");
+        foreach ($address as $k => $v) {
+            $input = _DB_PREFIX_ . 'address.' . $v['Field'];
+            $fields[$input] = $input;
+        }
+
+        return $fields;
     }
 }

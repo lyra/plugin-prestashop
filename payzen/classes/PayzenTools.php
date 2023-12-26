@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.16.2';
+    private static $PLUGIN_VERSION = '1.16.3';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -95,7 +95,9 @@ class PayzenTools
         'restrictmulti' => false,
         'shatwo' => true,
         'embedded' => true,
+        'smartform' => true,
         'support' => true,
+        'brazil' => false,
 
         'multi' => true,
         'choozeo' => false,
@@ -249,6 +251,10 @@ class PayzenTools
             array('key' => 'PAYZEN_RETKEY_PROD', 'default' => '', 'label' => 'SHA256 production key'),
             array('key' => 'PAYZEN_REST_SERVER_URL', 'default' => self::getDefault('REST_URL'), 'label' => 'REST API server URL'),
             array('key' => 'PAYZEN_REST_JS_CLIENT_URL', 'default' => self::getDefault('STATIC_URL'), 'label' => 'JavaScript client URL'),
+
+            array('key' => 'PAYZEN_DOCUMENT', 'name' => 'document_custom_field', 'default' => '', 'label' => 'CPF/CNPJ field'),
+            array('key' => 'PAYZEN_NUMBER', 'name' => 'number_custom_field', 'default' => '', 'label' => 'Address number field'),
+            array('key' => 'PAYZEN_NEIGHBORHOOD', 'name' => 'neighborhood_custom_field', 'default' => '', 'label' => 'Neighborhood field'),
 
             array('key' => 'PAYZEN_DEFAULT_LANGUAGE', 'default' => self::getDefault('LANGUAGE'), 'label' => 'Default language'),
             array('key' => 'PAYZEN_AVAILABLE_LANGUAGES', 'name' => 'available_languages', 'default' => '',
@@ -1075,5 +1081,18 @@ class PayzenTools
             '8' => 'SMARTFORM_EXT_WITH_LOGOS',
             '9' => 'SMARTFORM_EXT_WITHOUT_LOGOS'
         );
+    }
+
+    public static function formatDocument($cnpj_cpf)
+    {
+        $cnpj_cpf = preg_replace('/[^0-9]/is', '', $cnpj_cpf);
+
+        if (strlen(preg_replace("/\D/", '', $cnpj_cpf)) === 11) {
+            $response = preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", "\$1.\$2.\$3-\$4", $cnpj_cpf);
+        } else {
+            $response = preg_replace("/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/", "\$1.\$2.\$3/\$4-\$5", $cnpj_cpf);
+        }
+
+        return $response;
     }
 }
