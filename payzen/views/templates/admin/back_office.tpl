@@ -659,6 +659,35 @@
               <b>{l s='Entries marked with * are newly added and must be configured.' mod='payzen'}</b>
             </p>
           </div>
+          {if $payzen_plugin_features['brazil']}
+            <label for="PAYZEN_DOCUMENT">{l s='CPF/CNPJ field' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_DOCUMENT" name="PAYZEN_DOCUMENT">
+                {foreach from=$payzen_extra_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_DOCUMENT === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Custom field where CPF/CNPJ is saved on shop.' mod='payzen'}</p>
+            </div>
+            <label for="PAYZEN_NUMBER">{l s='Address number field' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_NUMBER" name="PAYZEN_NUMBER">
+                {foreach from=$payzen_extra_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_NUMBER === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Custom field where address number is saved on shop.' mod='payzen'}</p>
+            </div>
+            <label for="PAYZEN_NEIGHBORHOOD">{l s='Neighborhood field' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_NEIGHBORHOOD" name="PAYZEN_NEIGHBORHOOD">
+                {foreach from=$payzen_extra_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_NEIGHBORHOOD === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='Custom field where address neighborhood is saved on shop.' mod='payzen'}</p>
+            </div>
+          {/if}
         </section>
       </fieldset>
       <div class="clear">&nbsp;</div>

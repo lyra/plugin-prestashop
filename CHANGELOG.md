@@ -1,7 +1,10 @@
+1.16.3, 2023-12-26:
+- [technical] Improve features management by plugin variant.
+
 1.16.2, 2023-11-28:
 - Bug fix: Fix order slip amount.
-- [embedded] Send capture delay parameter for Smartform modes.
-- [embedded] Added possibility to display/hide payment method title on checkout page for Smartform modes.
+- [smartform] Send capture delay parameter for Smartform modes.
+- [smartform] Added possibility to display/hide payment method title on checkout page for Smartform modes.
 - Compatibility with PrestaShop 8.1.x and higher.
 - Update list of supported payment means.
 - Update list of supported currencies.
@@ -14,7 +17,7 @@
 - Update list of supported currencies.
 
 1.16.0, 2023-07-06:
-- [embedded] Smartform integration.
+- [smartform] Smartform integration.
 - [embedded] Send shopping cart content for payment with embedded fields.
 - [embedded] Bug fix: Fix error related to validation mode.
 - [oney] Added 10x 12x Oney and Paylater means of payment.
