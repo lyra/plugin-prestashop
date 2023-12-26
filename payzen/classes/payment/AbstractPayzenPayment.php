@@ -322,6 +322,47 @@ abstract class AbstractPayzenPayment
         /* @var $cust Customer */
         $cust = new Customer((int) $cart->id_customer);
 
+        // Customized fields for Brazil payment means.
+        if(PayzenTools::$plugin_features['brazil']) {
+            $customer_address = array_merge((array) $cust, (array) $billing_address);
+
+            $address_number = '0';
+            $config_number = Configuration::get('PAYZEN_NUMBER');
+            if (! empty($config_number)) {
+                $parts = explode('.', $config_number);
+                $data_array = json_decode(json_encode($customer_address), true);
+                if (! empty($data_array[$parts[1]])) {
+                    $address_number = $data_array[$parts[1]];
+                }
+            }
+
+            $document = '';
+            $config_document = Configuration::get('PAYZEN_DOCUMENT');
+            if (! empty($config_document)) {
+                $parts = explode('.', $config_document);
+                $data_array = json_decode(json_encode($customer_address), true);
+                if (! empty($data_array[$parts[1]])) {
+                    $document = $data_array[$parts[1]];
+                }
+            }
+
+            $document = PayzenTools::formatDocument($document);
+
+            $neighborhood = '-';
+            $config_neighborhood = Configuration::get('PAYZEN_NEIGHBORHOOD');
+            if (! empty($config_neighborhood)) {
+                $parts = explode('.', $config_neighborhood);
+                $data_array = json_decode(json_encode($customer_address), true);
+                if (! empty($data_array[$parts[1]])) {
+                    $neighborhood = $data_array[$parts[1]];
+                }
+            }
+
+            $request->set('cust_district', $neighborhood);
+            $request->set('cust_address_number', $address_number);
+            $request->set('cust_national_id', $document);
+        }
+
         // Customer data.
         $request->set('cust_email', $cust->email);
         $request->set('cust_id', $cust->id);
