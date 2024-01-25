@@ -1,3 +1,8 @@
+1.16.4, 2024-01-25:
+- Bug fix: ignore abandoned payments in IPN calls for already saved orders.
+- Improve IPN errors management.
+- Improve order statuses management.
+
 1.16.3, 2023-12-26:
 - [technical] Improve features management by plugin variant.
 
