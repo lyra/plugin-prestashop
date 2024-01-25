@@ -21,6 +21,7 @@ require_once dirname(__FILE__) . '/payzen.php';
 $logger = PayzenTools::getLogger();
 
 $save_on_failure = true;
+$header_error_500 = 'HTTP/1.1 500 Internal Server Error';
 
 if (PayzenTools::checkRestIpnValidity()) {
     // Use direct post content to avoid stipslashes from json data.
@@ -29,6 +30,8 @@ if (PayzenTools::checkRestIpnValidity()) {
     $answer = json_decode($data['kr-answer'], true);
     if (! is_array($answer)) {
         $logger->logError('Invalid REST IPN request received. Content of kr-answer: ' . $data['kr-answer']);
+
+        header($header_error_500, true, 500);
         die('<span style="display:none">KO-Invalid IPN request received.' . "\n" . '</span>');
     }
 
@@ -57,6 +60,8 @@ if (PayzenTools::checkRestIpnValidity()) {
         PayzenTools::rebuildContext($cart);
     } catch (Exception $e) {
         $logger->logError($e->getMessage() . ' Cart ID: #' . $cart->id);
+
+        header($header_error_500, true, 500);
         die('<span style="display:none">KO-' . $e->getMessage(). "\n" . '</span>');
     }
 
@@ -66,6 +71,8 @@ if (PayzenTools::checkRestIpnValidity()) {
     if (! PayzenTools::checkHash($_POST, $sha_key)) {
         $ip = Tools::getRemoteAddr();
         $logger->logError("{$ip} tries to access validation.php page without valid signature with data: " . print_r($_POST, true));
+
+        header($header_error_500, true, 500);
         die('<span style="display:none">KO-An error occurred while computing the signature.' . "\n" . '</span>');
     }
 
@@ -84,6 +91,8 @@ if (PayzenTools::checkRestIpnValidity()) {
         PayzenTools::rebuildContext($cart);
     } catch (Exception $e) {
         $logger->logError($e->getMessage() . " Cart ID: #{$cart->id}.");
+
+        header($header_error_500, true, 500);
         die('<span style="display:none">KO-' . $e->getMessage(). "\n" . '</span>');
     }
 
@@ -102,10 +111,13 @@ if (PayzenTools::checkRestIpnValidity()) {
         $logger->logError("{$ip} tries to access validation.php page without valid signature with data: " . print_r($_POST, true));
         $logger->logError('Signature algorithm selected in module settings must be the same as one selected in gateway Back Office.');
 
+        header($header_error_500, true, 500);
         die($response->getOutputForGateway('auth_fail'));
     }
 } else {
     $logger->logError('Invalid IPN request received. Content: ' . print_r($_POST, true));
+
+    header($header_error_500, true, 500);
     die('<span style="display:none">KO-Invalid IPN request received.' . "\n" . '</span>');
 }
 
@@ -130,7 +142,8 @@ if (! $order_id) {
             $msg .= " Order is in a failed state, cart #$cart_id.";
             $logger->logWarning($msg);
 
-            die($response->getOutputForGateway('ko', 'Total paid is different from order amount.'));
+            header($header_error_500, true, 500);
+            die($response->getOutputForGateway('amount_error'));
         } else {
             // Response to server.
             die($response->getOutputForGateway('payment_ok'));
@@ -154,6 +167,13 @@ if (! $order_id) {
 } else {
     // Order already registered.
     $logger->logInfo("Order #$order_id already registered for cart #$cart_id.");
+
+    // Ignore IPN on cancelation for already registered orders.
+    if ($response->getTransStatus() === 'ABANDONED') {
+        $logger->logWarning('Server call on cancelation for cart #' . $cart_id . '. No order will be updated.');
+
+        die('<span style="display:none">KO-Payment abandoned.' . "\n" . '</span>');
+    }
 
     $order = new Order((int) $order_id);
     $old_state = (int) $order->getCurrentState();
@@ -212,6 +232,8 @@ if (! $order_id) {
         (! Payzen::isStateInArray($new_state, $consistent_states) || ($response->get('url_check_src') === 'PAY'))) {
         // Order cannot move from final paid state to not completed states.
         $logger->logInfo("Order is successfully registered for cart #$cart_id but platform returns a payment error, transaction status is {$response->getTransStatus()}.");
+
+        header($header_error_500, true, 500);
         die($response->getOutputForGateway('payment_ko_on_order_ok'));
     } elseif (! $old_state || Payzen::isStateInArray($old_state, Payzen::getManagedStates())) {
         if (($old_state === Configuration::get('PS_OS_ERROR')) && $response->isAcceptedPayment() &&
@@ -220,7 +242,9 @@ if (! $order_id) {
             $msg = "Error: amount paid {$order->total_paid_real} is not equal to initial amount {$order->total_paid}.";
             $msg .= " Order is in a failed state, cart #$cart_id.";
             $logger->logWarning($msg);
-            die($response->getOutputForGateway('ko', 'Total paid is different from order amount.'));
+
+            header($header_error_500, true, 500);
+            die($response->getOutputForGateway('amount_error'));
         }
 
         if (! $old_state) {
