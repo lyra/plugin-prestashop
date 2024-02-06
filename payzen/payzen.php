@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.16.4';
+        $this->version = '1.16.5';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -150,6 +150,15 @@ class Payzen extends PaymentModule
             $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
 
             $installError = true;
+        }
+
+        if (version_compare(_PS_VERSION_, '1.7', '>')) {
+            if (! $this->registerHook('actionEmailSendBefore')) {
+                $this->logger->logWarning('Hook « actionEmailSendBefore » could not be saved.');
+                $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
+
+                $installError = true;
+            }
         }
 
         $admin_config_params = PayzenTools::getAdminParameters();
@@ -1732,6 +1741,25 @@ class Payzen extends PaymentModule
         return $this->displayRefundOnlineCheckbox(true) . $this->displaySupportContactFromOrderDetails($order);
     }
 
+    public function hookActionEmailSendBefore(array $params)
+    {
+        $order = new Order((int) $params['templateVars']['{id_order}']);
+        if (! $this->active || ($order->module != $this->name)) {
+            return;
+        }
+
+        if (! isset($this->context->cookie->payzenActionEmailSend)) {
+            $this->logger->logInfo("Stop Order #{$order->id} payment email from being sent.");
+            $this->context->cookie->payzenActionEmailSend = true;
+            return false;
+        }
+
+        if ($params['template'] === 'payment') {
+            unset($this->context->cookie->payzenActionEmailSend);
+            return true;
+        }
+    }
+
     private function displayRefundOnlineCheckbox($isBackwardCompatibility = false)
     {
         $template = _PS_MODULE_DIR_ . 'payzen/views/templates/admin/';
@@ -2150,9 +2178,27 @@ class Payzen extends PaymentModule
         $this->savePayment($order, $response);
         $this->saveIdentifier($customer, $response);
 
+        if (version_compare(_PS_VERSION_, '1.7', '>')) {
+            // Send email upon the update of the payment.
+            $order_history = new OrderHistory();
+            $order_history->id_order = (int) $order->id;
+            $order_history->id_order_state = $order->getCurrentState();
+            if (! $order_history->addWithemail(true)) {
+                $this->logger->logInfo("Failed to send email when updating payments for cart #{$cart->id}.");
+            }
+
+            // Delete double entry from history.
+            $result = Db::getInstance()->execute(
+                'DELETE FROM `' . _DB_PREFIX_ . 'order_history` WHERE `id_order` = ' . (int) $order->id . ' AND `id_order_state` = '
+                    . (int) $order->getCurrentState() . ' ORDER BY `date_add` DESC LIMIT 1');
+
+            if (! $result) {
+                $this->logger->logWarning("An error occurred when deleting history for order #{$order->id}.");
+            }
+        }
+
         return $order;
     }
-
 
     /**
      * Update current order state.
