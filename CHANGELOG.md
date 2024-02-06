@@ -1,3 +1,6 @@
+1.16.5, 2024-02-06:
+- Bug fix: Fix payment in installments invoice for PrestaShop 1.7.x and higher.
+
 1.16.4, 2024-01-25:
 - Bug fix: ignore abandoned payments in IPN calls for already saved orders.
 - Improve IPN errors management.
