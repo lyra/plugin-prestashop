@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.16.5';
+        $this->version = '1.16.6';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -187,7 +187,7 @@ class Payzen extends PaymentModule
                     $default = $param['default'];
                 }
 
-                if (! Configuration::updateValue($key, $default, false, false, false)) {
+                if (! Configuration::updateGlobalValue($key, $default)) {
                     $this->logger->logWarning("Error while saving default value for field {$key}.");
                     $this->_errors[] = sprintf($this->l('Error while saving default value for field « %s ».'), $key);
 
@@ -232,7 +232,7 @@ class Payzen extends PaymentModule
             $oney_state->shipped = false;
             $oney_state->paid = false;
 
-            if (! $oney_state->save() || ! Configuration::updateValue('PAYZEN_OS_ONEY_PENDING', $oney_state->id)) {
+            if (! $oney_state->save() || ! Configuration::updateGlobalValue('PAYZEN_OS_ONEY_PENDING', $oney_state->id)) {
                 $this->logger->logWarning('Error while creating customized order status «Funding request in progress».');
 
                 $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('Funding request in progress'));
@@ -270,7 +270,7 @@ class Payzen extends PaymentModule
             $tvp_state->shipped = false;
             $tvp_state->paid = false;
 
-            if (! $tvp_state->save() || ! Configuration::updateValue('PAYZEN_OS_TO_VALIDATE', $tvp_state->id)) {
+            if (! $tvp_state->save() || ! Configuration::updateGlobalValue('PAYZEN_OS_TO_VALIDATE', $tvp_state->id)) {
                 $this->logger->logWarning('Error while creating customized order status «To validate payment».');
 
                 $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('To validate payment'));
@@ -309,7 +309,7 @@ class Payzen extends PaymentModule
             $oos_state->paid = true;
             $oos_state->template = 'outofstock';
 
-            if (! $oos_state->save() || ! Configuration::updateValue('PAYZEN_OS_PAYMENT_OUTOFSTOCK', $oos_state->id)) {
+            if (! $oos_state->save() || ! Configuration::updateGlobalValue('PAYZEN_OS_PAYMENT_OUTOFSTOCK', $oos_state->id)) {
                 $this->logger->logWarning('Error while creating customized order status «On backorder (payment accepted)».');
 
                 $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('On backorder (payment accepted)'));
@@ -347,7 +347,7 @@ class Payzen extends PaymentModule
             $auth_state->shipped = false;
             $auth_state->paid = false;
 
-            if (! $auth_state->save() || ! Configuration::updateValue('PAYZEN_OS_AUTH_PENDING', $auth_state->id)) {
+            if (! $auth_state->save() || ! Configuration::updateGlobalValue('PAYZEN_OS_AUTH_PENDING', $auth_state->id)) {
                 $this->logger->logWarning('Error while creating customized order status «Pending authorization».');
 
                 $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('Pending authorization'));
@@ -386,7 +386,7 @@ class Payzen extends PaymentModule
             $sofort_state->shipped = false;
             $sofort_state->paid = false;
 
-            if (! $sofort_state->save() || ! Configuration::updateValue('PAYZEN_OS_TRANS_PENDING', $sofort_state->id)) {
+            if (! $sofort_state->save() || ! Configuration::updateGlobalValue('PAYZEN_OS_TRANS_PENDING', $sofort_state->id)) {
                 $this->logger->logWarning('Error while creating customized order status «Pending funds transfer».');
 
                 $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), $this->l('Pending funds transfer'));
@@ -424,7 +424,7 @@ class Payzen extends PaymentModule
             $refund_state->shipped = false;
             $refund_state->paid = false;
 
-            if (! $refund_state->save() || ! Configuration::updateValue('PAYZEN_OS_REFUNDED', $refund_state->id)) {
+            if (! $refund_state->save() || ! Configuration::updateGlobalValue('PAYZEN_OS_REFUNDED', $refund_state->id)) {
                 $this->logger->logWarning('Error while creating customized order status «Refunded with PayZen».');
 
                 $this->_errors[] = sprintf($this->l('Error while creating customized order status « %s ».'), sprintf($this->l('Refunded with %s'), 'PayZen'));
