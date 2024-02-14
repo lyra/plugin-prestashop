@@ -1,3 +1,6 @@
+1.16.6, 2024-02-14:
+- Bug fix: Fix module custom order statuses creation during installation.
+
 1.16.5, 2024-02-06:
 - Bug fix: Fix payment in installments invoice for PrestaShop 1.7.x and higher.
 
