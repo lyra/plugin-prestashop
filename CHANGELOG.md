@@ -1,3 +1,8 @@
+1.17.0, 2024-02-27:
+- [smartform] Display Smartform payment means as smart buttons.
+- Bug fix: Fix messages generated at the end of the payment when customer service option is disabled.
+- Bug fix: Skip the use of the class Media to add JS for PrestaShop 1.5.x.
+
 1.16.6, 2024-02-14:
 - Bug fix: Fix module custom order statuses creation during installation.
 

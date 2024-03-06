@@ -101,10 +101,10 @@ button.kr-popin-button {
     cursor: pointer !important;
 }
 
-.kr-smart-form[kr-single-payment-button] {
-    max-width: 100%;
-}
-
 .payzen-show-options {
     display: block !important;
+}
+
+.payzen-hide-confirmation {
+    display: none !important;
 }

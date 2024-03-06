@@ -35,14 +35,19 @@
       <div class="kr-form-error"></div>
     </div>
   {elseif $payzen_std_card_data_mode === '7' || $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'}
-    <div class="kr-smart-form" {if $payzen_std_rest_popin_mode == 'True'} kr-popin {else} kr-single-payment-button {/if} {if $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'} kr-card-form-expanded {/if} {if $payzen_std_card_data_mode === '9'} kr-no-card-logo-header {/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}"></div>
+    <div class="kr-smart-form" {if $payzen_std_rest_popin_mode == 'True'} kr-popin {/if} {if $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'} kr-card-form-expanded {/if} {if $payzen_std_card_data_mode === '9'} kr-no-card-logo-header {/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}"></div>
   {/if}
 </section>
 
 <script type="text/javascript">
   $(document).ready(function() {
-    $paymentOptions = $('.payment-option');
-    if ($paymentOptions && $paymentOptions.length == 1) {
+    $('input[type="radio"][name="payment-option"]').on('click', function(e) {
+      payzenManageButtonDisplay();
+    });
+
+    var paymentOptions = $('.payment-option');
+    if (paymentOptions && paymentOptions.length == 1) {
+      $("#payment-option-1").prop("checked", true);
       $('#payment-option-1-additional-information').addClass('payzen-show-options');
       {if $payzen_std_display_title != 'True'}
         $('#payment-option-1-container').hide();
@@ -50,10 +55,6 @@
     } else {
       $('#payment-option-1-additional-information').removeClass('payzen-show-options');
     }
-
-    {if $payzen_std_rest_popin_mode != 'True'}
-      KR.setFormConfig({ form: { smartform: { singlePaymentButton: { visibility: false } } } });
-    {/if}
 
     {if $payzen_std_smartform_compact_mode == 'True'}
       KR.setFormConfig({ cardForm: { layout: 'compact' }, smartForm: { layout: 'compact'} });
@@ -63,14 +64,9 @@
       KR.setFormConfig({ smartForm: { groupingThreshold: "{$payzen_std_smartform_payment_means_grouping_threshold|escape:'html':'UTF-8'}" } });
     {/if}
 
-    KR.onPaymentMethodSelected(data => {
-      var element = $('#conditions_to_approve\\[terms-and-conditions\\]');
-      if (element.is(":checked")) {
-        $("#payment-confirmation button.btn").removeClass('disabled');
-      }
-    });
-
     KR.onFormReady(() => {
+      payzenManageButtonDisplay();
+
       {if $payzen_std_rest_popin_mode == 'True'}
         var element = $(".kr-smart-button");
         if (element.length > 0) {
@@ -82,8 +78,31 @@
           }
         }
       {/if}
-    });
+    })
   });
+
+  var payzenManageButtonDisplay = async function() {
+    {if ($payzen_std_rest_popin_mode === 'True') || ($payzen_std_card_data_mode === '5')}
+      return;
+    {/if}
+ 
+    var methods = await KR.getPaymentMethods().then(function(result) {
+       return result;
+    });
+
+    // If only the card form is available, hide our payment button and use Prestashop button.
+    if ((methods.paymentMethods.length == 1) && (methods.paymentMethods[0] == 'CARDS')) {
+      $(".kr-payment-button").hide();
+      return;
+    }
+
+    var currentOptionId = $("input[type='radio'][name='payment-option']:checked").attr('id');
+    if ($("#" + currentOptionId + "-additional-information").find("#payzen_standard_rest_wrapper").length > 0) {
+      $("#payment-confirmation").addClass('payzen-hide-confirmation');
+    } else {
+      $("#payment-confirmation").removeClass('payzen-hide-confirmation');
+    }
+  };
 
   var payzenSubmit = function(e) {
     e.preventDefault();
@@ -97,13 +116,7 @@
       {/if}
 
       {if $payzen_std_rest_popin_mode == 'True'}
-        if (smartformModalButton.length === 0 && isSmartform.length > 0) {
-          var element = jQuery('.kr-smart-button');
-          var paymentMethod = element.attr('kr-payment-method');
-          KR.openPaymentMethod(paymentMethod);
-        } else {
-          KR.openPopin();
-        }
+        KR.openPopin();
 
         $('#payment-confirmation button').removeAttr('disabled');
       {else}
@@ -111,11 +124,7 @@
         $('.payzen .processing').css('display', 'block');
         $('#payment-confirmation button').attr('disabled', 'disabled');
 
-        if (isSmartform.length > 0 || smartformModalButton.length > 0) {
-          KR.openSelectedPaymentMethod();
-        } else {
-          KR.submit();
-        }
+        KR.submit();
       {/if}
     }
 

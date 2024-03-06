@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.16.6';
+        $this->version = '1.17.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1143,9 +1143,11 @@ class Payzen extends PaymentModule
 
                 $this->context->smarty->assign('payzen_rest_theme', $rest_theme);
 
-                $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
+                if (version_compare(_PS_VERSION_, '1.6', '>=')) {
+                    $page = Configuration::get('PS_ORDER_PROCESS_TYPE') ? 'order-opc' : 'order';
+                    Media::addJsDef(array('payzen' => array('restUrl' => $return_url, 'pageType' => $page)));
+                }
 
-                Media::addJsDef(array('payzen' => array('restUrl' => $return_url, 'pageType' => $page)));
                 $this->addJS('rest.js');
             }
 
@@ -2279,17 +2281,17 @@ class Payzen extends PaymentModule
             $msg->private = 1;
             $msg->read = 1;
             $msg->save();
+
+            // Create order message anyway to prevent changes on PrestaShop coming versions.
+            $msg = new Message();
+            $msg->message = $message;
+            $msg->id_order = (int) $order->id;
+            $msg->private = 1;
+            $msg->add();
+
+            // Mark message as read to archive it.
+            Message::markAsReaded($msg->id, 0);
         }
-
-        // Create order message anyway to prevent changes on PrestaShop coming versions.
-        $msg = new Message();
-        $msg->message = $message;
-        $msg->id_order = (int) $order->id;
-        $msg->private = 1;
-        $msg->add();
-
-        // Mark message as read to archive it.
-        Message::markAsReaded($msg->id, 0);
     }
 
     private function jsonDecode($parameter)
