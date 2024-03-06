@@ -13,6 +13,10 @@
 
 $(function() {
     $('#total_price').on('DOMSubtreeModified', function() {
+        if (typeof (payzen) === 'undefined') {
+            return;
+        }
+
         // If it's one-page checkout, do nothing.
         if (payzen.pageType === 'order-opc') {
             return;
@@ -90,8 +94,8 @@ var payzenInitRestEvents = function() {
         }
 
         // Reset PrestaShop confirmation button style on error.
-        var conditions = $('#conditions_to_approve\\[terms-and-conditions\\]');
-        if (conditions.is(":checked")) {
+        var approvedConditions = $('input[name*="conditions_to_approve\"]:checked').length == $('input[name*="conditions_to_approve\"]').length;
+        if (approvedConditions) {
             $("#payment-confirmation button.btn").removeClass('disabled');
         }
 
@@ -117,20 +121,39 @@ var payzenInitRestEvents = function() {
         $('.payzen .kr-form-error').html('');
     });
 
-    KR.button.onClick(function() {
+    KR.smartForm.onClick(function({paymentMethod, action, formId}) {
         // Hide oneclick description if it is present and is not popin mode.
         if ($('#payzen_oneclick_payment_description').length && ! $('.payzen .kr-popin-button').length && ! $('.payzen .kr-type-popin').length) {
             $('#payzen_oneclick_payment_description').hide();
         }
+
+        return payzenCheckTermsAndConditions(paymentMethod);
     });
 
     KR.onPopinClosed(function() {
         // Reset PrestaShop confirmation button style on popin close.
-        var conditions = $('#conditions_to_approve\\[terms-and-conditions\\]');
-        if (conditions.is(":checked")) {
+        if (payzenCanProceed()) {
             $("#payment-confirmation button.btn").removeClass('disabled');
         }
     });
+};
+
+var payzenCheckTermsAndConditions = function(paymentMethod) {
+    if (! payzenCanProceed()) {
+        KR.throwCustomError(payzenTranslate("CLIENT_312"), paymentMethod);
+        return false;
+    }
+
+    return true;
+};
+
+var payzenCanProceed = function() {
+    var approvedConditions = ($('input[name*="conditions_to_approve\"]:checked').length == $('input[name*="conditions_to_approve\"]').length);
+    if (! approvedConditions || $("#payment-confirmation button.btn").prop('disabled')) {
+       return false;
+    }
+
+    return true;
 };
 
 // Translate error message.
@@ -154,6 +177,7 @@ var PAYZEN_ERROR_MESSAGES = {
         CLIENT_301: 'Le numéro de carte est invalide. Vérifiez le numéro et essayez à nouveau.',
         CLIENT_302: 'La date d\'expiration est invalide. Vérifiez la date et essayez à nouveau.',
         CLIENT_303: 'Le code de sécurité CVV est invalide. Vérifiez le code et essayez à nouveau.',
+        CLIENT_312: 'Veuillez vous assurer que vous avez accepté les conditions générales de vente.',
         CLIENT_999: 'Une erreur technique est survenue. Merci de réessayer plus tard.',
 
         INT_999: 'Une erreur technique est survenue. Merci de réessayer plus tard.',
@@ -174,6 +198,7 @@ var PAYZEN_ERROR_MESSAGES = {
         CLIENT_301: 'The card number is invalid. Please check the number and try again.',
         CLIENT_302: 'The expiration date is invalid. Please check the date and try again.',
         CLIENT_303: 'The card security code (CVV) is invalid. Please check the code and try again.',
+        CLIENT_312: 'Please make sure you have accepted the terms and conditions.',
         CLIENT_999: 'A technical error has occurred. Please try again later.',
 
         INT_999: 'A technical error has occurred. Please try again later.',
@@ -194,6 +219,7 @@ var PAYZEN_ERROR_MESSAGES = {
         CLIENT_301: 'Die Kartennummer ist ungültig. Bitte überprüfen Sie die Nummer und versuchen Sie es erneut.',
         CLIENT_302: 'Das Verfallsdatum ist ungültig. Bitte überprüfen Sie das Datum und versuchen Sie es erneut.',
         CLIENT_303: 'Der Kartenprüfnummer (CVC) ist ungültig. Bitte überprüfen Sie den Nummer und versuchen Sie es erneut.',
+        CLIENT_312: 'Bitte akzeptieren Sie unsere Allgemeinen Geschäftsbedingungen.',
         CLIENT_999: 'Ein technischer Fehler ist aufgetreten. Bitte Versuchen Sie es später erneut.',
 
         INT_999: 'Ein technischer Fehler ist aufgetreten. Bitte Versuchen Sie es später erneut.',
@@ -214,6 +240,7 @@ var PAYZEN_ERROR_MESSAGES = {
         CLIENT_301: 'El número de tarjeta no es válido. Por favor, compruebe el número y vuelva a intentarlo.',
         CLIENT_302: 'La fecha de caducidad no es válida. Por favor, compruebe la fecha y vuelva a intentarlo.',
         CLIENT_303: 'El código de seguridad de la tarjeta (CVV) no es válido. Por favor revise el código y vuelva a intentarlo.',
+        CLIENT_312: 'Es necesario aceptar los términos y condiciones al final de la página para poder proceder con el pago.',
         CLIENT_999: 'Ha ocurrido un error técnico. Por favor, inténtelo de nuevo más tarde.',
 
         INT_999: 'Ha ocurrido un error técnico. Por favor, inténtelo de nuevo más tarde.',
@@ -234,6 +261,7 @@ var PAYZEN_ERROR_MESSAGES = {
         CLIENT_301: 'O número do cartão é inválido. Por favor, cheque o número e tente novamente.',
         CLIENT_302: 'A data de expiração é inválida. Verifique a data e tente novamente.',
         CLIENT_303: 'O código de segurança do cartão (CVV) é inválido. Verifique o código e tente novamente.',
+        CLIENT_312: 'Certifique-se que aceitou os termos e as condições.',
         CLIENT_999: 'Ocorreu um erro técnico. Por favor, tente novamente mais tarde.',
 
         INT_999: 'Ocorreu um erro técnico. Por favor, tente novamente mais tarde.',
@@ -254,6 +282,7 @@ var PAYZEN_ERROR_MESSAGES = {
         CLIENT_301: 'O número do cartão é inválido. Por favor, cheque o número e tente novamente.',
         CLIENT_302: 'A data de expiração é inválida. Verifique a data e tente novamente.',
         CLIENT_303: 'O código de segurança do cartão (CVV) é inválido. Verifique o código e tente novamente.',
+        CLIENT_312: 'Certifique-se que aceitou os termos e as condições.',
         CLIENT_999: 'Ocorreu um erro técnico. Por favor, tente novamente mais tarde.',
 
         INT_999: 'Ocorreu um erro técnico. Por favor, tente novamente mais tarde.',

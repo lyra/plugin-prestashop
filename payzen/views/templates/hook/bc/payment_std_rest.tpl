@@ -27,7 +27,7 @@
 
     {if $payzen_std_card_data_mode == '5'}
         <div id="payzen_standard_rest_wrapper" style="padding-top: 10px; padding-left: 40px;">
-            <div class="kr-embedded"{if $payzen_std_rest_popin_mode == 'True'} kr-popin{/if}
+            <div class="kr-embedded"{if $payzen_std_rest_popin_mode == 'True'} kr-popin {/if}
                 kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}"
                 kr-language="{$payzen_set_std_rest_language|escape:'html':'UTF-8'}"
                 {if isset($payzen_set_std_rest_kr_public_key)}kr-public-key="{$payzen_set_std_rest_kr_public_key|escape:'html':'UTF-8'}"{/if}
@@ -46,7 +46,7 @@
             </div>
         </div>
     {elseif $payzen_std_card_data_mode == '7' || $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'}
-        <div class="kr-smart-form"{if $payzen_std_rest_popin_mode == 'True'} kr-popin {else} kr-single-payment-button {/if} {if $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'} kr-card-form-expanded {/if} {if $payzen_std_card_data_mode === '9'} kr-no-card-logo-header {/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}"
+        <div class="kr-smart-form"{if $payzen_std_rest_popin_mode == 'True'} kr-popin {/if} {if $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'} kr-card-form-expanded {/if} {if $payzen_std_card_data_mode === '9'} kr-no-card-logo-header {/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}"
           {if isset($payzen_set_std_rest_kr_public_key)}kr-public-key="{$payzen_set_std_rest_kr_public_key|escape:'html':'UTF-8'}"{/if}
           {if isset($payzen_set_std_rest_return_url)}kr-post-url-success="{$payzen_set_std_rest_return_url|escape:'html':'UTF-8'}"{/if}
           {if isset($payzen_set_std_rest_return_url)}kr-post-url-refused="{$payzen_set_std_rest_return_url|escape:'html':'UTF-8'}"{/if}></div>

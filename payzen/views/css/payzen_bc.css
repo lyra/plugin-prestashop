@@ -102,7 +102,3 @@ label.payzen_label {
     display: inline-block;
     vertical-align: middle;
 }
-
-.kr-smart-form[kr-single-payment-button] {
-    max-width: 100%;
-}
