@@ -52,7 +52,9 @@
         $('div#historyTabContent').parent().append(payzenContactSupportDetails);
 
         // For PrestaShop 1.5.
-        $('form#formAddPayment').parent().append(payzenContactSupportDetails);
+        {if version_compare($smarty.const._PS_VERSION_, '1.6', '<')}
+            $('form#formAddPayment').parent().append(payzenContactSupportDetails);
+        {/if}
 
         $('contact-support').on('sendmail', function(e) {
             var data = e.originalEvent.detail;
