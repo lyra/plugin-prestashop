@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.17.0';
+        $this->version = '1.17.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1745,6 +1745,12 @@ class Payzen extends PaymentModule
 
     public function hookActionEmailSendBefore(array $params)
     {
+        if ((isset($params['templateVars']) && ! is_array($params['templateVars']))
+            || ! array_key_exists('{id_order}', $params['templateVars'])
+            || ! $params['templateVars']['{id_order}']) {
+            return;
+        }
+
         $order = new Order((int) $params['templateVars']['{id_order}']);
         if (! $this->active || ($order->module != $this->name)) {
             return;

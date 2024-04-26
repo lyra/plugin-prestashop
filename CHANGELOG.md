@@ -1,3 +1,8 @@
+1.17.1, 2024-04-26:
+- Bug fix: Fix contact support component link display in order details for PrestaShop 1.6.x.
+- Bug Fix: Fix error on null id_order in hook actionEmailSendBefore.
+- Added new transaction status REFUND_TO_RETRY.
+
 1.17.0, 2024-02-27:
 - [smartform] Display Smartform payment means as smart buttons.
 - Bug fix: Fix messages generated at the end of the payment when customer service option is disabled.
