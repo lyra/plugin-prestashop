@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.17.1';
+        $this->version = '1.17.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1756,14 +1756,20 @@ class Payzen extends PaymentModule
             return;
         }
 
-        if (! isset($this->context->cookie->payzenActionEmailSend)) {
-            $this->logger->logInfo("Stop Order #{$order->id} payment email from being sent.");
-            $this->context->cookie->payzenActionEmailSend = true;
-            return false;
-        }
+        if (! isset($this->context->cookie->payzenActionEmailSend)
+            && isset($this->context->cookie->payzenNewOrder)
+            && $params['template'] === 'payment') {
+                $this->logger->logInfo("Stop Order #{$order->id} payment email from being sent.");
+
+                $this->context->cookie->payzenActionEmailSend = true;
+                unset($this->context->cookie->payzenNewOrder);
+
+                return false;
+            }
 
         if ($params['template'] === 'payment') {
             unset($this->context->cookie->payzenActionEmailSend);
+
             return true;
         }
     }
@@ -2162,6 +2168,9 @@ class Payzen extends PaymentModule
         }
 
         $this->logger->logInfo("Call PaymentModule::validateOrder() PrestaShop function to create order for cart #{$cart->id}.");
+
+        // To block first payment mail send only for Payzen new orders.
+        $this->context->cookie->payzenNewOrder = true;
 
         // Call payment module validateOrder.
         $this->validateOrder(
