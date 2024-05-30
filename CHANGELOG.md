@@ -1,3 +1,7 @@
+1.17.2, 2024-05-30:
+- Rollback using 500 http code on error for IPN calls.
+- Bug fix: Fix error related to hook actionEmailSendBefore.
+
 1.17.1, 2024-04-26:
 - Bug fix: Fix contact support component link display in order details for PrestaShop 1.6.x.
 - Bug Fix: Fix error on null id_order in hook actionEmailSendBefore.
