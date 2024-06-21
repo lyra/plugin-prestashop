@@ -221,7 +221,7 @@ if (! $order_id) {
 
         die($response->getOutputForGateway($msg));
     } elseif (Payzen::isPaidOrder($order) &&
-        (! Payzen::isStateInArray($new_state, $consistent_states) || ($response->get('url_check_src') === 'PAY'))) {
+        (! Payzen::isStateInArray($new_state, $consistent_states) || ($response->get('url_check_src') !== 'MERCH_BO'))) {
         // Order cannot move from final paid state to not completed states.
         $logger->logInfo("Order is successfully registered for cart #$cart_id but platform returns a payment error, transaction status is {$response->getTransStatus()}.");
 

@@ -500,10 +500,16 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         if (Configuration::get('PAYZEN_OTHER_ENABLED') === 'True') {
             $otherPaymentMeans = @unserialize(Configuration::get('PAYZEN_OTHER_PAYMENT_MEANS'));
             $amount = $cart->getOrderTotal();
+            $billing_address = new Address((int) $cart->id_address_invoice);
+            $billing_country = new Country((int) $billing_address->id_country);
+
             foreach ($otherPaymentMeans as $key => $option) {
+                $countries = isset($option['countries']) ? $option['countries'] : array(); // Authorized countries for this option.
+
                 if (isset($option['embedded']) && ($option['embedded'] === 'True')
                     && ! (! empty($option['min_amount']) && $option['min_amount'] != 0 && $amount < $option['min_amount'])
-                    && ! (! empty($option['max_amount']) && $option['max_amount'] != 0 && $amount > $option['max_amount'])) {
+                    && ! (! empty($option['max_amount']) && $option['max_amount'] != 0 && $amount > $option['max_amount'])
+                    && (empty($countries) || in_array($billing_country->iso_code, $countries))) {
                         array_push($otherEmbeddedPaymentMeans, $option['code']);
                 }
             }
