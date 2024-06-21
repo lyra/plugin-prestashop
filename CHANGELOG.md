@@ -1,3 +1,7 @@
+1.17.3, 2024-06-21:
+- [smartform] Bug fix: Fix error related to countries restriction for Smartform payment means filter.
+- Bug fix: Fix error related to order status update on IPN when order is in final status.
+
 1.17.2, 2024-05-30:
 - Rollback using 500 http code on error for IPN calls.
 - Bug fix: Fix error related to hook actionEmailSendBefore.
