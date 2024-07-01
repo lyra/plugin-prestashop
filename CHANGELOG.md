@@ -1,3 +1,6 @@
+1.17.4, 2024-07-01:
+- [technical] Enabled some features by plugin variant.
+
 1.17.3, 2024-06-21:
 - [smartform] Bug fix: Fix error related to countries restriction for Smartform payment means filter.
 - Bug fix: Fix error related to order status update on IPN when order is in final status.
