@@ -46,6 +46,7 @@
         } else {
           $('#PAYZEN_REST_SETTINGS').hide();
           $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
+          $('#PAYZEN_STD_USE_WALLET_MENU').hide();
           toggleEmbeddedCheckbox(false);
         }
         break;
@@ -53,6 +54,7 @@
         $('#PAYZEN_REST_SETTINGS').show();
         $('#PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS').hide();
         $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+        payzenOneClickMenuDisplay();
         toggleEmbeddedCheckbox(false);
         break;
       case '7':
@@ -61,11 +63,13 @@
        $('#PAYZEN_REST_SETTINGS').show();
        $('#PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS').show();
        $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+       payzenOneClickMenuDisplay();
        toggleEmbeddedCheckbox(true);
        break;
       default:
         $('#PAYZEN_REST_SETTINGS').hide();
         $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+        $('#PAYZEN_STD_USE_WALLET_MENU').hide();
         toggleEmbeddedCheckbox(false);
     }
   }
@@ -946,12 +950,24 @@
         <div id="PAYZEN_STD_1_CLICK_PAYMENT_MENU">
           <label for="PAYZEN_STD_1_CLICK_PAYMENT">{l s='Payment by token' mod='payzen'}</label>
           <div class="margin-form">
-            <select id="PAYZEN_STD_1_CLICK_PAYMENT" name="PAYZEN_STD_1_CLICK_PAYMENT">
+            <select id="PAYZEN_STD_1_CLICK_PAYMENT" name="PAYZEN_STD_1_CLICK_PAYMENT" onchange="javascript: payzenOneClickMenuDisplay()">
               {foreach from=$payzen_yes_no_options key="key" item="option"}
                 <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_1_CLICK_PAYMENT === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
               {/foreach}
             </select>
             <p>{l s='This option allows to pay orders without re-entering bank data at each payment. The "payment by token" option should be enabled on your %s store to use this feature.' sprintf='PayZen' mod='payzen'}</p>
+          </div>
+        </div>
+
+        <div id="PAYZEN_STD_USE_WALLET_MENU" {if ($PAYZEN_STD_CARD_DATA_MODE !== '5' && $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9') || $PAYZEN_STD_1_CLICK_PAYMENT !== 'True'} style="display: none;"{/if}>
+          <label for="PAYZEN_STD_USE_WALLET">{l s='Use buyer wallet to manage tokens' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_STD_USE_WALLET" name="PAYZEN_STD_USE_WALLET">
+              {foreach from=$payzen_yes_no_options key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_USE_WALLET === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p>{l s='A wallet allows a buyer to store multiple payment cards and choose which one to use at the time of purchase, without having to enter a card number. The buyer can request the deletion of a card stored in his wallet at any time.' mod='payzen'}</p>
           </div>
         </div>
       </fieldset>

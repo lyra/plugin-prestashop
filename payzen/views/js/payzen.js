@@ -246,11 +246,19 @@ function payzenCountriesRestrictMenuDisplay(retrictCountriesPaymentId) {
 }
 
 function payzenOneClickMenuDisplay() {
-    var oneClickPayment = $('#PAYZEN_STD_1_CLICK_PAYMENT').val();
+    var restModes = ['5', '7', '8', '9'];
+    var cardEntryMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
+
+    if (restModes.indexOf(cardEntryMode) == -1) {
+        return;
+    }
+
+    var oneClickPayment =$('select#PAYZEN_STD_1_CLICK_PAYMENT option:selected').val();
+
     if (oneClickPayment == 'True') {
-        $('#PAYZEN_STD_1_CLICK_MENU').show();
+        $('#PAYZEN_STD_USE_WALLET_MENU').show();
     } else {
-        $('#PAYZEN_STD_1_CLICK_MENU').hide();
+        $('#PAYZEN_STD_USE_WALLET_MENU').hide();
     }
 }
 

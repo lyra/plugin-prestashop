@@ -108,3 +108,11 @@ button.kr-popin-button {
 .payzen-hide-confirmation {
     display: none !important;
 }
+
+div.kr-smart-form-list-section-name {
+    font-weight: bold !important;
+}
+
+.payzen_hide-wallet-elements {
+    display: none !important;
+}

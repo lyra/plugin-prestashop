@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.17.4';
+    private static $PLUGIN_VERSION = '1.18.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -352,6 +352,7 @@ class PayzenTools
                 'label' => 'Register card label'),
             array('key' => 'PAYZEN_STD_REST_ATTEMPTS', 'default' => '', 'label' => 'Payment attempts number for cards'),
             array('key' => 'PAYZEN_STD_1_CLICK_PAYMENT', 'default' => 'False', 'label' => 'Payment by token'),
+            array('key' => 'PAYZEN_STD_USE_WALLET', 'default' => 'False', 'label' => 'Use buyer wallet to manage tokens'),
             array('key' => 'PAYZEN_STD_CANCEL_IFRAME', 'default' => 'False', 'label' => 'Cancel payment in iframe mode'),
 
             array('key' => 'PAYZEN_MULTI_TITLE',

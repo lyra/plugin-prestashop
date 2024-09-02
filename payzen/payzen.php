@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.17.4';
+        $this->version = '1.18.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -117,7 +117,8 @@ class Payzen extends PaymentModule
             || ! $this->registerHook('actionOrderStatusPostUpdate')
             || ! $this->registerHook('actionAdminCarrierWizardControllerSaveBefore')
             || ! $this->registerHook('actionAdminCarriersOptionsModifier')
-            || ! $this->registerHook('actionAdminControllerSetMedia')) {
+            || ! $this->registerHook('actionAdminControllerSetMedia')
+            || ! $this->registerHook('displayCustomerAccount')) {
             $this->logger->logWarning('One or more hooks necessary for the module could not be saved.');
             $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
 
@@ -1075,7 +1076,8 @@ class Payzen extends PaymentModule
     public function hookHeader($params)
     {
         $controller = $this->context->controller;
-        if ($controller instanceof OrderController || $controller instanceof OrderOpcController) {
+
+        if ($controller instanceof OrderController || $controller instanceof OrderOpcController || $controller instanceof PayzenWalletModuleFrontController) {
             if (isset($this->context->cookie->payzenPayErrors)) {
                 // Process errors from other pages.
                 $controller->errors = array_merge(
@@ -1095,7 +1097,8 @@ class Payzen extends PaymentModule
             $html = '';
 
             $standard = new PayzenStandardPayment();
-            if ($standard->isAvailable($this->context->cart) && $standard->isEmbedded()) {
+            $embedded = $standard->isEmbedded() || $standard->accountCustomerwallet();
+            if ($standard->isAvailable($this->context->cart) && $embedded) {
                 $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
                 $pub_key = $test_mode ? Configuration::get('PAYZEN_PUBKEY_TEST') : Configuration::get('PAYZEN_PUBKEY_PROD');
 
@@ -1186,6 +1189,19 @@ class Payzen extends PaymentModule
     public function hookDisplayHeader($params)
     {
         return $this->hookHeader($params);
+    }
+
+    public function hookDisplayCustomerAccount($params)
+    {
+        $context = Context::getContext();
+
+        $url = Context::getContext()->link->getModuleLink($this->name, 'wallet', array(), true);
+
+        $this->context->smarty->assign([
+            'front_controller' => $url,
+        ]);
+
+        return $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'payzen/views/templates/hook/customer_account.tpl');
     }
 
     protected function useMobileTheme()
@@ -1419,27 +1435,25 @@ class Payzen extends PaymentModule
         if ($standard->isAvailable($cart)) {
             $option = $standard->getPaymentOption($cart);
 
+            $this->context->smarty->assign($standard->getTplVars($cart));
+            $isRestPayment = strpos($standard->getTplName(), 'rest'); // Check if it's really a payment by embedded fields.
+            $useCustomerWallet = $isRestPayment && (Configuration::get('PAYZEN_STD_USE_WALLET') == 'True');
+
             // Payment by identifier.
             $additionalForm = '';
             $oneClickPayment = false;
-            if ($standard->isOneClickActive()) {
+            if ($standard->isOneClickActive() && ! $useCustomerWallet) {
                 $savedStdIdentifier = isset($customersConfig[$cart->id_customer]['standard']['n']) ? $customersConfig[$cart->id_customer]['standard']['n'] : '';
                 $isStandardValidAlias = $standard->setCookieValidPaymentByAlias($savedStdIdentifier, $customer);
                 if ($isStandardValidAlias) {
                     $oneClickPayment = true;
-                    $this->context->smarty->assign($standard->getTplVars($cart));
                     $additionalForm = $this->fetch('module:payzen/views/templates/hook/payment_std_oneclick.tpl');
                     $option->setAdditionalInformation($additionalForm);
                 }
             }
 
             if ($standard->hasForm() || $oneClickPayment) {
-                if (! $oneClickPayment) {
-                    $this->context->smarty->assign($standard->getTplVars($cart));
-                }
-
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $standard->getTplName());
-                $isRestPayment = strpos($standard->getTplName(), 'rest'); // Check if it's really a payment by embedded fields.
                 $isIframePayment = strpos($standard->getTplName(), 'iframe');
 
                 if ($isIframePayment || ($standard->isEmbedded() && $isRestPayment)) {
@@ -2622,6 +2636,10 @@ class Payzen extends PaymentModule
     public function saveIdentifier($customer, $response)
     {
         if (! $customer->id) {
+            return;
+        }
+
+        if ($response->getExtInfo('is_customer_wallet')) {
             return;
         }
 

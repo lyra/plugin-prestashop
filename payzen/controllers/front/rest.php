@@ -38,9 +38,9 @@ class PayzenRestModuleFrontController extends ModuleFrontController
                 $json['identifierToken'] = $identifierToken;
             }
         } else {
-           $json = array(
-               'status' => 'error',
-               'message' => $this->module->l('Error when creating token.')
+            $json = array(
+                'status' => 'error',
+                'message' => $this->module->l('Error when creating token.')
             );
         }
 
@@ -57,6 +57,11 @@ class PayzenRestModuleFrontController extends ModuleFrontController
             $this->getToken();
 
             return;
+        } elseif (Tools::getValue('deleteIdentifier')) {
+            $this->logger->logInfo("Payment identifier deleted from customer wallet for user {$this->context->customer->email}. Let's delete it from the database.");
+            $this->deleteIdentifier(Tools::getValue('deleteIdentifier'));
+
+            Tools::redirect(Context::getContext()->link->getModuleLink('payzen', 'wallet', array(), true));
         }
 
         $this->logger->logInfo("User return to shop process starts.");
@@ -99,6 +104,16 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         $order_id = Order::getOrderByCartId($cart_id);
 
         if (! $order_id) {
+            if ($response->getExtInfo('from_account')) {
+                if ($response->get('identifier') || ($response->get('identifier_status') == 'CREATED')) {
+                    $this->context->cookie->payzenIdentifierOperationSuccess = $this->module->l('Payment means successfully added.', 'wallet');
+                } else {
+                    $this->context->cookie->payzenCreateIdentifierError = $this->module->l('Unable to add payment means to your account.', 'wallet');
+                }
+
+                Tools::redirect(Context::getContext()->link->getModuleLink('payzen', 'wallet', array(), true));
+            }
+
             // Order has not been processed yet.
             $new_state = (int) Payzen::nextOrderState($response);
 
@@ -187,5 +202,29 @@ class PayzenRestModuleFrontController extends ModuleFrontController
     private function checkRestReturnValidity()
     {
         return Tools::getIsset('kr-hash') && Tools::getIsset('kr-hash-algorithm') && Tools::getIsset('kr-answer');
+    }
+
+    private function deleteIdentifier($identifier)
+    {
+        $customerId = $this->context->customer->id;
+        $customerEmail = $this->context->customer->email;
+
+        $customersConfig = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+        if (! is_array($customersConfig)) {
+            $this->logger->logInfo("User {$customerEmail} has no saved identifier.");
+
+            return;
+        }
+
+        $savedIdentifier = isset($customersConfig[$customerId]['standard']['n']) ? $customersConfig[$customerId]['standard']['n'] : '';
+        if (! $savedIdentifier || ($savedIdentifier !== $identifier)) {
+            return;
+        }
+
+        unset($customersConfig[$customerId]['standard']);
+        Configuration::updateValue('PAYZEN_CUSTOMERS_CONFIG', serialize($customersConfig));
+
+        $this->logger->logInfo("Payment identifier deleted successfully for user {$customerEmail} for standard submodule.");
+        $this->context->cookie->payzenIdentifierOperationSuccess = $this->module->l('The stored means of payment was successfully deleted.', 'wallet');
     }
 }
