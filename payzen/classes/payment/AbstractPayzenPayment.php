@@ -55,6 +55,10 @@ abstract class AbstractPayzenPayment
             return false;
         }
 
+        if ($this->accountCustomerWallet()) {
+            return true;
+        }
+
         // Cart errors.
         if (! Validate::isLoadedObject($cart) || ($cart->nbProducts() <= 0)) {
             return false;
@@ -73,6 +77,21 @@ abstract class AbstractPayzenPayment
         }
 
         return true;
+    }
+
+    public function accountCustomerWallet()
+    {
+        if ($this->name !== 'standard') {
+            return false;
+        }
+
+        if (! $this->isOneClickActive()) {
+            return false;
+        }
+
+        $controller = $this->context->controller;
+
+        return ($controller instanceof PayzenWalletModuleFrontController);
     }
 
     protected function checkActive()
@@ -269,7 +288,9 @@ abstract class AbstractPayzenPayment
 
         $delivery_country = new Country((int) $delivery_address->id_country);
 
-        PayzenTools::getLogger()->logInfo("Form data generation for cart #{$cart->id} with {$this->name} submodule.");
+        if (! empty($cart->id)) {
+            PayzenTools::getLogger()->logInfo("Form data generation for cart #{$cart->id} with {$this->name} submodule.");
+        }
 
         /* @var $request PayzenRequest */
         $request = new PayzenRequest();

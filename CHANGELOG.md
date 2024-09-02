@@ -1,3 +1,6 @@
+1.18.0, 2024-09-02:
+- [embedded] Use customer wallet functionality to manage payment by alias with embedded fields and Smartform.
+
 1.17.4, 2024-07-01:
 - [technical] Enabled some features by plugin variant.
 

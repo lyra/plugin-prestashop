@@ -136,6 +136,24 @@ var payzenInitRestEvents = function() {
             $("#payment-confirmation button.btn").removeClass('disabled');
         }
     });
+
+    KR.wallet.onPaymentTokenDeleted(function(callback) {
+        if (typeof(payzen) === 'undefined') {
+            return;
+        }
+
+        var deleteIdentifier = "deleteIdentifier=" + callback.token;
+        $.ajax({
+            type: 'POST',
+            url: decodeURIComponent(payzen.restUrl),
+            async: false,
+            cache: false,
+            data: deleteIdentifier,
+            success: function() {
+                console.log("Payment identifier deleted successfully.");
+            }
+        });
+    });
 };
 
 var payzenCheckTermsAndConditions = function(paymentMethod) {
