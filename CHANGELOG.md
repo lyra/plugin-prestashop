@@ -1,3 +1,9 @@
+1.19.0, 2024-11-20:
+- [SEPA] Enable payment with SEPA for some plugin variants.
+- Bug fix: Fix error related to hook actionEmailSendBefore.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.18.0, 2024-09-02:
 - [embedded] Use customer wallet functionality to manage payment by alias with embedded fields and Smartform.
 

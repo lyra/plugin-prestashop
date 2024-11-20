@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.18.0';
+        $this->version = '1.19.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1762,24 +1762,24 @@ class Payzen extends PaymentModule
         if ((isset($params['templateVars']) && ! is_array($params['templateVars']))
             || ! array_key_exists('{id_order}', $params['templateVars'])
             || ! $params['templateVars']['{id_order}']) {
-            return;
+            return true;
         }
 
         $order = new Order((int) $params['templateVars']['{id_order}']);
         if (! $this->active || ($order->module != $this->name)) {
-            return;
+            return true;
         }
 
         if (! isset($this->context->cookie->payzenActionEmailSend)
             && isset($this->context->cookie->payzenNewOrder)
             && $params['template'] === 'payment') {
-                $this->logger->logInfo("Stop Order #{$order->id} payment email from being sent.");
+            $this->logger->logInfo("Stop Order #{$order->id} payment email from being sent.");
 
-                $this->context->cookie->payzenActionEmailSend = true;
-                unset($this->context->cookie->payzenNewOrder);
+            $this->context->cookie->payzenActionEmailSend = true;
+            unset($this->context->cookie->payzenNewOrder);
 
-                return false;
-            }
+            return false;
+        }
 
         if ($params['template'] === 'payment') {
             unset($this->context->cookie->payzenActionEmailSend);
