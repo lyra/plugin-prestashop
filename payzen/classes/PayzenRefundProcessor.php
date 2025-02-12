@@ -39,6 +39,11 @@ class PayzenRefundProcessor implements RefundProcessor
         // Retrieve Order from its Id.
         $cartId = (int) $operationResponse['orderDetails']['orderId'];
         $orderId = Order::getOrderByCartId($cartId);
+
+        if (! $orderId) {
+            return;
+        }
+
         $order = new Order($orderId);
 
         // Retrieve order currency.

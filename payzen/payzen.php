@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.19.0';
+        $this->version = '1.19.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -2085,15 +2085,14 @@ class Payzen extends PaymentModule
     private function getPrivateKey()
     {
         $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
-        $private_key = $test_mode ? Configuration::get('PAYZEN_PRIVKEY_TEST') : Configuration::get('PAYZEN_PRIVKEY_PROD');
 
-        return $private_key;
+        return $test_mode ? Configuration::get('PAYZEN_PRIVKEY_TEST') : Configuration::get('PAYZEN_PRIVKEY_PROD');
     }
 
     private function getUserInfo()
     {
-        $commentText = 'PrestaShop user: ' . $this->context->employee->email;
-        $commentText .= ' ; IP address: ' . Tools::getRemoteAddr();
+        $commentText = isset( $this->context->employee) ? "PrestaShop user: {$this->context->employee->email} ; ": '';
+        $commentText .= "IP address: " . Tools::getRemoteAddr();
 
         return $commentText;
     }
@@ -2895,6 +2894,11 @@ class Payzen extends PaymentModule
             $new_state = 'PS_OS_ERROR';
         }
 
+        $new_state_id = Configuration::get($new_state);
+        if ($new_state_id && str_starts_with($new_state, "PAYZEN_OS") && ! self::isPayzenCustomizedState($new_state_id)) {
+            $new_state = 'PS_OS_ERROR';
+        }
+
         return Configuration::get($new_state);
     }
 
@@ -3004,7 +3008,24 @@ class Payzen extends PaymentModule
             }
 
             if ((int) $state_id === (int) Configuration::get($state_name)) {
+                if (str_starts_with($state_name, "PAYZEN_OS")) {
+                    return self::isPayzenCustomizedState($state_id);
+                }
+
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function isPayzenCustomizedState($state_id)
+    {
+        $all_available_order_states = OrderState::getOrderStates((int) Context::getContext()->language->id);
+
+        foreach ($all_available_order_states as $available_order_state) {
+            if ((int) $state_id === (int) $available_order_state['id_order_state']) {
+                return $available_order_state['module_name'] === 'payzen';
             }
         }
 
@@ -3060,6 +3081,7 @@ class Payzen extends PaymentModule
     private static function payzenCreateOrderSlip($order, $amount)
     {
         $currency = new Currency($order->id_currency);
+
         $orderSlip = new OrderSlip();
         $orderSlip->id_customer = (int) $order->id_customer;
         $orderSlip->id_order = (int) $order->id;
