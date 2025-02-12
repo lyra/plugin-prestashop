@@ -104,7 +104,7 @@
     }
   };
 
-  var payzenSubmit = function(e) {
+  var payzenSubmit = async function(e) {
     e.preventDefault();
 
     if (!$('#payzen_standard').data('submitted')) {
@@ -123,6 +123,10 @@
         $('#payzen_standard').data('submitted', true);
         $('.payzen .processing').css('display', 'block');
         $('#payment-confirmation button').attr('disabled', 'disabled');
+
+        if (PAYZEN_LAST_CART == false) {
+            await payzenRefreshToken(true);
+        }
 
         KR.submit();
       {/if}

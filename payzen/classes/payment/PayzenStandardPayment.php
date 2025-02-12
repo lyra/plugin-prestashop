@@ -392,6 +392,17 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             } else {
                 $webservice = 'CreatePayment';
                 $metadata = "cart #$cart_id.";
+
+                $last_token_data = $this->context->cookie->payzen_token_data;
+                $last_token = $this->context->cookie->payzen_token;
+
+                $token_data = base64_encode(serialize($params));
+                if ($last_token && $last_token_data && ($last_token_data === $token_data)) {
+                    // Cart data does not change from last payment attempt, do not re-create payment token.
+                    PayzenTools::getLogger()->logInfo("Cart data did not change since last payment attempt, use last created token for cart #{$cart_id}.");
+
+                    return $last_token;
+                }
             }
 
             $result = $client->post('V4/Charge/'. $webservice, json_encode($params));
@@ -408,6 +419,11 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                 // Payment form token created successfully.
                 PayzenTools::getLogger()->logInfo("Form token created successfully for {$metadata}");
                 $return = $result['answer']['formToken'];
+
+                if ($webservice == 'CreatePayment') {
+                    $this->context->cookie->payzen_token = $return;
+                    $this->context->cookie->payzen_token_data = base64_encode(serialize($params));
+                }
             }
         } catch (Exception $e) {
             PayzenTools::getLogger()->logError("{$e->getMessage() }" . ($e->getCode() > 0 ? ' (' . $e->getCode() . ').' : ''));
