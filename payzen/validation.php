@@ -135,7 +135,7 @@ if (! $order_id) {
             $msg .= " Order is in a failed state, cart #$cart_id.";
             $logger->logWarning($msg);
 
-            die($response->getOutputForGateway('amount_error'));
+            die("<span style='display:none'>KO-Total paid {$order->total_paid_real} is different from order amount {$order->total_paid}.</span>");
         } else {
             // Response to server.
             die($response->getOutputForGateway('payment_ok'));
@@ -234,7 +234,7 @@ if (! $order_id) {
             $msg .= " Order is in a failed state, cart #$cart_id.";
             $logger->logWarning($msg);
 
-            die($response->getOutputForGateway('amount_error'));
+            die("<span style='display:none'>KO-Total paid {$order->total_paid_real} is different from order amount {$order->total_paid}.</span>");
         }
 
         if (! $old_state) {

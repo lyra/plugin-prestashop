@@ -1,3 +1,7 @@
+1.19.1, 2025-02-12:
+- Bug fix: Fix amount incoherence when paying with embedded fields and Smartform.
+- Bug fix: Fix error related to customized status identifier verification.
+
 1.19.0, 2024-11-20:
 - [SEPA] Enable payment with SEPA for some plugin variants.
 - Bug fix: Fix error related to hook actionEmailSendBefore.

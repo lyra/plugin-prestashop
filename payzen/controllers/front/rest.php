@@ -9,11 +9,11 @@
  */
 
 use Lyranetwork\Payzen\Sdk\Form\Response as PayzenResponse;
+use Lyranetwork\Payzen\Sdk\Form\Api as PayzenApi;
 
 class PayzenRestModuleFrontController extends ModuleFrontController
 {
     public $ssl = true;
-    private $current_cart;
     private $logger;
 
     public function __construct()
@@ -31,7 +31,7 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         $token = $payment->getFormToken($cart);
 
         if ($token) {
-            $json = array('token' => $token);
+            $json = array('token' => $token, 'lastCart' => $this->context->cookie->id_cart);
 
             if (Tools::getValue('refreshIdentifierToken')) {
                 $identifierToken = $payment->getFormToken($cart, true);
@@ -44,7 +44,7 @@ class PayzenRestModuleFrontController extends ModuleFrontController
             );
         }
 
-        die(Tools::jsonEncode($json));
+        die($this->jsonEncode($json));
     }
 
     /**
@@ -53,6 +53,14 @@ class PayzenRestModuleFrontController extends ModuleFrontController
     public function postProcess()
     {
         if (Tools::getValue('refreshToken')) {
+            if (! $this->context->cookie->id_cart) {
+                die($this->jsonEncode('{}'));
+            }
+
+            if (Tools::getValue('emptyCart')) {
+                $this->context->cookie->id_cart = null;
+            }
+
             $this->logger->logInfo('Cart has been updated, let\'s refresh form token.');
             $this->getToken();
 
@@ -62,7 +70,16 @@ class PayzenRestModuleFrontController extends ModuleFrontController
             $this->deleteIdentifier(Tools::getValue('deleteIdentifier'));
 
             Tools::redirect(Context::getContext()->link->getModuleLink('payzen', 'wallet', array(), true));
-        }
+        } elseif (Tools::getValue('emptyCart')) {
+            $json = array('lastCart' => $this->context->cookie->id_cart);
+            $this->context->cookie->id_cart = null;
+
+            die($this->jsonEncode($json));
+        } elseif (Tools::getValue('restoreCart')) {
+             $this->context->cookie->id_cart = Tools::getValue('restoreCart');
+
+             die($this->jsonEncode('{}'));
+         }
 
         $this->logger->logInfo("User return to shop process starts.");
 
@@ -226,5 +243,14 @@ class PayzenRestModuleFrontController extends ModuleFrontController
 
         $this->logger->logInfo("Payment identifier deleted successfully for user {$customerEmail} for standard submodule.");
         $this->context->cookie->payzenIdentifierOperationSuccess = $this->module->l('The stored means of payment was successfully deleted.', 'wallet');
+    }
+
+    private function jsonEncode($parameter)
+    {
+        if (method_exists('Tools', 'jsonEncode')) {
+            return Tools::jsonEncode($parameter);
+        }
+
+        return json_encode($parameter);
     }
 }

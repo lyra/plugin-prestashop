@@ -22,36 +22,7 @@ $(function() {
             return;
         }
 
-        var refreshData = 'refreshToken=1';
-        if (typeof $('#payzen_payment_by_identifier') !== 'undefined') {
-            refreshData += '&refreshIdentifierToken=1';
-        }
-
-        $.ajax({
-            type: 'POST',
-            url: decodeURIComponent(payzen.restUrl),
-            async: false,
-            cache: false,
-            data: refreshData,
-            success: function(json) {
-                var response = JSON.parse(json);
-
-                if (response.token) {
-                    var token = response.token;
-                    sessionStorage.setItem('payzenToken', response.token);
-
-                    if (response.identifierToken) {
-                        sessionStorage.setItem('payzenIdentifierToken', response.identifierToken);
-
-                        if ($('#payzen_payment_by_identifier').val() == '1') {
-                            token = response.identifierToken;
-                        }
-                    }
-
-                    KR.setFormConfig({ formToken: token,  language: PAYZEN_LANGUAGE });
-                }
-            }
-        });
+        payzenRefreshToken(false);
     });
 
     setTimeout(function() {
@@ -82,8 +53,96 @@ const PAYZEN_EXPIRY_ERRORS = [
     'PSP_108', 'PSP_136', 'PSP_649'
 ];
 
+var PAYZEN_LAST_CART = false;
+
+var payzenRestoreCart = function() {
+    if (PAYZEN_LAST_CART == false) {
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: decodeURIComponent(payzen.restUrl),
+        async: false,
+        cache: false,
+        data: "restoreCart=" + PAYZEN_LAST_CART,
+        success: function() {
+            PAYZEN_LAST_CART = false;
+        }
+    });
+};
+
+var payzenEmptyCart = function() {
+    $.ajax({
+        type: 'POST',
+        url: decodeURIComponent(payzen.restUrl),
+        async: false,
+        cache: false,
+        data: "emptyCart=1",
+        success: function(json) {
+            var response = JSON.parse(json);
+            PAYZEN_LAST_CART = false;
+
+            if (response.lastCart) {
+                PAYZEN_LAST_CART = response.lastCart;
+            }
+        }
+    });
+};
+
+var payzenRefreshToken = async function(emptyCart) {
+    var refreshData = 'refreshToken=1';
+
+    if ($('#payzen_payment_by_identifier').length > 0) {
+        refreshData += '&refreshIdentifierToken=1';
+    }
+
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: decodeURIComponent(payzen.restUrl),
+            async: false,
+            cache: false,
+            data: refreshData,
+            success: function(json) {
+                var response = JSON.parse(json);
+
+                if (response.token) {
+                    var token = response.token;
+                    sessionStorage.setItem('payzenToken', response.token);
+ 
+                    if (emptyCart) {
+                        payzenEmptyCart();
+                    }
+
+                    if (response.identifierToken) {
+                        sessionStorage.setItem('payzenIdentifierToken', response.identifierToken);
+
+                        if ($('#payzen_payment_by_identifier').val() == '1') {
+                            token = response.identifierToken;
+                        }
+                    }
+
+                    KR.setFormConfig({ formToken: token, language: PAYZEN_LANGUAGE }).then(
+                        function(v) {
+                            KR = v.KR;
+                            resolve(response);
+                        }
+                    );
+                }
+            },
+            error: function(error) {
+                console.log(JSON.stringify(error));
+                reject (error);
+            }
+       });
+   });
+};
+
 var payzenInitRestEvents = function() {
     KR.onError(function(e) {
+        payzenRestoreCart();
+
         $('.payzen .processing').css('display', 'none');
         $('#payzen_oneclick_payment_description').show();
 
@@ -156,11 +215,17 @@ var payzenInitRestEvents = function() {
     });
 };
 
-var payzenCheckTermsAndConditions = function(paymentMethod) {
+var payzenCheckTermsAndConditions = async function(paymentMethod) {
     if (! payzenCanProceed()) {
         KR.throwCustomError(payzenTranslate("CLIENT_312"), paymentMethod);
         return false;
     }
+
+    if (PAYZEN_LAST_CART != false) {
+        return true;
+    }
+
+    await payzenRefreshToken(true);
 
     return true;
 };
