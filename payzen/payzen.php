@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.19.1';
+        $this->version = '1.19.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -2895,7 +2895,7 @@ class Payzen extends PaymentModule
         }
 
         $new_state_id = Configuration::get($new_state);
-        if ($new_state_id && str_starts_with($new_state, "PAYZEN_OS") && ! self::isPayzenCustomizedState($new_state_id)) {
+        if ($new_state_id && Tools::substr($new_state, 0, Tools::strlen('PAYZEN_OS')) === 'PAYZEN_OS' && ! self::isPayzenCustomizedState($new_state_id)) {
             $new_state = 'PS_OS_ERROR';
         }
 
@@ -3008,7 +3008,7 @@ class Payzen extends PaymentModule
             }
 
             if ((int) $state_id === (int) Configuration::get($state_name)) {
-                if (str_starts_with($state_name, "PAYZEN_OS")) {
+                if (Tools::substr($state_name, 0, Tools::strlen('PAYZEN_OS')) === 'PAYZEN_OS') {
                     return self::isPayzenCustomizedState($state_id);
                 }
 
