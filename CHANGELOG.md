@@ -1,3 +1,6 @@
+1.19.2, 2025-02-18:
+- Bug fix: Fix error related to undefined function str_starts_with with PHP 7.x versions and older.
+
 1.19.1, 2025-02-12:
 - Bug fix: Fix amount incoherence when paying with embedded fields and Smartform.
 - Bug fix: Fix error related to customized status identifier verification.
