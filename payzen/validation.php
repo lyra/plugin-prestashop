@@ -161,7 +161,8 @@ if (! $order_id) {
     $logger->logInfo("Order #$order_id already registered for cart #$cart_id.");
 
     // Ignore IPN on cancelation for already registered orders.
-    if ($response->getTransStatus() === 'ABANDONED') {
+    if ($response->getTransStatus() === 'ABANDONED' || ($response->getTransStatus() === 'CANCELLED'
+        && (($response->get('order_status') === 'UNPAID' && $response->get('order_cycle') === 'CLOSED') || $response->get('url_check_src') !== 'MERCH_BO'))) {
         $logger->logWarning('Server call on cancelation for cart #' . $cart_id . '. No order will be updated.');
 
         die('<span style="display:none">KO-Payment abandoned.' . "\n" . '</span>');
@@ -221,7 +222,7 @@ if (! $order_id) {
 
         die($response->getOutputForGateway($msg));
     } elseif (Payzen::isPaidOrder($order) &&
-        (! Payzen::isStateInArray($new_state, $consistent_states) || ($response->get('url_check_src') !== 'MERCH_BO'))) {
+        (! Payzen::isStateInArray($new_state, $consistent_states))) {
         // Order cannot move from final paid state to not completed states.
         $logger->logInfo("Order is successfully registered for cart #$cart_id but platform returns a payment error, transaction status is {$response->getTransStatus()}.");
 
