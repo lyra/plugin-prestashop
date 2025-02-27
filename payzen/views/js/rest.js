@@ -107,7 +107,13 @@ var payzenRefreshToken = async function(emptyCart) {
             success: function(json) {
                 var response = JSON.parse(json);
 
-                if (response.token) {
+                if (response.cartUnchanged) {
+                    if (emptyCart) {
+                        payzenEmptyCart();
+                    }
+
+                    resolve(response);
+                } else if (response.token) {
                     var token = response.token;
                     sessionStorage.setItem('payzenToken', response.token);
  
@@ -142,6 +148,10 @@ var payzenRefreshToken = async function(emptyCart) {
 var payzenInitRestEvents = function() {
     KR.onError(function(e) {
         payzenRestoreCart();
+
+        $('button.kr-method-label').each(function() {
+            $(this).removeAttr('disabled');
+        });
 
         $('.payzen .processing').css('display', 'none');
         $('#payzen_oneclick_payment_description').show();
@@ -186,7 +196,7 @@ var payzenInitRestEvents = function() {
             $('#payzen_oneclick_payment_description').hide();
         }
 
-        return payzenCheckTermsAndConditions(paymentMethod);
+        return payzenCheckTermsAndConditions(paymentMethod, action);
     });
 
     KR.onPopinClosed(function() {
@@ -215,7 +225,7 @@ var payzenInitRestEvents = function() {
     });
 };
 
-var payzenCheckTermsAndConditions = async function(paymentMethod) {
+var payzenCheckTermsAndConditions = async function(paymentMethod, action) {
     if (! payzenCanProceed()) {
         KR.throwCustomError(payzenTranslate("CLIENT_312"), paymentMethod);
         return false;
@@ -223,6 +233,14 @@ var payzenCheckTermsAndConditions = async function(paymentMethod) {
 
     if (PAYZEN_LAST_CART != false) {
         return true;
+    }
+
+    if (action === 'beforePaymentStart') {
+        if (paymentMethod === 'CARDS') {
+            $('.kr-payment-button').attr('disabled', 'disabled');
+        } else {
+            $('button.kr-method-label.kr-' + paymentMethod.toLowerCase()).attr('disabled', 'disabled');
+        }
     }
 
     await payzenRefreshToken(true);

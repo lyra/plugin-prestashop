@@ -26,22 +26,32 @@ class PayzenRestModuleFrontController extends ModuleFrontController
     public function getToken()
     {
         $cart = $this->context->cart;
-
         $payment = new PayzenStandardPayment();
-        $token = $payment->getFormToken($cart);
 
-        if ($token) {
-            $json = array('token' => $token, 'lastCart' => $this->context->cookie->id_cart);
+        $last_cart_update = isset($this->context->cookie->payzen_last_cart_update) ? $this->context->cookie->payzen_last_cart_update : null;
+        if ($last_cart_update && ($last_cart_update === $cart->date_upd)) {
+            // Cart data did not change since last payment attempt, do not update payment token.
+            PayzenTools::getLogger()->logInfo("Cart data did not change since last payment attempt, use last created token for cart #{$cart->id}.");
 
-            if (Tools::getValue('refreshIdentifierToken')) {
-                $identifierToken = $payment->getFormToken($cart, true);
-                $json['identifierToken'] = $identifierToken;
-            }
+            $json = array('cartUnchanged' => true);
         } else {
-            $json = array(
-                'status' => 'error',
-                'message' => $this->module->l('Error when creating token.')
-            );
+            $this->logger->logInfo('Cart has been updated, let\'s refresh form token.');
+            $token = $payment->getFormToken($cart);
+
+            if ($token) {
+                $json = array('token' => $token, 'lastCart' => $this->context->cookie->id_cart);
+                $this->context->cookie->payzen_last_cart_update = $cart->date_upd;
+
+                if (Tools::getValue('refreshIdentifierToken')) {
+                    $identifierToken = $payment->getFormToken($cart, true);
+                    $json['identifierToken'] = $identifierToken;
+                }
+            } else {
+                $json = array(
+                    'status' => 'error',
+                    'message' => $this->module->l('Error when creating token.')
+                );
+            }
         }
 
         die($this->jsonEncode($json));
@@ -61,7 +71,6 @@ class PayzenRestModuleFrontController extends ModuleFrontController
                 $this->context->cookie->id_cart = null;
             }
 
-            $this->logger->logInfo('Cart has been updated, let\'s refresh form token.');
             $this->getToken();
 
             return;
