@@ -1,3 +1,7 @@
+1.19.3, 2025-02-27:
+- Bug fix: Fix error related to IPN management on uncompleted transaction cancellation.
+- Bug fix: Fix error related to payment form token refresh when cart not modified.
+
 1.19.2, 2025-02-18:
 - Bug fix: Fix error related to undefined function str_starts_with with PHP 7.x versions and older.
 

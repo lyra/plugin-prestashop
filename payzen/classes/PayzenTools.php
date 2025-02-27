@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.19.2';
+    private static $PLUGIN_VERSION = '1.19.3';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -833,6 +833,8 @@ class PayzenTools
         $response['vads_result'] = self::getProperty($transaction, 'errorCode') ? self::getProperty($transaction, 'errorCode') : '00';
         $response['vads_extra_result'] = self::getProperty($transaction, 'detailedErrorCode');
 
+        $response['vads_order_cycle'] = self::getProperty($answer, 'orderCycle');
+        $response['vads_order_status'] = self::getProperty($answer, 'orderStatus');
         $response['vads_trans_status'] = self::getProperty($transaction, 'detailedStatus');
         $response['vads_trans_uuid'] = self::getProperty($transaction, 'uuid');
         $response['vads_operation_type'] = self::getProperty($transaction, 'operationType');
