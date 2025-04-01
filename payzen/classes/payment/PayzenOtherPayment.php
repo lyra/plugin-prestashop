@@ -124,6 +124,8 @@ class PayzenOtherPayment extends AbstractPayzenPayment
             $request->set('capture_delay', $capture_delay);
         }
 
+        $request->addExtInfo("payment_method", $data['card_type']);
+
         return $request;
     }
 

@@ -1,3 +1,13 @@
+1.20.0, 2025-04-01:
+- Bug fix: Use delivery address to retrieve country when rebuilding context.
+- Bug fix: Fix payment method name displayed in orders list.
+- Bug fix: Fix error related to display/hide payment method title on checkout page.
+- Display the wallet used for payment if any in order details.
+- Remove the iframe payment mode.
+- Remove the payment by embedded fields legacy mode.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.19.3, 2025-02-27:
 - Bug fix: Fix error related to IPN management on uncompleted transaction cancellation.
 - Bug fix: Fix error related to payment form token refresh when cart not modified.

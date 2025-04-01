@@ -14,7 +14,6 @@
 class PayzenRedirectModuleFrontController extends ModuleFrontController
 {
     public $ssl = true;
-    private $iframe = false;
     private $logger;
 
     private $accepted_payment_types = array(
@@ -44,8 +43,6 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
     public function init()
     {
-        $this->iframe = (int) Tools::getValue('content_only', 0) == 1;
-
         parent::init();
     }
 
@@ -101,10 +98,6 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         }
 
         $type = Tools::getValue('payzen_payment_type', null); // The selected payment submodule.
-        if (! $type && $this->iframe) {
-            // Only standard payment can be done inside iframe.
-            $type = 'standard';
-        }
 
         if (! in_array($type, $this->accepted_payment_types)) {
             $this->logger->logWarning('Error: payment type "' . $type . '" is not supported. Load standard payment by default.');
@@ -136,8 +129,6 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
 
                 if ($payment->getEntryMode() === PayzenTools::MODE_LOCAL_TYPE) {
                     $data['card_type'] = Tools::getValue('payzen_card_type');
-                } elseif ($payment->getEntryMode() === PayzenTools::MODE_IFRAME) {
-                    $data['iframe_mode'] = true;
                 }
 
                 // Payment by alias.
@@ -262,25 +253,16 @@ class PayzenRedirectModuleFrontController extends ModuleFrontController
         $title = $payment->getTitle((int) $cart->id_lang) . $option;
         $this->context->smarty->assign('payzen_title', $title);
 
-        if ($this->iframe) {
-            $this->setTemplate(PayzenTools::getTemplatePath('iframe/redirect.tpl'));
+
+        if (version_compare(_PS_VERSION_, '1.7', '>=')) {
+            $this->setTemplate('module:payzen/views/templates/front/redirect.tpl');
         } else {
-            if (version_compare(_PS_VERSION_, '1.7', '>=')) {
-                $this->setTemplate('module:payzen/views/templates/front/redirect.tpl');
-            } else {
-                $this->setTemplate('redirect_bc.tpl');
-            }
+            $this->setTemplate('redirect_bc.tpl');
         }
     }
 
     private function payzenRedirect($url)
     {
-        if ($this->iframe) {
-            // Iframe mode, use template to redirect to top window.
-            $this->context->smarty->assign('payzen_url', PayzenTools::getPageLink($url));
-            $this->setTemplate(PayzenTools::getTemplatePath('iframe/response.tpl'));
-        } else {
-            Tools::redirect($url);
-        }
+        Tools::redirect($url);
     }
 }

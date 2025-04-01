@@ -172,11 +172,9 @@ class PayzenHelperForm
             'payzen_card_data_mode_options' => array(
                 '1' => $payzen->l('Bank data acquisition on payment gateway', 'payzenhelperform'),
                 '2' => $payzen->l('Card type selection on merchant site', 'payzenhelperform'),
-                '4' => $payzen->l('Payment page integrated to checkout process (iframe mode)', 'payzenhelperform'),
-                '5' => $payzen->l('Embedded payment fields on merchant site (REST API)', 'payzenhelperform'),
-                '7' => $payzen->l('Embedded Smartform on merchant site (REST API)', 'payzenhelperform'),
-                '8' => $payzen->l('Embedded Smartform extended on merchant site with logos (REST API)', 'payzenhelperform'),
-                '9' => $payzen->l('Embedded Smartform extended on merchant site without logos (REST API)', 'payzenhelperform')
+                '7' => $payzen->l('Embedded payment fields on merchant site (REST API)', 'payzenhelperform'),
+                '8' => $payzen->l('Embedded payment fields extended on merchant site with logos (REST API)', 'payzenhelperform'),
+                '9' => $payzen->l('Embedded payment fields extended on merchant site without logos (REST API)', 'payzenhelperform')
             ),
             'payzen_countries_options' => array(
                 '1' => $payzen->l('All Allowed Countries', 'payzenhelperform'),
@@ -320,8 +318,7 @@ class PayzenHelperForm
             'PAYZEN_STD_PAYMENT_CARDS' => ! Configuration::get('PAYZEN_STD_PAYMENT_CARDS') ?
                                             array('') :
                                             explode(';', Configuration::get('PAYZEN_STD_PAYMENT_CARDS')),
-            'PAYZEN_STD_CARD_DATA_MODE' => Configuration::get('PAYZEN_STD_CARD_DATA_MODE') ?
-                                            Configuration::get('PAYZEN_STD_CARD_DATA_MODE') : '1',
+            'PAYZEN_STD_CARD_DATA_MODE' => PayzenTools::getEntryMode('PAYZEN_STD_'),
             'PAYZEN_STD_REST_POPIN_MODE' => Configuration::get('PAYZEN_STD_REST_POPIN_MODE'),
             'PAYZEN_STD_REST_THEME' => Configuration::get('PAYZEN_STD_REST_THEME') ?
                                         Configuration::get('PAYZEN_STD_REST_THEME') : 'classic',
@@ -333,7 +330,6 @@ class PayzenHelperForm
             'PAYZEN_STD_REST_ATTEMPTS' => Configuration::get('PAYZEN_STD_REST_ATTEMPTS'),
             'PAYZEN_STD_1_CLICK_PAYMENT' => Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT'),
             'PAYZEN_STD_USE_WALLET' => Configuration::get('PAYZEN_STD_USE_WALLET'),
-            'PAYZEN_STD_CANCEL_IFRAME' => Configuration::get('PAYZEN_STD_CANCEL_IFRAME'),
 
             'PAYZEN_MULTI_TITLE' => self::getLangConfig('PAYZEN_MULTI_TITLE'),
             'PAYZEN_MULTI_ENABLED' => Configuration::get('PAYZEN_MULTI_ENABLED'),
@@ -406,16 +402,6 @@ class PayzenHelperForm
             $tpl_vars['PAYZEN_' . $key . '_COUNTRY'] = Configuration::get('PAYZEN_' . $key . '_COUNTRY');
             $tpl_vars['PAYZEN_' . $key . '_COUNTRY_LST'] = ! Configuration::get('PAYZEN_' . $key . '_COUNTRY_LST') ?
                 array() : explode(';', Configuration::get('PAYZEN_' . $key . '_COUNTRY_LST'));
-        }
-
-        if (! PayzenTools::$plugin_features['embedded'] || ! PayzenTools::$plugin_features['smartform']) {
-            if (! PayzenTools::$plugin_features['embedded']) {
-                unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_EMBEDDED]);
-            }
-
-            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM]);
-            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM_EXT_WITH_LOGOS]);
-            unset($tpl_vars['payzen_card_data_mode_options'][PayzenTools::MODE_SMARTFORM_EXT_WITHOUT_LOGOS]);
         }
 
         return $tpl_vars;
