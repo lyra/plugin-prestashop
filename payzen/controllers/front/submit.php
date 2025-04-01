@@ -18,7 +18,6 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
     public $ssl = true;
 
     private $currentCart;
-    private $iframe = false;
     private $logger;
 
     public function __construct()
@@ -30,12 +29,6 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
     public function postProcess()
     {
-        $this->iframe = (int) Tools::getValue('content_only', 0) == 1;
-
-        if ($this->iframe) {
-            unset($this->context->cookie->payzenCartId); // Used in iframe mode.
-        }
-
         $cart_id = Tools::getValue('vads_order_id');
         $this->currentCart = new Cart((int) $cart_id);
 
@@ -239,12 +232,6 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
 
     private function payzenRedirect($url)
     {
-        if ($this->iframe) {
-            // IFrame mode, use template to redirect to top window.
-            $this->context->smarty->assign('payzen_url', PayzenTools::getPageLink($url));
-            $this->setTemplate(PayzenTools::getTemplatePath('iframe/response.tpl'));
-        } else {
-            Tools::redirect($url);
-        }
+        Tools::redirect($url);
     }
 }

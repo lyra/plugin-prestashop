@@ -33,9 +33,9 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.19.3';
+        $this->version = '1.20.0';
         $this->author = 'Lyra Network';
-        $this->controllers = array('redirect', 'submit', 'rest', 'iframe');
+        $this->controllers = array('redirect', 'submit', 'rest');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
 
         if (property_exists($this, 'is_eu_compatible')) {
@@ -442,14 +442,13 @@ class Payzen extends PaymentModule
         // Clear module compiled templates.
         $tpls = array(
             'redirect', 'redirect_bc', 'redirect_js',
-            'iframe/redirect', 'iframe/redirect_bc', 'iframe/response', 'iframe/loader',
 
             'bc/payment_ancv', 'bc/payment_choozeo', 'bc/payment_fullcb', 'bc/payment_multi', 'bc/payment_oney',
             'bc/payment_oney34','bc/payment_paypal', 'bc/payment_sepa', 'bc/payment_sofort', 'bc/payment_std_eu',
-            'bc/payment_std_iframe', 'bc/payment_std', 'bc/payment_std_rest', 'bc/payment_franfinance',
+            'bc/payment_std', 'bc/payment_std_rest', 'bc/payment_franfinance',
 
             'payment_choozeo', 'payment_fullcb', 'payment_multi', 'payment_oney', 'payment_oney34',
-            'payment_return', 'payment_std_iframe', 'payment_std', 'payment_std_rest', 'payment_franfinance'
+            'payment_return', 'payment_std', 'payment_std_rest', 'payment_franfinance'
         );
         foreach ($tpls as $tpl) {
             $this->context->smarty->clearCompiledTemplate($this->getTemplatePath($tpl . '.tpl'));
@@ -1454,10 +1453,9 @@ class Payzen extends PaymentModule
 
             if ($standard->hasForm() || $oneClickPayment) {
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $standard->getTplName());
-                $isIframePayment = strpos($standard->getTplName(), 'iframe');
 
-                if ($isIframePayment || ($standard->isEmbedded() && $isRestPayment)) {
-                    // Iframe or REST mode.
+                if (($standard->isEmbedded() && $isRestPayment)) {
+                    // REST mode.
                     $option->setAdditionalInformation($form . $additionalForm);
                     if ($oneClickPayment) {
                         $option->setForm('<form id="payzen_standard" onsubmit="javascript: payzenSubmit(event);"><input id="payzen_payment_by_identifier" type="hidden" name="payzen_payment_by_identifier" value="1" /></form>');
@@ -1816,7 +1814,7 @@ class Payzen extends PaymentModule
         $tpl_vars['payzen_sign_algo'] = Configuration::get('PAYZEN_SIGN_ALGO', null, $order->id_shop_group, $order->id_shop);
 
         $card_data_mode = Configuration::get('PAYZEN_STD_CARD_DATA_MODE', null, $order->id_shop_group, $order->id_shop);
-        $tpl_vars['payzen_std_card_data_mode'] = $card_data_mode ? $card_data_mode : '1';
+        $tpl_vars['payzen_std_card_data_mode'] = $card_data_mode && $card_data_mode != '4' ? $card_data_mode : '1';
         $tpl_vars['id_cart'] = $order->id_cart;
         $tpl_vars['order_reference'] = $order->reference;
         $order_status = $order->getCurrentStateFull($this->context->language->id);
@@ -2167,7 +2165,7 @@ class Payzen extends PaymentModule
 
         // Specific case of "Other payment means" submodule.
         if (is_a($payment, 'PayzenOtherPayment')) {
-            $method = PayzenOtherPayment::getMethodByCode($response->get('card_brand'));
+            $method = PayzenOtherPayment::getMethodByCode($response->getExtInfo('payment_method'));
             $payment->init($method['code'], $method['title']);
         }
 
@@ -2447,7 +2445,7 @@ class Payzen extends PaymentModule
 
                 $data = array(
                     'card_number' => $trs->{'card_number'},
-                    'card_brand' => $trs->{'card_brand'},
+                    'card_brand' => isset($trs->{'wallet'}) ? $trs->{'wallet'} : $trs->{'card_brand'},
                     'expiry_month' => isset($trs->{'expiry_month'}) ? $trs->{'expiry_month'} : null,
                     'expiry_year' => isset($trs->{'expiry_year'}) ? $trs->{'expiry_year'} : null
                 );
@@ -2482,7 +2480,7 @@ class Payzen extends PaymentModule
 
             $data = array(
                 'card_number' => $response->get('card_number'),
-                'card_brand' => $response->get('card_brand'),
+                'card_brand' => $response->get('wallet') ? $response->get('wallet') : $response->get('card_brand'),
                 'expiry_month' => $response->get('expiry_month'),
                 'expiry_year' => $response->get('expiry_year')
             );
@@ -2588,7 +2586,7 @@ class Payzen extends PaymentModule
 
             $data = array(
                 'card_number' => $response->get('card_number'),
-                'card_brand' => $response->get('card_brand'),
+                'card_brand' => $response->get('wallet') ? $response->get('wallet') : $response->get('card_brand'),
                 'expiry_month' => $response->get('expiry_month'),
                 'expiry_year' => $response->get('expiry_year')
             );

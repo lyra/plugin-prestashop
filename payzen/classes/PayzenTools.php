@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.19.3';
+    private static $PLUGIN_VERSION = '1.20.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -48,8 +48,6 @@ class PayzenTools
 
     const MODE_FORM = '1';
     const MODE_LOCAL_TYPE = '2';
-    const MODE_IFRAME = '4';
-    const MODE_EMBEDDED = '5';
     const MODE_SMARTFORM = '7';
     const MODE_SMARTFORM_EXT_WITH_LOGOS = '8';
     const MODE_SMARTFORM_EXT_WITHOUT_LOGOS = '9';
@@ -94,8 +92,6 @@ class PayzenTools
         'prodfaq' => true,
         'restrictmulti' => false,
         'shatwo' => true,
-        'embedded' => true,
-        'smartform' => true,
         'support' => true,
         'brazil' => false,
 
@@ -353,7 +349,6 @@ class PayzenTools
             array('key' => 'PAYZEN_STD_REST_ATTEMPTS', 'default' => '', 'label' => 'Payment attempts number for cards'),
             array('key' => 'PAYZEN_STD_1_CLICK_PAYMENT', 'default' => 'False', 'label' => 'Payment by token'),
             array('key' => 'PAYZEN_STD_USE_WALLET', 'default' => 'False', 'label' => 'Use buyer wallet to manage tokens'),
-            array('key' => 'PAYZEN_STD_CANCEL_IFRAME', 'default' => 'False', 'label' => 'Cancel payment in iframe mode'),
 
             array('key' => 'PAYZEN_MULTI_TITLE',
                 'default' => array(
@@ -886,6 +881,7 @@ class PayzenTools
                 }
             }
 
+            $response['vads_wallet'] = self::getProperty($transactionDetails, 'wallet');
             $response['vads_warranty_result'] = self::getProperty($transactionDetails, 'liabilityShift');
 
             if ($cardDetails = self::getProperty($transactionDetails, 'cardDetails')) {
@@ -1019,7 +1015,7 @@ class PayzenTools
 
         Context::getContext()->cart = $cart = new Cart((int) $cart->id); // Reload cart to take customer group into account.
 
-        $address = new Address((int) $cart->id_address_invoice);
+        $address = new Address((int) $cart->id_address_delivery);
         Context::getContext()->country = new Country((int) $address->id_country);
         Context::getContext()->language = new Language((int) $cart->id_lang);
         Context::getContext()->currency = new Currency((int) $cart->id_currency);
@@ -1061,25 +1057,10 @@ class PayzenTools
         return implode(' / ', $installedModules);
     }
 
-    public static function getActivePaymentMethods()
-    {
-        $activePaymentMethods = array();
-        foreach (PaymentModule::getInstalledPaymentModules() as $payment) {
-            $module = Module::getInstanceByName($payment['name']);
-            if (Validate::isLoadedObject($module) && $module->active) {
-                $activePaymentMethods[$module->name] = $module->displayName;
-            }
-        }
-
-        return $activePaymentMethods;
-    }
-
     public static function getCardDataEntryModes() {
         return array(
             '1' => 'REDIRECT',
             '2' => 'MERCHANT',
-            '4' => 'IFRAME',
-            '5' => 'REST',
             '7' => 'SMARTFORM',
             '8' => 'SMARTFORM_EXT_WITH_LOGOS',
             '9' => 'SMARTFORM_EXT_WITHOUT_LOGOS'
@@ -1097,5 +1078,21 @@ class PayzenTools
         }
 
         return $response;
+    }
+
+    public static function getEntryMode($prefix = 'PAYZEN_STD_')
+    {
+        $entryMode = Configuration::get($prefix . 'CARD_DATA_MODE') ? Configuration::get($prefix . 'CARD_DATA_MODE') : '1';
+
+        switch ($entryMode) {
+            case '4':
+                return '1';
+
+            case '5':
+                return '9';
+
+            default:
+                return $entryMode;
+        }
     }
 }

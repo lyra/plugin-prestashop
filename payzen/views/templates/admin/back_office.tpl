@@ -39,36 +39,22 @@
     var cardDataMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
 
     switch (cardDataMode) {
-      case '4':
-        if (! confirm('{l s='Warning, some payment means are not compatible with an integration by iframe. Please consult the documentation for more details.' mod='payzen'}')) {
-          var oldCardDataMode = $('#PAYZEN_STD_CARD_DATA_MODE_OLD').val();
-          $('select#PAYZEN_STD_CARD_DATA_MODE').val(oldCardDataMode).change()
-        } else {
-          $('#PAYZEN_REST_SETTINGS').hide();
-          $('#PAYZEN_STD_CANCEL_IFRAME_MENU').show();
-          $('#PAYZEN_STD_USE_WALLET_MENU').hide();
-          toggleEmbeddedCheckbox(false);
-        }
-        break;
-      case '5':
-        $('#PAYZEN_REST_SETTINGS').show();
-        $('#PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS').hide();
-        $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
-        payzenOneClickMenuDisplay();
-        toggleEmbeddedCheckbox(false);
-        break;
       case '7':
       case '8':
       case '9':
        $('#PAYZEN_REST_SETTINGS').show();
        $('#PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS').show();
-       $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
        payzenOneClickMenuDisplay();
        toggleEmbeddedCheckbox(true);
        break;
+        $('#PAYZEN_REST_SETTINGS').show();
+        $('#PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS').show();
+        $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
+        payzenOneClickMenuDisplay();
+        toggleEmbeddedCheckbox(true);
+        break;
       default:
         $('#PAYZEN_REST_SETTINGS').hide();
-        $('#PAYZEN_STD_CANCEL_IFRAME_MENU').hide();
         $('#PAYZEN_STD_USE_WALLET_MENU').hide();
         toggleEmbeddedCheckbox(false);
     }
@@ -238,7 +224,7 @@
 
         <section style="display: none; padding-top: 15px;">
           <p style="font-size: .85em; color: #7F7F7F;">
-           {l s='Configure this section if you are using order operations from Prestashop Back Office or if you are using embedded payment fields or Smartform modes.' mod='payzen'}
+           {l s='Configure this section if you are using order operations from Prestashop Back Office or if you are using embedded payment fields modes.' mod='payzen'}
           </p>
           <label for="PAYZEN_PRIVKEY_TEST">{l s='Test password' mod='payzen'}</label>
           <div class="margin-form">
@@ -259,7 +245,7 @@
           <p></p>
 
           <p style="font-size: .85em; color: #7F7F7F;">
-           {l s='Configure this section only if you are using embedded payment fields or Smartform modes.' mod='payzen'}
+           {l s='Configure this section only if you are using embedded payment fields modes.' mod='payzen'}
           </p>
           <p></p>
 
@@ -811,19 +797,7 @@
           <p>{l s='Select how the payment data will be entered. Attention, to use bank data acquisition on the merchant site, you must ensure that you have subscribed to this option with your bank.' mod='payzen'}</p>
         </div>
 
-        <div id="PAYZEN_STD_CANCEL_IFRAME_MENU" {if $PAYZEN_STD_CARD_DATA_MODE !== '4'} style="display: none;"{/if}>
-          <label for="PAYZEN_STD_CANCEL_IFRAME">{l s='Cancel payment in iframe mode' mod='payzen'}</label>
-          <div class="margin-form">
-            <select id="PAYZEN_STD_CANCEL_IFRAME" name="PAYZEN_STD_CANCEL_IFRAME">
-              {foreach from=$payzen_yes_no_options key="key" item="option"}
-                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_CANCEL_IFRAME === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
-              {/foreach}
-            </select>
-            <p>{l s='Select « Yes » if you want to propose payment cancellation in iframe mode.' mod='payzen'}</p>
-          </div>
-        </div>
-
-        <div id="PAYZEN_REST_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE !== '5' && $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'} style="display: none;"{/if}>
+        <div id="PAYZEN_REST_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'} style="display: none;"{/if}>
           <p></p>
           <label for="PAYZEN_STD_REST_POPIN_MODE">{l s='Display in a pop-in' mod='payzen'}</label>
           <div class="margin-form">
@@ -832,7 +806,7 @@
                     <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_REST_POPIN_MODE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
                 {/foreach}
             </select>
-            <p>{l s='This option allows to display the embedded payment fields or the Smartform in a pop-in.' mod='payzen'}</p>
+            <p>{l s='This option allows to display the embedded payment fields in a pop-in.' mod='payzen'}</p>
           </div>
           <p></p>
           <p></p>
@@ -843,7 +817,7 @@
                     <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_REST_THEME === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
                 {/foreach}
             </select>
-            <p>{l s='Select a theme to use to display the embedded payment fields or the Smartform.' mod='payzen'}</p>
+            <p>{l s='Select a theme to use to display the embedded payment fields.' mod='payzen'}</p>
           </div>
           <p></p>
           <div id="PAYZEN_STD_SMARTFORM_CUSTOMIZATION_SETTINGS" {if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'} style="display: none;"{/if}>
@@ -854,7 +828,7 @@
                       <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_SF_COMPACT_MODE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
                   {/foreach}
               </select>
-              <p>{l s='This option allows to display the Smartform in a compact mode.' mod='payzen'}</p>
+              <p>{l s='This option allows to display the embedded payment fields in a compact mode.' mod='payzen'}</p>
             </div>
             <p></p>
             <label for="PAYZEN_STD_SF_THRESHOLD">{l s='Payment means grouping threshold' mod='payzen'}</label>
@@ -959,7 +933,7 @@
           </div>
         </div>
 
-        <div id="PAYZEN_STD_USE_WALLET_MENU" {if ($PAYZEN_STD_CARD_DATA_MODE !== '5' && $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9') || $PAYZEN_STD_1_CLICK_PAYMENT !== 'True'} style="display: none;"{/if}>
+        <div id="PAYZEN_STD_USE_WALLET_MENU" {if ($PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9') || $PAYZEN_STD_1_CLICK_PAYMENT !== 'True'} style="display: none;"{/if}>
           <label for="PAYZEN_STD_USE_WALLET">{l s='Use buyer wallet to manage tokens' mod='payzen'}</label>
           <div class="margin-form">
             <select id="PAYZEN_STD_USE_WALLET" name="PAYZEN_STD_USE_WALLET">
@@ -2335,7 +2309,7 @@
             <b>{l s='Capture' mod='payzen'} : </b>{l s='The number of days before the bank capture. Enter value only if different from « Base settings ».' mod='payzen'}<br />
             <b>{l s='Validation mode' mod='payzen'} : </b>{l s='If manual is selected, you will have to confirm payments manually in your bank Back Office.' mod='payzen'}<br />
             <b>{l s='Cart data' mod='payzen'} : </b>{l s='If you disable this option, the shopping cart details will not be sent to the gateway. Attention, in some cases, this option has to be enabled. For more information, refer to the module documentation.' mod='payzen'}<br />
-            <b style="{if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'}display: none;{/if}" class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED">{l s='Integrated mode' mod='payzen'} : </b><span style="{if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'}display: none;{/if}" class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED">{l s='If you enable this option, the payment mean will be displayed in the Smartform. Attention, not all available payment means are supported by the Smartform. For more information, refer to the module documentation.' mod='payzen'}</span><br />
+            <b style="{if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'}display: none;{/if}" class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED">{l s='Integrated mode' mod='payzen'} : </b><span style="{if $PAYZEN_STD_CARD_DATA_MODE !== '7' && $PAYZEN_STD_CARD_DATA_MODE !== '8' && $PAYZEN_STD_CARD_DATA_MODE !== '9'}display: none;{/if}" class="PAYZEN_OTHER_PAYMENT_MEANS_EMBEDDED">{l s='If you enable this option, the payment mean will be displayed in the embedded payment fields. Attention, not all available payment means are supported by the embedded payment fields. For more information, refer to the module documentation.' mod='payzen'}</span><br />
             <b>{l s='Do not forget to click on « Save » button to save your modifications.' mod='payzen'}</b>
           </p>
         </div>

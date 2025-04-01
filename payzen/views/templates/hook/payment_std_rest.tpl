@@ -19,22 +19,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
 <section id="payzen_standard_rest_wrapper" style="margin-bottom: 3rem;">
-  {if $payzen_std_card_data_mode == '5'}
-    <div class="payzen kr-embedded"{if $payzen_std_rest_popin_mode == 'True'}kr-popin{/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}">
-      <div class="kr-pan"></div>
-      <div class="kr-expiry"></div>
-      <div class="kr-security-code"></div>
-      <button type="button" class="kr-payment-button" {if $payzen_std_rest_popin_mode != 'True'}style="display: none;"{/if}></button>
-      <div class="kr-field processing" style="display: none; border: none !important;">
-        <div style="background-image: url('{$smarty.const._MODULE_DIR_|escape:'html':'UTF-8'}payzen/views/img/loading_big.gif');
-                  margin: 0 auto; display: block; height: 35px; background-color: #ffffff; background-position: center;
-                  background-repeat: no-repeat; background-size: 35px;">
-        </div>
-      </div>
-
-      <div class="kr-form-error"></div>
-    </div>
-  {elseif $payzen_std_card_data_mode === '7' || $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'}
+  {if $payzen_std_card_data_mode === '7' || $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'}
     <div class="kr-smart-form" {if $payzen_std_rest_popin_mode == 'True'} kr-popin {/if} {if $payzen_std_card_data_mode === '8' || $payzen_std_card_data_mode === '9'} kr-card-form-expanded {/if} {if $payzen_std_card_data_mode === '9'} kr-no-card-logo-header {/if} kr-form-token="{$payzen_rest_identifier_token|escape:'html':'UTF-8'}"></div>
   {/if}
 </section>
@@ -82,7 +67,7 @@
   });
 
   var payzenManageButtonDisplay = async function() {
-    {if ($payzen_std_rest_popin_mode === 'True') || ($payzen_std_card_data_mode === '5')}
+    {if ($payzen_std_rest_popin_mode === 'True')}
       return;
     {/if}
  

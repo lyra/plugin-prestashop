@@ -109,9 +109,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
         if ($entry_mode === PayzenTools::MODE_LOCAL_TYPE /* Card type on website. */) {
             $vars['payzen_avail_cards'] = $this->getPaymentCards();
-        } elseif ($entry_mode === PayzenTools::MODE_IFRAME /* Iframe mode. */) {
-            $vars['payzen_can_cancel_iframe'] = (Configuration::get($this->prefix . 'CANCEL_IFRAME') === 'True');
-            $this->tpl_name = 'payment_std_iframe.tpl';
         } elseif ($embedded /* REST API. */) {
             $form_token = $this->getFormToken($cart);
 
@@ -169,21 +166,16 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
     public function getEntryMode()
     {
-        // Get data entry mode.
-        return Configuration::get($this->prefix . 'CARD_DATA_MODE');
+        return PayzenTools::getEntryMode($this->prefix);
     }
 
     private function displayTitle()
     {
-        if (! $this->isSmartform()) {
+        if (! $this->isEmbedded()) {
             return 'True';
         }
 
-        if ($this->isSmartform() && Configuration::get('PAYZEN_STD_REST_POPIN_MODE') === 'True') {
-            return 'True';
-        }
-
-        if (sizeOf(PayzenTools::getActivePaymentMethods()) > 1) {
+        if ($this->isEmbedded() && Configuration::get('PAYZEN_STD_REST_POPIN_MODE') === 'True') {
             return 'True';
         }
 
@@ -211,22 +203,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             $request->set('payment_cards', Configuration::get($this->prefix . 'PAYMENT_CARDS'));
 
             return $request;
-        }
-
-        if (isset($data['iframe_mode']) && $data['iframe_mode']) {
-            $request->set('action_mode', 'IFRAME');
-
-            // Hide logos below payment fields.
-            $request->set('theme_config', $request->get('theme_config') . '3DS_LOGOS=false;');
-
-            // Enable automatic redirection.
-            $request->set('redirect_enabled', '1');
-            $request->set('redirect_success_timeout', '0');
-            $request->set('redirect_error_timeout', '0');
-
-            $return_url = $request->get('url_return');
-            $sep = strpos($return_url, '?') === false ? '?' : '&';
-            $request->set('url_return', $return_url . $sep . 'content_only=1');
         }
 
         if (isset($data['card_type']) && $data['card_type']) {
@@ -374,7 +350,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
         $params['formAction'] = $this->getEscapedVar($request, 'page_action');
 
-        if ($this->isSmartform()) {
+        if ($this->isEmbedded()) {
             // Filter payment means when creating the payment token.
             $params['paymentMethods'] = $this->getPaymentMeansForSmartform($cart);
         }
@@ -469,7 +445,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
     }
 
     /**
-     * Check if the embedded payment fields option is choosen.
+     * Check if any of the embedded payment fields options is choosen.
      *
      * @return boolean
      */
@@ -480,33 +456,12 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         }
 
         $embedded = array(
-            PayzenTools::MODE_EMBEDDED,
             PayzenTools::MODE_SMARTFORM,
             PayzenTools::MODE_SMARTFORM_EXT_WITH_LOGOS,
             PayzenTools::MODE_SMARTFORM_EXT_WITHOUT_LOGOS
         );
 
         return in_array($this->getEntryMode(), $embedded);
-    }
-
-    /**
-     * Check if the Smartform payment fields option is choosen.
-     *
-     * @return boolean
-     */
-    public function isSmartform()
-    {
-        if ($this->isFromBackend()) {
-            return false;
-        }
-
-        $smartform = array(
-            PayzenTools::MODE_SMARTFORM,
-            PayzenTools::MODE_SMARTFORM_EXT_WITH_LOGOS,
-            PayzenTools::MODE_SMARTFORM_EXT_WITHOUT_LOGOS
-        );
-
-        return in_array($this->getEntryMode(), $smartform);
     }
 
     public function isOneClickActive()

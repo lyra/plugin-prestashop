@@ -34,17 +34,6 @@ div.payment_module.payzen a form {
     text-transform: none !important;
 }
 
-#payzen_cancel_iframe a {
-    font-size: 12px;
-    text-decoration: none;
-    border: 0;
-    margin-left: 15px;
-    padding: 0;
-    background: none;
-    cursor: pointer;
-    display: inline;
-}
-
 div.payment_module.payzen.multi ul {
     display: inline-block;
     margin-bottom: 0;
@@ -72,20 +61,6 @@ p.payzen_link {
     text-decoration: underline;
     font-size: 17px;
     font-weight: bold;
-}
-
-#payzen_cancel_iframe {
-    background: none!important;
-    padding: 0!important;
-    font-family: arial, sans-serif;
-    color: #069;
-    cursor: pointer;
-    font-size: 12px;
-    text-decoration: none;
-    border: 0;
-    margin-left: 15px;
-    padding: 0;
-    display: inline;
 }
 
 span.payzen_span {

@@ -246,7 +246,7 @@ function payzenCountriesRestrictMenuDisplay(retrictCountriesPaymentId) {
 }
 
 function payzenOneClickMenuDisplay() {
-    var restModes = ['5', '7', '8', '9'];
+    var restModes = ['7', '8', '9'];
     var cardEntryMode = $('select#PAYZEN_STD_CARD_DATA_MODE option:selected').val();
 
     if (restModes.indexOf(cardEntryMode) == -1) {

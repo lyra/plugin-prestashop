@@ -22,24 +22,6 @@
     padding: 3px 6px;
 }
 
-#payzen_iframe {
-    position: relative;
-    width: 100%;
-    min-height: 440px;
-    border: 0 none;
-}
-
-#payzen_cancel_iframe a {
-    font-size: 12px;
-    text-decoration: none;
-    border: 0;
-    margin-left: 15px;
-    padding: 0;
-    background: none;
-    cursor: pointer;
-    display: inline;
-}
-
 .payzen-pm {
     display: inline-block;
     margin-right: 15px;
