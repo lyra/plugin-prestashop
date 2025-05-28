@@ -74,6 +74,26 @@
       if (element !== null) {
         document.getElementById('payment-option-1-additional-information').classList.remove('payzen-show-options');
       }
+
+      {if $payzen_std_select_by_default == 'True'}
+        var methodTitle = '{$payzen_title|escape:'js'}';
+        var spans = document.querySelectorAll("span");
+        var found = null;
+        spans.forEach(function(span) {
+          if (span.textContent.trim() === methodTitle) {
+            found = span;
+          }
+        });
+        if (found) {
+          var parentDiv = found.closest('div[id*="payment-option-"]');
+          var id = parentDiv.getAttribute('id');
+          var match = id && id.match(/payment-option-(\d+)/);
+          if (match && match.length > 1) {
+            var paymentOptionId = match[1];
+            $('#payment-option-' + paymentOptionId).prop("checked", true);
+          }
+        }
+      {/if}
     }
   };
 </script>

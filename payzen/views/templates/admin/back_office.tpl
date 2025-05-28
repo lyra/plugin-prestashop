@@ -944,6 +944,32 @@
             <p>{l s='A wallet allows a buyer to store multiple payment cards and choose which one to use at the time of purchase, without having to enter a card number. The buyer can request the deletion of a card stored in his wallet at any time.' mod='payzen'}</p>
           </div>
         </div>
+
+        <div id="PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE_MENU">
+          <label for="PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE">{l s='Display payment means as payment method' mod='payzen'}</label>
+          <div class="margin-form">
+            <select id="PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE" name="PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE">
+              {foreach from=$payzen_yes_no_options key="key" item="option"}
+                <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p>{l s='If you enable this option, the used means of payment will be set as the payment method in the order details in PrestaShop Back Office.' mod='payzen'}</p>
+          </div>
+        </div>
+
+        {if version_compare($smarty.const._PS_VERSION_, '1.7', '>=')}
+          <div id="PAYZEN_STD_SELECT_BY_DEFAULT_MENU">
+            <label for="PAYZEN_STD_SELECT_BY_DEFAULT">{l s='Select by default' mod='payzen'}</label>
+            <div class="margin-form">
+              <select id="PAYZEN_STD_SELECT_BY_DEFAULT" name="PAYZEN_STD_SELECT_BY_DEFAULT">
+                {foreach from=$payzen_yes_no_options key="key" item="option"}
+                  <option value="{$key|escape:'html':'UTF-8'}"{if $PAYZEN_STD_SELECT_BY_DEFAULT === $key} selected="selected"{/if}>{$option|escape:'html':'UTF-8'}</option>
+                {/foreach}
+              </select>
+              <p>{l s='If you enable this option, this payment method will be selected by default on the checkout page.' mod='payzen'}</p>
+            </div>
+          </div>
+        {/if}
       </fieldset>
       <div class="clear">&nbsp;</div>
     </div>

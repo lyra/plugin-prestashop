@@ -100,6 +100,8 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $vars['payzen_rest_form_token'] = '';
         $vars['payzen_rest_identifier_token'] = '';
 
+        $vars['payzen_std_select_by_default'] = (Configuration::get('PAYZEN_STD_SELECT_BY_DEFAULT') == 'True') ? 'True' : 'False';
+
         if ($this->isValidSavedAlias()) {
             $vars['payzen_is_valid_std_identifier'] = true;
             $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
