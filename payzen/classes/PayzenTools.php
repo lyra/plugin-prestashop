@@ -32,8 +32,8 @@ class PayzenTools
     private static $LANGUAGE = 'fr';
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
-    private static $SUPPORT_EMAIL = 'support@payzen.eu';
-    private static $PLUGIN_VERSION = '1.20.0';
+    private static $SUPPORT_EMAIL = 'https://payzen.io/fr-FR/support/';
+    private static $PLUGIN_VERSION = '1.21.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -92,7 +92,7 @@ class PayzenTools
         'prodfaq' => true,
         'restrictmulti' => false,
         'shatwo' => true,
-        'support' => true,
+        'support' => false,
         'brazil' => false,
 
         'multi' => true,
@@ -123,6 +123,10 @@ class PayzenTools
 
     public static $oney_cards = array(
         'ONEY_3X_4X', 'ONEY_10X_12X', 'ONEY_PAYLATER'
+    );
+
+    public static $credit_cards = array(
+        'CB', 'E-CARTEBLEUE', 'MAESTRO', 'MASTERCARD', 'VISA', 'VISA_ELECTRON', 'VPAY', 'AMEX', 'MULTI'
     );
 
     public static function getDefault($name)
@@ -349,6 +353,8 @@ class PayzenTools
             array('key' => 'PAYZEN_STD_REST_ATTEMPTS', 'default' => '', 'label' => 'Payment attempts number for cards'),
             array('key' => 'PAYZEN_STD_1_CLICK_PAYMENT', 'default' => 'False', 'label' => 'Payment by token'),
             array('key' => 'PAYZEN_STD_USE_WALLET', 'default' => 'False', 'label' => 'Use buyer wallet to manage tokens'),
+            array('key' => 'PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE', 'default' => 'False', 'label' => 'Use payment mean as title'),
+            array('key' => 'PAYZEN_STD_SELECT_BY_DEFAULT', 'default' => 'False', 'label' => 'select payment method by default'),
 
             array('key' => 'PAYZEN_MULTI_TITLE',
                 'default' => array(

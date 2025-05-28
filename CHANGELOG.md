@@ -1,3 +1,7 @@
+1.21.0, 2025-05-28:
+- Added possibility to display payment mean as order payment method on PrestaShop Back Office.
+- Added possibility to select standard payment method by default on checkout page.
+
 1.20.0, 2025-04-01:
 - Bug fix: Use delivery address to retrieve country when rebuilding context.
 - Bug fix: Fix payment method name displayed in orders list.

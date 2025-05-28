@@ -330,6 +330,8 @@ class PayzenHelperForm
             'PAYZEN_STD_REST_ATTEMPTS' => Configuration::get('PAYZEN_STD_REST_ATTEMPTS'),
             'PAYZEN_STD_1_CLICK_PAYMENT' => Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT'),
             'PAYZEN_STD_USE_WALLET' => Configuration::get('PAYZEN_STD_USE_WALLET'),
+            'PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE' => Configuration::get('PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE'),
+            'PAYZEN_STD_SELECT_BY_DEFAULT' => Configuration::get('PAYZEN_STD_SELECT_BY_DEFAULT'),
 
             'PAYZEN_MULTI_TITLE' => self::getLangConfig('PAYZEN_MULTI_TITLE'),
             'PAYZEN_MULTI_ENABLED' => Configuration::get('PAYZEN_MULTI_ENABLED'),

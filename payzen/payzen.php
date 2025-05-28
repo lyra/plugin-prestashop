@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.20.0';
+        $this->version = '1.21.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1465,6 +1465,9 @@ class Payzen extends PaymentModule
                 } else {
                     $option->setForm($form);
                 }
+            } else if (Configuration::get('PAYZEN_STD_CARD_DATA_MODE') === '1' && Configuration::get('PAYZEN_STD_SELECT_BY_DEFAULT') == 'True') {
+                    $additionalForm = $this->fetch('module:payzen/views/templates/hook/payment_std_select_as_default.tpl');
+                    $option->setAdditionalInformation($additionalForm);
             }
 
             $options[] = $option;
@@ -2169,13 +2172,17 @@ class Payzen extends PaymentModule
             $payment->init($method['code'], $method['title']);
         }
 
-        $title = $payment->getTitle((int) $cart->id_lang);
+        if (is_a($payment, 'PayzenStandardPayment') && (Configuration::get('PAYZEN_STD_USE_PAYMENT_MEAN_AS_TITLE') === 'True')) {
+            $title = $this->getPaymentMethodTitle($response);
+        } else {
+            $title = $payment->getTitle((int) $cart->id_lang);
 
-        if ($option_id = $response->getExtInfo('option_id')) {
-            // This is multiple payment submodule.
-            $multi_options = $payment::getAvailableOptions();
-            $option = $multi_options[$option_id];
-            $title .= $option ? ' (' . $option['count'] . ' x)' : '';
+            if ($option_id = $response->getExtInfo('option_id')) {
+                // This is multiple payment submodule.
+                $multi_options = $payment::getAvailableOptions();
+                $option = $multi_options[$option_id];
+                $title .= $option ? ' (' . $option['count'] . ' x)' : '';
+            }
         }
 
         $this->logger->logInfo("Call PaymentModule::validateOrder() PrestaShop function to create order for cart #{$cart->id}.");
@@ -3045,6 +3052,11 @@ class Payzen extends PaymentModule
         return $response->get('card_brand') === 'SDD';
     }
 
+    public static function isCreditCard($response)
+    {
+        return in_array($response->get('card_brand'), PayzenTools::$credit_cards);
+    }
+
     public static function isFirstSequenceInOrderPayments($order, $transaction_id, $sequence_number)
     {
         $payments = $order->getOrderPayments();
@@ -3099,5 +3111,23 @@ class Payzen extends PaymentModule
     public function getContext()
     {
         return $this->context;
+    }
+
+    private function getPaymentMethodTitle($response)
+    {
+        $cards = Lyranetwork\Payzen\Sdk\Form\Api::getSupportedCardTypes();
+
+        $wallet = $response->get('wallet');
+        if ($wallet) {
+            return array_key_exists($wallet, $cards) ? $cards[$wallet] : $wallet;
+        }
+
+        if (self::isCreditCard($response)) {
+            return  $this->l("Credit card");
+        }
+
+        $cardBrand = $response->get('card_brand');
+
+        return array_key_exists($cardBrand, $cards) ? $cards[$cardBrand] : $cardBrand;
     }
 }
