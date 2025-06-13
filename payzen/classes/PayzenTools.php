@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
     private static $SUPPORT_EMAIL = 'https://payzen.io/fr-FR/support/';
-    private static $PLUGIN_VERSION = '1.21.0';
+    private static $PLUGIN_VERSION = '1.21.1';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -831,6 +831,7 @@ class PayzenTools
 
         $response = array();
 
+        $response['vads_url_check_src'] = self::getProperty($answer, 'kr-src');
         $response['vads_result'] = self::getProperty($transaction, 'errorCode') ? self::getProperty($transaction, 'errorCode') : '00';
         $response['vads_extra_result'] = self::getProperty($transaction, 'detailedErrorCode');
 
@@ -872,18 +873,14 @@ class PayzenTools
             $effectiveCurrency = PayzenApi::getCurrencyNumCode(self::getProperty($transactionDetails, 'effectiveCurrency'));
 
             if ($effectiveAmount && $effectiveCurrency) {
-                // Invert only if there is currency conversion.
+                $response['vads_effective_amount'] = $response['vads_amount'];
+                $response['vads_effective_currency'] = $response['vads_currency'];
+                $response['vads_amount'] = $effectiveAmount;
+                $response['vads_currency'] = $effectiveCurrency;
+
                 if ($effectiveCurrency !== $response['vads_currency']) {
                     // Set change_rate.
                     $response['vads_change_rate'] = Tools::ps_round($effectiveAmount / $response['vads_amount'], 4);
-
-                    $response['vads_effective_amount'] = $response['vads_amount'];
-                    $response['vads_effective_currency'] = $response['vads_currency'];
-                    $response['vads_amount'] = $effectiveAmount;
-                    $response['vads_currency'] = $effectiveCurrency;
-                } else {
-                    $response['vads_effective_amount'] = $effectiveAmount;
-                    $response['vads_effective_currency'] = $effectiveCurrency;
                 }
             }
 

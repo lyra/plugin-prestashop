@@ -30,7 +30,7 @@ class PayzenRefundProcessor implements RefundProcessor
     }
 
     /**
-     * Action to do after sucessful refund process.
+     * Action to do after a successful refund process.
      *
      * @throws Exception
      */
@@ -80,17 +80,33 @@ class PayzenRefundProcessor implements RefundProcessor
             $refundAmount = $operationResponse['refundedAmountMulti'] + $orderRefundedAmountInCents;
         }
 
-        if ($operationType == 'frac_update') {
-            if ($transRefundedAmount == $refundAmount && $refundAmount == $orderAmountInCents) {
-                $this->context->cookie->payzenSplitPaymentUpdateRefundStatus = "True";
-                $order->setCurrentState((int) Configuration::get('PAYZEN_OS_REFUNDED'));
-            } elseif(! ($transRefundedAmount == $refundAmount && $transRefundedAmount < $orderAmountInCents)){
-                $msg = sprintf($this->translate('Refund of split payment is not supported. Please, consider making necessary changes in %1$s Back Office.'), 'PayZen');
+        switch ($operationType) {
+            case 'frac_update':
+                if ($transRefundedAmount == $refundAmount && $refundAmount == $orderAmountInCents) {
+                    $this->context->cookie->payzenSplitPaymentUpdateRefundStatus = "True";
+                    $order->setCurrentState((int) Configuration::get('PAYZEN_OS_REFUNDED'));
+                } elseif(! ($transRefundedAmount == $refundAmount && $transRefundedAmount < $orderAmountInCents)) {
+                    $msg = sprintf($this->translate('Refund of split payment is not supported. Please, consider making necessary changes in %1$s Back Office.'), 'PayZen');
 
-                throw new \Exception($msg);
-            }
+                    throw new \Exception($msg);
+                }
 
-            return;
+                return;
+
+            case 'already_cancel':
+                $this->context->cookie->payzenRefundWarn = 'Transaction already cancelled on payment gateway.';
+                $operationType = 'cancel';
+
+                break;
+
+            case 'already_refund':
+                $this->context->cookie->payzenRefundWarn = 'Transaction already refunded on payment gateway.';
+                $operationType = 'refund';
+
+                break;
+
+            default:
+                break;
         }
 
         $responseData = PayzenTools::convertRestResult($operationResponse);
