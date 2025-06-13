@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.21.0';
+        $this->version = '1.21.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -2874,7 +2874,12 @@ class Payzen extends PaymentModule
                         // Pending funds transfer order state.
                         $new_state = 'PAYZEN_OS_TRANS_PENDING';
                     } else {
-                        $new_state = 'PS_OS_PAYMENT';
+                        if ($is_partial_payment) {
+                            return $old_state;
+                        } else {
+                            $new_state = 'PS_OS_PAYMENT';
+                        }
+
                         $valid = true;
                     }
 
@@ -2888,7 +2893,7 @@ class Payzen extends PaymentModule
                     $new_state = Configuration::get('PS_OS_OUTOFSTOCK_UNPAID') ? 'PS_OS_OUTOFSTOCK_UNPAID' : 'PS_OS_OUTOFSTOCK';
                 }
             }
-        } elseif ($response->isCancelledPayment() || ($response->getTransStatus() === 'CANCELLED')) {
+        } elseif ($response->isCancelledPayment()) {
             // Do not cancel PrestaShop order, no state changing return PrestaShop order old state.
             if ($response->get('operation_type') === 'CREDIT' || $is_partial_payment) {
                 return $old_state;
