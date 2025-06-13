@@ -44,6 +44,7 @@ if (PayzenTools::checkRestIpnValidity()) {
     $save_on_failure &= isset($answer['orderCycle']) && ($answer['orderCycle'] === 'CLOSED');
 
     // Wrap payment result to use traditional order creation tunnel.
+    $answer['kr-src'] = $data['kr-src'] ? $data['kr-src'] : '';
     $data = PayzenTools::convertRestResult($answer);
 
     $cart_id = (int) $data['vads_order_id'];
@@ -161,8 +162,9 @@ if (! $order_id) {
     $logger->logInfo("Order #$order_id already registered for cart #$cart_id.");
 
     // Ignore IPN on cancelation for already registered orders.
-    if ($response->getTransStatus() === 'ABANDONED' || ($response->getTransStatus() === 'CANCELLED'
-        && (($response->get('order_status') === 'UNPAID' && $response->get('order_cycle') === 'CLOSED') || $response->get('url_check_src') !== 'MERCH_BO'))) {
+    if (($response->getTransStatus() === 'ABANDONED') ||
+        (($response->getTransStatus() === 'CANCELLED')
+            && ((($response->get('order_status') === 'UNPAID') && ($response->get('order_cycle') === 'CLOSED')) || ($response->get('url_check_src') !== 'MERCH_BO')))) {
         $logger->logWarning('Server call on cancelation for cart #' . $cart_id . '. No order will be updated.');
 
         die('<span style="display:none">KO-Payment abandoned.' . "\n" . '</span>');
@@ -180,9 +182,17 @@ if (! $order_id) {
     $decimals = $currency->getDecimals();
     $paid_total = $currency->convertAmountToFloat($response->get('amount'));
 
-    // Check if this is a partial payment.
+    if ($response->get('effective_currency') && ($response->get('effective_currency') == $response->get('currency'))) {
+        $paid_total = $currency->convertAmountToFloat($response->get('effective_amount')); // Use effective amount to get modified amount.
+    }
+
     if (number_format($order->total_paid_real, $decimals) !== number_format($paid_total, $decimals)) {
-        $is_partial_payment = true;
+        if ($response->getTransStatus() === 'CANCELLED') {
+            $payments = $order->getOrderPayments();
+            $is_partial_payment = is_array($payments) && (count($payments) > 1);
+        } else {
+            $is_partial_payment = true;
+        }
     }
 
     $outofstock = Payzen::isOutOfStock($order);
@@ -248,6 +258,20 @@ if (! $order_id) {
         die($response->getOutputForGateway($response->isAcceptedPayment() ? 'payment_ok' : 'payment_ko'));
     } else {
         $logger->logWarning("Unknown order state ID ($old_state) for cart #$cart_id. Managed by merchant.");
+
+        if ($response->get('url_check_src') === 'MERCH_BO') {
+            $payzen->setOrderState($order, $new_state, $response);
+            $logger->logInfo("Order is successfully updated for cart #$cart_id.");
+
+            if ($response->isAcceptedPayment()) {
+                $msg = 'payment_ok_already_done';
+            } else {
+                $msg = 'payment_ko_already_done';
+            }
+
+            die($response->getOutputForGateway($msg));
+        }
+
         die($response->getOutputForGateway('ok', 'Unknown order status.'));
     }
 }

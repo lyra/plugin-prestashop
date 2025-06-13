@@ -1,3 +1,8 @@
+1.21.1, 2025-06-13:
+- Bug fix: Fix error related to IPN processing on refund/cancellation of order with unknown status.
+- Bug fix: Fix error related to refund of split payment processing.
+- Bug fix: Fix error related to refund already canceled or refunded transactions.
+
 1.21.0, 2025-05-28:
 - Added possibility to display payment mean as order payment method on PrestaShop Back Office.
 - Added possibility to select standard payment method by default on checkout page.

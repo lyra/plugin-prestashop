@@ -41,7 +41,6 @@
       $('#payment-option-1-additional-information').removeClass('payzen-show-options');
       {if $payzen_std_select_by_default == 'True'}
         var methodTitle = '{$payzen_title|escape:'js'}';
-        console.log('methodTitle: ' + methodTitle);
         var spans = document.querySelectorAll("span");
         var found = null;
         spans.forEach(function(span) {
