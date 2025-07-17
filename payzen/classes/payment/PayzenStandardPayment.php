@@ -224,17 +224,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $customer = new Customer((int) $cart->id_customer);
 
         if ($this->isOneClickActive() && $customer->id) {
-            $isCustomerWallet = $this->isEmbedded() && (Configuration::get('PAYZEN_STD_USE_WALLET') == 'True') || $this->accountCustomerwallet();
-            if ($isCustomerWallet) {
-                $controller = $this->context->controller;
-                if ($controller instanceof PayzenWalletModuleFrontController) {
-                    $request->set('amount', 0);
-                    $request->set('order_id', null);
-                    $request->addExtInfo('from_account', true);
-                }
-
-                $request->set('page_action', 'CUSTOMER_WALLET');
-            } elseif ((! isset($data['force_identifier']) || $data['force_identifier']) && $this->isValidSavedAlias()) {
+            if ((! isset($data['force_identifier']) || $data['force_identifier']) && $this->isValidSavedAlias()) {
                 // Customer has an identifier and it is valid.
                 $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
                 $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
@@ -255,7 +245,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         return $request;
     }
 
-    public function getFormToken($cart, $use_identifier = false)
+    public function getFormToken($cart, $use_identifier = false, $identifier_error = null)
     {
         $request = $this->prepareRequest($cart, array(
             'force_identifier' => $use_identifier,
@@ -319,13 +309,6 @@ class PayzenStandardPayment extends AbstractPayzenPayment
             )
         );
 
-        if ($request->get('page_action') == 'CUSTOMER_WALLET') {
-            $params['metadata']['is_customer_wallet'] = true;
-            if ($request->get('vads_ext_info_from_account')) {
-                $params['metadata']['from_account'] = true;
-            }
-        }
-
         $validationMode = Configuration::get('PAYZEN_STD_VALIDATION');
         if ($validationMode !== "") {
             $validationMode = ($validationMode === '-1') ? Configuration::get('PAYZEN_VALIDATION_MODE') : $validationMode;
@@ -352,6 +335,34 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
         $params['formAction'] = $this->getEscapedVar($request, 'page_action');
 
+        $fromAccount = false;
+
+        $isCustomerWallet = $this->isEmbedded() && ((Configuration::get('PAYZEN_STD_1_CLICK_PAYMENT') === 'True') && (Configuration::get('PAYZEN_STD_USE_WALLET') === 'True'))
+            || $this->accountCustomerWallet();
+        if ($isCustomerWallet && is_null($identifier_error)) {
+            $params['formAction'] = 'CUSTOMER_WALLET';
+            $params['metadata']['is_customer_wallet'] = true;
+
+            $controller = $this->context->controller;
+            if ($controller instanceof PayzenWalletModuleFrontController) {
+                $fromAccount = true;
+                $params['metadata']['from_account'] = true;
+                $params['amount'] = 0;
+                $params['order_id'] = null;
+            }
+        } else {
+            switch ($identifier_error) {
+                case "INT_015":
+                    $params['formAction'] = 'PAYMENT';
+                    $params['customer']['email'] = '';
+                    break;
+                case "INT_016":
+                    $params['formAction'] = 'PAYMENT';
+                    $params['customer']['reference'] = '';
+                    break;
+            }
+        }
+
         if ($this->isEmbedded()) {
             // Filter payment means when creating the payment token.
             $params['paymentMethods'] = $this->getPaymentMeansForSmartform($cart);
@@ -362,7 +373,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $site_id = Configuration::get('PAYZEN_SITE_ID');
 
         $return = false;
-        if ($request->get('vads_ext_info_from_account')) {
+        if ($fromAccount) {
             $webservice = 'CreateToken';
             $metadata = "user $cust_mail.";
         } else {
@@ -384,6 +395,13 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                 if (isset($result['answer']['detailedErrorMessage']) && ! empty($result['answer']['detailedErrorMessage'])) {
                     PayzenTools::getLogger()->logError('Detailed message: ' . $result['answer']['detailedErrorMessage']
                         . ' (' . $result['answer']['detailedErrorCode'] . ').');
+                }
+
+                // Regenerate token in case of invalid email or customer reference.
+                if (in_array($result['answer']['errorCode'], ["INT_015", "INT_016"])) {
+                    PayzenTools::getLogger()->logInfo("Regenerate token without invalid customer information.");
+
+                    return $this->getFormToken($cart, $use_identifier, $result['answer']['errorCode']);
                 }
             } else {
                 // Payment form token created successfully.
