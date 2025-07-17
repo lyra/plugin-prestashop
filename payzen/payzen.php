@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.21.1';
+        $this->version = '1.21.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -1096,7 +1096,7 @@ class Payzen extends PaymentModule
             $html = '';
 
             $standard = new PayzenStandardPayment();
-            $embedded = $standard->isEmbedded() || $standard->accountCustomerwallet();
+            $embedded = $standard->isEmbedded() || $standard->accountCustomerWallet();
             if ($standard->isAvailable($this->context->cart) && $embedded) {
                 $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
                 $pub_key = $test_mode ? Configuration::get('PAYZEN_PUBKEY_TEST') : Configuration::get('PAYZEN_PUBKEY_PROD');

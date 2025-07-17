@@ -1,3 +1,6 @@
+1.21.2, 2025-07-17:
+- Bug fix: Fix error related to customer wallet in case of invalid customer email or reference.
+
 1.21.1, 2025-06-13:
 - Bug fix: Fix error related to IPN processing on refund/cancellation of order with unknown status.
 - Bug fix: Fix error related to refund of split payment processing.
