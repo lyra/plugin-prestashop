@@ -1,3 +1,6 @@
+1.21.3, 2025-07-31:
+- Bug fix: Fix error related to embedded fields payment with customer wallet when only cards are available.
+
 1.21.2, 2025-07-17:
 - Bug fix: Fix error related to customer wallet in case of invalid customer email or reference.
 
