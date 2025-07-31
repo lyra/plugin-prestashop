@@ -89,16 +89,6 @@
     {if ($payzen_std_rest_popin_mode === 'True')}
       return;
     {/if}
- 
-    var methods = await KR.getPaymentMethods().then(function(result) {
-       return result;
-    });
-
-    // If only the card form is available, hide our payment button and use Prestashop button.
-    if ((methods.paymentMethods.length == 1) && (methods.paymentMethods[0] == 'CARDS')) {
-      $(".kr-payment-button").hide();
-      return;
-    }
 
     var currentOptionId = $("input[type='radio'][name='payment-option']:checked").attr('id');
     if ($("#" + currentOptionId + "-additional-information").find("#payzen_standard_rest_wrapper").length > 0) {
@@ -112,28 +102,13 @@
     e.preventDefault();
 
     if (!$('#payzen_standard').data('submitted')) {
-      var isSmartform = $('.kr-smart-form');
-      var smartformModalButton = $('.kr-smart-form-modal-button');
-
       {if $payzen_is_valid_std_identifier && $payzen_std_rest_popin_mode != 'True'}
         $('#payzen_oneclick_payment_description').hide();
       {/if}
 
-      {if $payzen_std_rest_popin_mode == 'True'}
-        KR.openPopin();
+      KR.openPopin();
 
-        $('#payment-confirmation button').removeAttr('disabled');
-      {else}
-        $('#payzen_standard').data('submitted', true);
-        $('.payzen .processing').css('display', 'block');
-        $('#payment-confirmation button').attr('disabled', 'disabled');
-
-        if (PAYZEN_LAST_CART == false) {
-            await payzenRefreshToken(true);
-        }
-
-        KR.submit();
-      {/if}
+      $('#payment-confirmation button').removeAttr('disabled');
     }
 
     return false;
