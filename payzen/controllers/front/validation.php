@@ -11,10 +11,22 @@
 /**
  * Instant payment notification file. Wait for payment gateway confirmation, then validate order.
  */
-
-require_once dirname(dirname(dirname(__FILE__))) . '/config/config.inc.php';
-require_once(_PS_MODULE_DIR_ . 'payzen/payzen.php');
 require_once(_PS_MODULE_DIR_ . 'payzen/classes/PayzenIpnProcessor.php');
 
-$processor = new PayzenIpnProcessor();
-$processor->process();
+class PayzenValidationModuleFrontController extends ModuleFrontController
+{
+    private $processor;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->processor = new PayzenIpnProcessor();
+    }
+
+    public function postProcess()
+    {
+       $this->processor->process();
+    }
+
+}

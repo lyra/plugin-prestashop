@@ -86,7 +86,7 @@
   <div style="width: 100%;">
     <fieldset>
       <legend>
-        <img style="width: 20px; vertical-align: middle;" src="../modules/payzen/logo.png">PayZen
+        <img style="width: 20px; vertical-align: middle;" src="{$payzen_logo}">PayZen
       </legend>
 
       <div style="padding: 5px;">{l s='Developed by' mod='payzen'} <b><a href="https://www.lyra.com/" target="_blank">Lyra Network</a></b></div>

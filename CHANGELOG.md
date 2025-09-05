@@ -1,3 +1,9 @@
+1.22.0, 2025-09-05:
+- Compatibility with PrestaShop 9.x versions.
+- Change Instant Payment Notification URL for PrestaShop 9.x.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.21.3, 2025-07-31:
 - Bug fix: Fix error related to embedded fields payment with customer wallet when only cards are available.
 

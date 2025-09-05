@@ -31,9 +31,9 @@ class PayzenTools
     private static $SIGN_ALGO = 'SHA-256';
     private static $LANGUAGE = 'fr';
 
-    private static $CMS_IDENTIFIER = 'PrestaShop_1.5-8.x';
+    private static $CMS_IDENTIFIER = 'PrestaShop_1.5-9.x';
     private static $SUPPORT_EMAIL = 'https://payzen.io/fr-FR/support/';
-    private static $PLUGIN_VERSION = '1.21.3';
+    private static $PLUGIN_VERSION = '1.22.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -1096,6 +1096,15 @@ class PayzenTools
 
             default:
                 return $entryMode;
+        }
+    }
+
+    public static function getOrderByCartId($cart_id)
+    {
+        if (method_exists(Order::class, 'getIdByCartId')) {
+            return Order::getIdByCartId($cart_id);
+        } else {
+            return Order::getOrderByCartId($cart_id);
         }
     }
 }
