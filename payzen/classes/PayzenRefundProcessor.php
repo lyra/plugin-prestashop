@@ -38,7 +38,7 @@ class PayzenRefundProcessor implements RefundProcessor
     {
         // Retrieve Order from its Id.
         $cartId = (int) $operationResponse['orderDetails']['orderId'];
-        $orderId = Order::getOrderByCartId($cartId);
+        $orderId = PayzenTools::getOrderByCartId($cartId);
 
         if (! $orderId) {
             return;

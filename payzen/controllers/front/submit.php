@@ -89,7 +89,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
         }
 
         // Search order in db.
-        $order_id = Order::getOrderByCartId($cart_id);
+        $order_id = PayzenTools::getOrderByCartId($cart_id);
 
         if (! $order_id) {
             // Order has not been processed yet.

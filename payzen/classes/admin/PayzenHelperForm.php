@@ -105,9 +105,15 @@ class PayzenHelperForm
             }
         }
 
+        $domain = Tools::getShopDomain(true, true);
+        if (Tools::usingSecureMode()) {
+            $domain = Tools::getShopDomainSsl(true, true);
+        }
+
         $tpl_vars = array(
+            'payzen_logo' => $domain . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_) . '/payzen/logo.png',
             'payzen_support_email' => PayzenTools::getDefault('SUPPORT_EMAIL'),
-            'payzen_formatted_support_email' => PayzenApi::formatSupportEmails(PayzenTools::getDefault('SUPPORT_EMAIL')),
+            'payzen_formatted_support_email' => PayzenApi::formatSupportEmails(PayzenTools::getDefault('SUPPORT_EMAIL'), $payzen->l('Click here', 'payzenhelperform')),
             'payzen_plugin_version' => PayzenTools::getDefault('PLUGIN_VERSION'),
             'payzen_gateway_version' => PayzenTools::getDefault('GATEWAY_VERSION'),
             'payzen_contrib' => PayzenTools::getContrib(),
@@ -418,7 +424,7 @@ class PayzenHelperForm
         $ssl = Configuration::get('PS_SSL_ENABLED', null, $id_shop_group, $shop->id);
 
         $ipn = ($ssl ? 'https://' . $shop->domain_ssl : 'http://' . $shop->domain)
-            . $shop->getBaseURI() . 'modules/payzen/validation.php';
+            . $shop->getBaseURI() . 'module/payzen/validation';
 
         return $ipn;
     }

@@ -33,9 +33,9 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.21.3';
+        $this->version = '1.22.0';
         $this->author = 'Lyra Network';
-        $this->controllers = array('redirect', 'submit', 'rest');
+        $this->controllers = array('redirect', 'submit', 'rest', 'validation');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
 
         if (property_exists($this, 'is_eu_compatible')) {
@@ -500,7 +500,7 @@ class Payzen extends PaymentModule
             }
 
             $msg .= '<br />';
-        } else if (Tools::getValue('submitter') === 'payzen_send_support') {
+        } elseif (Tools::getValue('submitter') === 'payzen_send_support') {
             if (Tools::getValue('sender') && Tools::getValue('subject') && Tools::getValue('message')) {
                 $email = array(
                     'sender' => Tools::getValue('sender'),
@@ -1454,7 +1454,7 @@ class Payzen extends PaymentModule
             if ($standard->hasForm() || $oneClickPayment) {
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $standard->getTplName());
 
-                if (($standard->isEmbedded() && $isRestPayment)) {
+                if ($standard->isEmbedded() && $isRestPayment) {
                     // REST mode.
                     $option->setAdditionalInformation($form . $additionalForm);
                     if ($oneClickPayment) {
@@ -1465,9 +1465,9 @@ class Payzen extends PaymentModule
                 } else {
                     $option->setForm($form);
                 }
-            } else if (Configuration::get('PAYZEN_STD_CARD_DATA_MODE') === '1' && Configuration::get('PAYZEN_STD_SELECT_BY_DEFAULT') == 'True') {
-                    $additionalForm = $this->fetch('module:payzen/views/templates/hook/payment_std_select_as_default.tpl');
-                    $option->setAdditionalInformation($additionalForm);
+            } elseif (Configuration::get('PAYZEN_STD_CARD_DATA_MODE') === '1' && Configuration::get('PAYZEN_STD_SELECT_BY_DEFAULT') == 'True') {
+                $additionalForm = $this->fetch('module:payzen/views/templates/hook/payment_std_select_as_default.tpl');
+                $option->setAdditionalInformation($additionalForm);
             }
 
             $options[] = $option;
@@ -2206,7 +2206,7 @@ class Payzen extends PaymentModule
         $this->logger->logInfo("PaymentModule::validateOrder() PrestaShop function called successfully for cart #{$cart->id}.");
 
         // Reload order.
-        $order = new Order((int) Order::getOrderByCartId($cart->id));
+        $order = new Order((int) PayzenTools::getOrderByCartId($cart->id));
         $this->logger->logInfo("Order #{$order->id} created successfully for cart #{$cart->id}.");
 
         $this->createMessage($order, $response);

@@ -127,7 +127,7 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         $cart = new Cart($cart_id);
 
         // Get order ID by cart ID.
-        $order_id = Order::getOrderByCartId($cart_id);
+        $order_id = PayzenTools::getOrderByCartId($cart_id);
 
         if (! $order_id) {
             if ($response->getExtInfo('from_account')) {

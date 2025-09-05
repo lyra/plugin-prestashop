@@ -11,8 +11,12 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
 <script type="text/javascript">
-  window.onload = function(e) {
+  window.addEventListener('load', function(e) {
     options = document.getElementsByClassName('payment-option');
+    if (options.length == 0) {
+        options = document.getElementsByClassName('payment__option');
+    }
+
     if ((typeof options !== null) && (options.length > 0)) {
       {if $payzen_std_select_by_default == 'True'}
         var methodTitle = '{$payzen_title|escape:'js'}';
@@ -34,5 +38,5 @@
         }
       {/if}
     }
-  };
+  });
 </script>
