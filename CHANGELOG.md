@@ -1,3 +1,7 @@
+1.22.1, 2025-10-28:
+- Bug fix: Fix error related to IPN processing on already saved orders.
+- Bug fix: Fix error related to rebuilding context.
+
 1.22.0, 2025-09-05:
 - Compatibility with PrestaShop 9.x versions.
 - Change Instant Payment Notification URL for PrestaShop 9.x.
