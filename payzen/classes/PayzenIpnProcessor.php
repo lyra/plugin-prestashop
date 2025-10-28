@@ -45,15 +45,6 @@ class PayzenIpnProcessor
         // Shopping cart object.
         $cart = new Cart($cart_id);
 
-        // Rebuild context.
-        try {
-            PayzenTools::rebuildContext($cart);
-        } catch (Exception $e) {
-            $this->logger->logError($e->getMessage() . ' Cart ID: #' . $cart->id);
-
-            die('<span style="display:none">KO-' . $e->getMessage(). "\n" . '</span>');
-        }
-
         $order_id = PayzenTools::getOrderByCartId($cart_id);
 
         if (! $order_id) {
@@ -152,9 +143,10 @@ class PayzenIpnProcessor
                 $this->logger->logInfo("No state change for order associated with cart #$cart_id, order remains in state ({$old_state}).");
 
                 // Do not create payment if it is cancelled partial debit payment OR order is in final status PAYZEN_OS_REFUNDED.
-                $force_stop_payment_creation = (Configuration::get('PAYZEN_OS_REFUNDED') == $old_state) ||
-                                               (($response->isCancelledPayment() || ($response->getTransStatus() === 'CANCELLED'))
-                                               && ($response->get('operation_type') === 'DEBIT') && $is_partial_payment);
+                $force_stop_payment_creation = (Configuration::get('PAYZEN_OS_REFUNDED') == $old_state)
+                                               || (($response->isCancelledPayment() || ($response->getTransStatus() === 'CANCELLED'))
+                                                   && ($response->get('operation_type') === 'DEBIT') && $is_partial_payment)
+                                               || (! $first_payment && ! $response->isAcceptedPayment());
 
                 $this->module->savePayment($order, $response, $force_stop_payment_creation);
                 $this->module->createMessage($order, $response);
@@ -240,6 +232,9 @@ class PayzenIpnProcessor
 
         $cart_id = (int) $data['vads_order_id'];
 
+        // Rebuild context.
+        $this->rebuildContext($cart_id);
+
         $this->logger->logInfo("Server call process starts for cart #$cart_id.");
 
         $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
@@ -259,6 +254,7 @@ class PayzenIpnProcessor
     private function getRedirectPaymentResponse()
     {
         $cart_id = (int) Tools::getValue('vads_order_id');
+        $this->rebuildContext($cart_id);
 
         $this->logger->logInfo("Server call process starts for cart #$cart_id.");
 
@@ -281,5 +277,20 @@ class PayzenIpnProcessor
         }
 
         return $response;
+    }
+
+    private function rebuildContext ($cart_id)
+    {
+        // Shopping cart object.
+        $cart = new Cart($cart_id);
+
+        // Rebuild context.
+        try {
+            PayzenTools::rebuildContext($cart);
+        } catch (Exception $e) {
+            $this->logger->logError($e->getMessage() . ' Cart ID: #' . $cart->id);
+
+            die('<span style="display:none">KO-' . $e->getMessage(). "\n" . '</span>');
+        }
     }
 }
