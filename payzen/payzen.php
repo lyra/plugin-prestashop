@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.22.1';
+        $this->version = '1.23.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'validation');
         $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
@@ -2833,6 +2833,16 @@ class Payzen extends PaymentModule
         );
 
         return $trs->{'operation_type'} === 'DEBIT' && in_array($trs->{'trans_status'}, $successful_states);
+    }
+
+    public static function filterRestTransactions($trs)
+    {
+        $successful_states = array_merge(
+            Lyranetwork\Payzen\Sdk\Form\Api::getSuccessStatuses(),
+            Lyranetwork\Payzen\Sdk\Form\Api::getPendingStatuses()
+        );
+
+        return $trs['operationType'] === 'DEBIT' && in_array($trs['detailedStatus'], $successful_states);
     }
 
     public static function nextOrderState($response, $outofstock = false, $old_state = null, $is_partial_payment = false)

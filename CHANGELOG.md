@@ -1,3 +1,8 @@
+1.23.0, 2025-12-15:
+- Added partial payment with embedded fields.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.22.1, 2025-10-28:
 - Bug fix: Fix error related to IPN processing on already saved orders.
 - Bug fix: Fix error related to rebuilding context.
