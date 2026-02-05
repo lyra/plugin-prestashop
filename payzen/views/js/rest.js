@@ -191,6 +191,12 @@ var payzenInitRestEvents = function() {
     });
 
     KR.smartForm.onClick(function({paymentMethod, action, formId}) {
+        const isWalletPage = document.querySelector('[id$="payzen-wallet"]');
+
+        if (isWalletPage) {
+            return;
+        }
+
         // Hide oneclick description if it is present and is not popin mode.
         if ($('#payzen_oneclick_payment_description').length && ! $('.payzen .kr-popin-button').length && ! $('.payzen .kr-type-popin').length) {
             $('#payzen_oneclick_payment_description').hide();
