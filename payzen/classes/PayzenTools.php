@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-9.x';
     private static $SUPPORT_EMAIL = 'https://payzen.io/fr-FR/support/';
-    private static $PLUGIN_VERSION = '1.23.0';
+    private static $PLUGIN_VERSION = '1.23.1';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
