@@ -1,3 +1,6 @@
+1.23.1, 2026-02-05:
+- Fix behavior of wallet on customer account.
+
 1.23.0, 2025-12-15:
 - Added partial payment with embedded fields.
 - Update list of supported payment means.
