@@ -112,14 +112,9 @@ class PayzenHelperForm
 
         $tpl_vars = array(
             'payzen_logo' => $domain . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_) . '/payzen/logo.png',
-            'payzen_support_email' => PayzenTools::getDefault('SUPPORT_EMAIL'),
             'payzen_formatted_support_email' => PayzenApi::formatSupportEmails(PayzenTools::getDefault('SUPPORT_EMAIL'), $payzen->l('Click here', 'payzenhelperform')),
             'payzen_plugin_version' => PayzenTools::getDefault('PLUGIN_VERSION'),
             'payzen_gateway_version' => PayzenTools::getDefault('GATEWAY_VERSION'),
-            'payzen_contrib' => PayzenTools::getContrib(),
-            'payzen_installed_modules' => PayzenTools::getModulesInstalled(),
-            'payzen_card_data_entry_modes' => PayzenTools::getCardDataEntryModes(),
-            'payzen_employee' => $context->employee,
 
             'payzen_plugin_features' => PayzenTools::$plugin_features,
             'payzen_request_uri' => $_SERVER['REQUEST_URI'],
@@ -271,7 +266,6 @@ class PayzenHelperForm
             'PAYZEN_KEY_PROD' => Configuration::get('PAYZEN_KEY_PROD'),
             'PAYZEN_MODE' => Configuration::get('PAYZEN_MODE'),
             'PAYZEN_SIGN_ALGO' => Configuration::get('PAYZEN_SIGN_ALGO'),
-            'PAYZEN_PLATFORM_URL' => Configuration::get('PAYZEN_PLATFORM_URL'),
             'PAYZEN_NOTIFY_URL' => self::getIpnUrl(),
 
             'PAYZEN_PUBKEY_TEST' => Configuration::get('PAYZEN_PUBKEY_TEST'),
@@ -281,8 +275,6 @@ class PayzenHelperForm
             'PAYZEN_RETKEY_TEST' => Configuration::get('PAYZEN_RETKEY_TEST'),
             'PAYZEN_RETKEY_PROD' => Configuration::get('PAYZEN_RETKEY_PROD'),
             'PAYZEN_REST_NOTIFY_URL' => self::getIpnUrl(),
-            'PAYZEN_REST_SERVER_URL' => Configuration::get('PAYZEN_REST_SERVER_URL'),
-            'PAYZEN_REST_JS_CLIENT_URL' => Configuration::get('PAYZEN_REST_JS_CLIENT_URL'),
 
             'PAYZEN_DEFAULT_LANGUAGE' => Configuration::get('PAYZEN_DEFAULT_LANGUAGE'),
             'PAYZEN_AVAILABLE_LANGUAGES' => ! Configuration::get('PAYZEN_AVAILABLE_LANGUAGES') ?
@@ -391,12 +383,6 @@ class PayzenHelperForm
             'PAYZEN_PAYPAL_AMOUNTS' => self::getArrayConfig('PAYZEN_PAYPAL_AMOUNTS'),
             'PAYZEN_PAYPAL_DELAY' => Configuration::get('PAYZEN_PAYPAL_DELAY'),
             'PAYZEN_PAYPAL_VALIDATION' => Configuration::get('PAYZEN_PAYPAL_VALIDATION'),
-
-            'PAYZEN_CHOOZEO_TITLE' => self::getLangConfig('PAYZEN_CHOOZEO_TITLE'),
-            'PAYZEN_CHOOZEO_ENABLED' => Configuration::get('PAYZEN_CHOOZEO_ENABLED'),
-            'PAYZEN_CHOOZEO_AMOUNTS' => self::getArrayConfig('PAYZEN_CHOOZEO_AMOUNTS'),
-            'PAYZEN_CHOOZEO_DELAY' => Configuration::get('PAYZEN_CHOOZEO_DELAY'),
-            'PAYZEN_CHOOZEO_OPTIONS' => self::getArrayConfig('PAYZEN_CHOOZEO_OPTIONS'),
 
             'PAYZEN_OTHER_GROUPED_VIEW' => Configuration::get('PAYZEN_OTHER_GROUPED_VIEW'),
             'PAYZEN_OTHER_ENABLED' => Configuration::get('PAYZEN_OTHER_ENABLED'),

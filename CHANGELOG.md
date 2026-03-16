@@ -1,3 +1,8 @@
+1.24.0, 2026-03-16:
+- [technical] Clean Choozeo payment submodule code.
+- Remove contact support component.
+- Remove the possibility to configure URLs for payment page, REST API server and JS client server.
+
 1.23.1, 2026-02-05:
 - Fix behavior of wallet on customer account.
 

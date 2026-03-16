@@ -385,7 +385,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         PayzenTools::getLogger()->logInfo("Creating form token for cart #{$cart_id} with parameters: {$data}");
 
         try {
-            $client = new PayzenRest(Configuration::get('PAYZEN_REST_SERVER_URL'), $site_id, $key);
+            $client = new PayzenRest(PayzenTools::getConfigOrDefault('PAYZEN_REST_SERVER_URL'), $site_id, $key);
             $result = $client->post('V4/Charge/'. $webservice, $data);
 
             if ($result['status'] !== 'SUCCESS') {

@@ -33,10 +33,9 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.23.1';
+        $this->version = '1.24.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'validation');
-        $this->module_key = 'f3e5d07f72a9d27a5a09196d54b9648e';
 
         if (property_exists($this, 'is_eu_compatible')) {
             $this->is_eu_compatible = 1;
@@ -117,7 +116,6 @@ class Payzen extends PaymentModule
             || ! $this->registerHook('actionOrderStatusPostUpdate')
             || ! $this->registerHook('actionAdminCarrierWizardControllerSaveBefore')
             || ! $this->registerHook('actionAdminCarriersOptionsModifier')
-            || ! $this->registerHook('actionAdminControllerSetMedia')
             || ! $this->registerHook('displayCustomerAccount')) {
             $this->logger->logWarning('One or more hooks necessary for the module could not be saved.');
             $this->_errors[] = $this->l('One or more hooks necessary for the module could not be saved.');
@@ -443,11 +441,11 @@ class Payzen extends PaymentModule
         $tpls = array(
             'redirect', 'redirect_bc', 'redirect_js',
 
-            'bc/payment_ancv', 'bc/payment_choozeo', 'bc/payment_fullcb', 'bc/payment_multi', 'bc/payment_oney',
+            'bc/payment_ancv', 'bc/payment_fullcb', 'bc/payment_multi', 'bc/payment_oney',
             'bc/payment_oney34','bc/payment_paypal', 'bc/payment_sepa', 'bc/payment_sofort', 'bc/payment_std_eu',
             'bc/payment_std', 'bc/payment_std_rest', 'bc/payment_franfinance',
 
-            'payment_choozeo', 'payment_fullcb', 'payment_multi', 'payment_oney', 'payment_oney34',
+            'payment_fullcb', 'payment_multi', 'payment_oney', 'payment_oney34',
             'payment_return', 'payment_std', 'payment_std_rest', 'payment_franfinance'
         );
         foreach ($tpls as $tpl) {
@@ -500,69 +498,9 @@ class Payzen extends PaymentModule
             }
 
             $msg .= '<br />';
-        } elseif (Tools::getValue('submitter') === 'payzen_send_support') {
-            if (Tools::getValue('sender') && Tools::getValue('subject') && Tools::getValue('message')) {
-                $email = array(
-                    'sender' => Tools::getValue('sender'),
-                    'subject' => Tools::getValue('subject'),
-                    'message' => Tools::getValue('message')
-                );
-
-                if ($this->sendEmail($email)) {
-                   if (Tools::getValue('payzen_mail_origine') === 'order') {
-                       // Display success message in Order details page.
-                       $this->context->cookie->payzenMessageSuccessSent = $this->l('Thank you for contacting us. Your email has been successfully sent.');
-                       die();
-                   } else {
-                       // Display success message in module backend.
-                       $msg .= $this->displayConfirmation($this->l('Thank you for contacting us. Your email has been successfully sent.'));
-                   }
-                } else {
-                    if (Tools::getValue('payzen_mail_origine') === 'order') {
-                        // Display error message in Order details page.
-                        $this->context->cookie->payzenMessageErrorSent = $this->l('An error has occurred. Your email was not sent.');
-                        die();
-                    } else {
-                        $msg .= $this->displayError($this->l('An error has occurred. Your email was not sent.'));
-                    }
-                }
-
-                $this->context->cookie->payzenEmailSendMsg = $msg;
-            } else {
-                if (Tools::getValue('payzen_mail_origine') === 'order') {
-                    // Display error message in Order details page.
-                    $this->context->cookie->payzenMessageErrorSent = $this->l('Please make sure to configure all required fields.');
-                    die();
-                } else {
-                    $this->context->cookie->payzenEmailSendMsg = $this->displayError($this->l('Please make sure to configure all required fields.'));
-                }
-            }
         }
 
         return $msg . $this->renderForm();
-    }
-
-    /**
-     * Send support email.
-     */
-    private function sendEmail($email)
-    {
-        return Mail::Send(
-            (int) $this->context->language->id,
-            'payzen', // Email template file to be use.
-            $email['subject'], // Email subject.
-            array(
-                '{email}' => $email['sender'], // Sender email address.
-                '{message}' => $email['message'] // Email content.
-            ),
-            PayzenTools::getDefault('SUPPORT_EMAIL'), // Receiver email address.
-            NULL, // Receiver name.
-            $email['sender'], // From email address.
-            NULL,  // From name.
-            NULL, // File attachment.
-            NULL, // Mode smtp.
-            _PS_MODULE_DIR_ . $this->name . '/mails/' // Custom template path.
-        );
     }
 
     /**
@@ -599,10 +537,6 @@ class Payzen extends PaymentModule
                 } else {
                     $error = false;
                     foreach ($value as $id => $option) {
-                        if (($key === 'PAYZEN_CHOOZEO_OPTIONS') && ! isset($option['enabled'])) {
-                            $value[$id]['enabled'] = 'False';
-                        }
-
                         if (isset($option['min_amount']) && $option['min_amount'] && (! is_numeric($option['min_amount']) || $option['min_amount'] < 0)) {
                             $value[$id]['min_amount'] = ''; // Error, reset incorrect value.
                             $error = true;
@@ -939,16 +873,6 @@ class Payzen extends PaymentModule
                     $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $value, $label);
                     continue;
                 }
-            } elseif ($key === 'PAYZEN_REST_SERVER_URL' || $key === 'PAYZEN_REST_JS_CLIENT_URL') {
-                if (! preg_match('#^https?://([^/]+/)+$#u', $value)) {
-                    if (empty($value)) {
-                        $this->_errors[] = sprintf($this->l('The field « %s » is mandatory.'), $label);
-                    } else {
-                        $this->_errors[] = sprintf($this->l('Invalid value « %1$s » for field « %2$s ».'), $value, $label);
-                    }
-
-                    continue;
-                }
             }
 
             // Validate with Lyranetwork\Payzen\Sdk\Form\Request.
@@ -1031,10 +955,6 @@ class Payzen extends PaymentModule
     {
         $this->addJS('payzen.js');
 
-        if (PayzenTools::$plugin_features['support']) {
-            $this->addJs('support.js');
-        }
-
         $this->context->controller->addJqueryUI('ui.accordion');
 
         $html = '';
@@ -1116,7 +1036,7 @@ class Payzen extends PaymentModule
                             var PAYZEN_LANGUAGE = "' . $language_iso_code . '";
                           </script>';
 
-                $html .= '<script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js"
+                $html .= '<script src="' . PayzenTools::getConfigOrDefault('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/stable/kr-payment-form.min.js"
                                   kr-public-key="' . $pub_key . '"
                                   kr-post-url-success="' . $return_url . '"
                                   kr-post-url-refused="' . $return_url . '"
@@ -1140,8 +1060,8 @@ class Payzen extends PaymentModule
 
                 // Theme and plugins, should be loaded after the javascript library.
                 $rest_theme = Configuration::get('PAYZEN_STD_REST_THEME');
-                $html .= '<link rel="stylesheet" href="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '-reset.css">
-                          <script src="' . Configuration::get('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '.js"></script>';
+                $html .= '<link rel="stylesheet" href="' . PayzenTools::getConfigOrDefault('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '-reset.css">
+                          <script src="' . PayzenTools::getConfigOrDefault('PAYZEN_REST_JS_CLIENT_URL') . 'js/krypton-client/V4.0/ext/' . $rest_theme . '.js"></script>';
 
                 $this->context->smarty->assign('payzen_rest_theme', $rest_theme);
 
@@ -1319,12 +1239,6 @@ class Payzen extends PaymentModule
             $html .= $this->display(__FILE__, 'bc/' . $multi->getTplName());
         }
 
-        $choozeo = new PayzenChoozeoPayment();
-        if ($choozeo->isAvailable($cart)) {
-            $this->context->smarty->assign($choozeo->getTplVars($cart));
-            $html .= $this->display(__FILE__, 'bc/' . $choozeo->getTplName());
-        }
-
         $oney34 = new PayzenOney34Payment();
         if ($oney34->isAvailable($cart)) {
             $this->context->smarty->assign($oney34->getTplVars($cart));
@@ -1480,19 +1394,6 @@ class Payzen extends PaymentModule
             if ($multi->hasForm()) {
                 $this->context->smarty->assign($multi->getTplVars($cart));
                 $form = $this->fetch('module:payzen/views/templates/hook/' . $multi->getTplName());
-                $option->setForm($form);
-            }
-
-            $options[] = $option;
-        }
-
-        $choozeo = new PayzenChoozeoPayment();
-        if ($choozeo->isAvailable($cart)) {
-            $option = $choozeo->getPaymentOption($cart);
-
-            if ($choozeo->hasForm()) {
-                $this->context->smarty->assign($choozeo->getTplVars($cart));
-                $form = $this->fetch('module:payzen/views/templates/hook/' . $choozeo->getTplName());
                 $option->setForm($form);
             }
 
@@ -1695,15 +1596,6 @@ class Payzen extends PaymentModule
         }
     }
 
-    public function hookActionAdminControllerSetMedia()
-    {
-        if (! PayzenTools::$plugin_features['support']) {
-            return;
-        }
-
-        $this->addJs('support.js');
-    }
-
     public function hookDisplayAdminOrderTop($params)
     {
         $order = new Order((int) $params['id_order']);
@@ -1711,26 +1603,7 @@ class Payzen extends PaymentModule
             return;
         }
 
-        $url_admin_orders = $this->context->link->getAdminLink('AdminOrders');
-        $url_admin_order = str_replace('/?_token=', '/' . $order->id . '/view?_token=', $url_admin_orders);
-
-        if (isset($this->context->cookie->payzenMessageErrorSent)) {
-            $this->get('session')->getFlashBag()->set('error', $this->context->cookie->payzenMessageErrorSent);
-            unset($this->context->cookie->payzenMessageErrorSent);
-            $this->context->cookie->write();
-
-            Tools::redirectAdmin($url_admin_order);
-        }
-
-        if (isset($this->context->cookie->payzenMessageSuccessSent)) {
-            $this->get('session')->getFlashBag()->set('success', $this->context->cookie->payzenMessageSuccessSent);
-            unset($this->context->cookie->payzenMessageSuccessSent);
-            $this->context->cookie->write();
-
-            Tools::redirectAdmin($url_admin_order);
-        }
-
-        return $this->displayRefundOnlineCheckbox() . $this->displaySupportContactFromOrderDetails($order);
+        return $this->displayRefundOnlineCheckbox();
     }
 
     public function hookDisplayAdminOrder($params)
@@ -1745,17 +1618,7 @@ class Payzen extends PaymentModule
             unset($this->context->cookie->payzenRefundWarn);
         }
 
-        if (isset($this->context->cookie->payzenMessageErrorSent)) {
-            $this->context->controller->errors[] = $this->context->cookie->payzenMessageErrorSent;
-            unset($this->context->cookie->payzenMessageErrorSent);
-        }
-
-        if (isset($this->context->cookie->payzenMessageSuccessSent)) {
-            $this->context->controller->confirmations[] = $this->context->cookie->payzenMessageSuccessSent;
-            unset($this->context->cookie->payzenMessageSuccessSent);
-        }
-
-        return $this->displayRefundOnlineCheckbox(true) . $this->displaySupportContactFromOrderDetails($order);
+        return $this->displayRefundOnlineCheckbox(true);
     }
 
     public function hookActionEmailSendBefore(array $params)
@@ -1802,52 +1665,6 @@ class Payzen extends PaymentModule
         return $this->context->smarty->fetch($template);
     }
 
-    private function displaySupportContactFromOrderDetails($order)
-    {
-        if (! PayzenTools::$plugin_features['support']) {
-            return '';
-        }
-
-        $this->addJs('support.js');
-
-        $tpl_vars = PayzenHelperForm::getAdminFormContext();
-        $tpl_vars['trans_id_title'] = $this->l('Transaction UUID : ');
-        $tpl_vars['payzen_site_id'] = Configuration::get('PAYZEN_SITE_ID', null, $order->id_shop_group, $order->id_shop);
-        $tpl_vars['payzen_mode'] = Configuration::get('PAYZEN_MODE', null, $order->id_shop_group, $order->id_shop);
-        $tpl_vars['payzen_sign_algo'] = Configuration::get('PAYZEN_SIGN_ALGO', null, $order->id_shop_group, $order->id_shop);
-
-        $card_data_mode = Configuration::get('PAYZEN_STD_CARD_DATA_MODE', null, $order->id_shop_group, $order->id_shop);
-        $tpl_vars['payzen_std_card_data_mode'] = $card_data_mode && $card_data_mode != '4' ? $card_data_mode : '1';
-        $tpl_vars['id_cart'] = $order->id_cart;
-        $tpl_vars['order_reference'] = $order->reference;
-        $order_status = $order->getCurrentStateFull($this->context->language->id);
-        $tpl_vars['order_status'] = $order_status['name'];
-        $tpl_vars['date_add'] = $order->date_add;
-        $tpl_vars['total_paid'] = PayzenTools::formatPrice($order->total_paid, $order->id_currency, $this->context);
-        $tpl_vars['total_products_wt'] = PayzenTools::formatPrice($order->total_products_wt, $order->id_currency, $this->context);
-        $tpl_vars['total_shipping'] = PayzenTools::formatPrice($order->total_shipping, $order->id_currency, $this->context);
-        $tpl_vars['total_discounts'] = PayzenTools::formatPrice($order->total_discounts, $order->id_currency, $this->context);
-
-        // Recover carrier name.
-        $tpl_vars['order_carrier'] = '';
-        foreach ($tpl_vars['prestashop_carriers'] as $carrier) {
-            if ($carrier['id_carrier'] === $order->id_carrier) {
-                $tpl_vars['order_carrier'] = $carrier['name'];
-                break;
-            }
-        }
-
-        $tpl_vars['id_carrier'] = $order->id_carrier;
-
-        // Recover POST uri.
-        $payzen_request_uri = $this->context->link->getAdminLink('AdminModules');
-        $payzen_request_uri = str_replace('&token=', '&configure=payzen&token=', $payzen_request_uri);
-        $tpl_vars['payzen_request_uri'] = $payzen_request_uri;
-        $this->context->smarty->assign($tpl_vars);
-
-        return $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'payzen/views/templates/admin/support_contact_from_order_details.tpl');
-    }
-
     /**
      *  Before updating order status.
      *
@@ -1885,7 +1702,7 @@ class Payzen extends PaymentModule
         $client = new Lyranetwork\Payzen\Sdk\Refund\Api(
             $refund_processor,
             $this->getPrivateKey(),
-            Configuration::get('PAYZEN_REST_SERVER_URL'),
+            PayzenTools::getConfigOrDefault('PAYZEN_REST_SERVER_URL'),
             Configuration::get('PAYZEN_SITE_ID'),
             'PrestaShop'
         );
@@ -2014,7 +1831,7 @@ class Payzen extends PaymentModule
         $client = new Lyranetwork\Payzen\Sdk\Refund\Api(
             $refund_processor,
             $this->getPrivateKey(),
-            Configuration::get('PAYZEN_REST_SERVER_URL'),
+            PayzenTools::getConfigOrDefault('PAYZEN_REST_SERVER_URL'),
             Configuration::get('PAYZEN_SITE_ID'),
             'PrestaShop'
         );
@@ -2709,7 +2526,7 @@ class Payzen extends PaymentModule
 
             // Perform REST request to check identifier.
             $client = new Lyranetwork\Payzen\Sdk\Rest\Api(
-                Configuration::get('PAYZEN_REST_SERVER_URL'),
+                PayzenTools::getConfigOrDefault('PAYZEN_REST_SERVER_URL'),
                 Configuration::get('PAYZEN_SITE_ID'),
                 $this->getPrivateKey()
             );
