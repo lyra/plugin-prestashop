@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
@@ -22,9 +22,6 @@ $_MODULE['<{payzen}prestashop>payzen_9a6202beabfbeeebd31db65a5cfd1d22'] = 'En at
 $_MODULE['<{payzen}prestashop>payzen_b653ecd1a36f5f0835030b77b35d3ef5'] = 'Remboursé avec %s';
 $_MODULE['<{payzen}prestashop>payzen_2c528eaf30bdea981fa09a3ce3e93c22'] = 'Etes-vous sûr de bien vouloir supprimer les détails de votre module ?';
 $_MODULE['<{payzen}prestashop>payzen_f38f5974cdc23279ffe6d203641a8bdf'] = 'Configuration mise à jour.';
-$_MODULE['<{payzen}prestashop>payzen_d4e09ddd1f1fa07f5683e5bafc659eb1'] = 'Merci de nous contacter. Votre e-mail a été envoyé avec succès.';
-$_MODULE['<{payzen}prestashop>payzen_f55f5b158c6e91dfb7f7b0a27ecb6583'] = 'Une erreur est survenue. Votre e-mail n\'a pas été envoyé.';
-$_MODULE['<{payzen}prestashop>payzen_789531d6f3fb951a7b6f52bf74c17474'] = 'Veuillez configurer les champs obligatoires.';
 $_MODULE['<{payzen}prestashop>payzen_35c92b3cd223bc02c4d41e6d9fda2985'] = 'Une ou plusieurs valeurs sont invalides pour le champ « %s ». Seules les valeurs valides sont sauvegardées.';
 $_MODULE['<{payzen}prestashop>payzen_6e7ffecca9439f8cb89d53bc0c17e59f'] = 'Trop de types de carte sont sélectionnés.';
 $_MODULE['<{payzen}prestashop>payzen_6396d0cfb20db5767f92b4e94898d50b'] = 'Le champ « %1$s » est invalide: veuillez vérifier la colonne « %2$s » de l\'option « %3$s » dans la section « %4$s ».';
@@ -144,7 +141,6 @@ $_MODULE['<{payzen}prestashop>abstractpayzenpayment_b9a84d9eb8b9088f970acd8bc0eb
 $_MODULE['<{payzen}prestashop>payzenancvpayment_77bde9239751c5a5b2499da1b295f982'] = 'Pays non supporté par le paiement ANCV.';
 $_MODULE['<{payzen}prestashop>payzenancvpayment_4ff8092427015f9d85a5dba03fa0306d'] = 'Paiement avec ANCV';
 $_MODULE['<{payzen}prestashop>payzenfranfinancepayment_20e6b22744d3453ca1a38f0047bf1646'] = 'Paiement avec FranFinance';
-$_MODULE['<{payzen}prestashop>payzenchoozeopayment_23baf30b8f6002ec6f83a79271d1c109'] = 'Paiement avec Choozeo sans frais';
 $_MODULE['<{payzen}prestashop>payzenfullcbpayment_129b76792cea13dd8d0c2d61cf90d43f'] = 'Paiement avec Full CB';
 $_MODULE['<{payzen}prestashop>payzengroupedotherpayment_4c82df878d344136c0a801d767b126f6'] = 'Autres moyens de paiement';
 $_MODULE['<{payzen}prestashop>payzenmultipayment_d412c918bf6e2dd65e2dbcebcaf8a5a1'] = 'Paiement par carte bancaire en plusieurs fois';
@@ -178,8 +174,6 @@ $_MODULE['<{payzen}prestashop>back_office_25e529837c4a8559447d7e782006962a'] = '
 $_MODULE['<{payzen}prestashop>back_office_8e387387f80338a05d82f273466514ec'] = 'Paiement SEPA - Restriction sur le montant par groupe de clients';
 $_MODULE['<{payzen}prestashop>back_office_5afaf992f3b1be6b20b0c9ceeaa0ad79'] = 'Paiement SOFORT Banking - Restriction sur le montant par groupe de clients';
 $_MODULE['<{payzen}prestashop>back_office_334ae4198a14d1c2cc0d5b4ddb29bd1b'] = 'Paiement PayPal - Restriction sur le montant par groupe de clients';
-$_MODULE['<{payzen}prestashop>back_office_f1e9cb2d5f240a92d31ccb7b8444effa'] = 'Paiement Choozeo - Restriction sur le montant par groupe de clients';
-$_MODULE['<{payzen}prestashop>back_office_a7dd7e2735742fcc31f68d525492d480'] = 'Paiement Choozeo - Options de paiement';
 $_MODULE['<{payzen}prestashop>back_office_7b3afebb3d087f640c118f60a2113409'] = 'Autres moyens de paiement - Restriction sur le montant par groupe de clients';
 $_MODULE['<{payzen}prestashop>back_office_953f118e14ad7734bc6257f94d4c261e'] = 'Autres moyens de paiement - Moyens de paiement';
 $_MODULE['<{payzen}prestashop>back_office_c658ea834357a283c8198486c30fc045'] = 'Développé par';
@@ -208,8 +202,6 @@ $_MODULE['<{payzen}prestashop>back_office_130105503fe674affc6e66615550e3e5'] = '
 $_MODULE['<{payzen}prestashop>back_office_108daace88ec45eb4324af3b08bc29e3'] = 'URL de notification';
 $_MODULE['<{payzen}prestashop>back_office_55e6bd8d85eaae30cfe6a6a26df3c7c6'] = 'URL à copier dans le Back Office PayZen > Paramétrage > Règles de notifications.';
 $_MODULE['<{payzen}prestashop>back_office_d8353641f40a9ac55d076ea2785f2d60'] = 'En mode multi-boutique, l\'URL de notification est la même pour toutes les boutiques.';
-$_MODULE['<{payzen}prestashop>back_office_9deb4807a73db0f73c602248395ebca3'] = 'URL de la page de paiement';
-$_MODULE['<{payzen}prestashop>back_office_81f1212295fb14103dc46d3be825b597'] = 'URL vers laquelle l\'acheteur sera redirigé pour le paiement.';
 $_MODULE['<{payzen}prestashop>back_office_e439dbf7038faf7b0d2ba9bd7c64c288'] = 'CLÉS D\'API REST';
 $_MODULE['<{payzen}prestashop>back_office_bc084ef11ecf65113d112699e1ee864f'] = 'Configurez cette section si vous utilisez les opérations sur les commandes depuis le Back Office PrestaShop ou si vous utilisez les modes champs de paiement embarqués.';
 $_MODULE['<{payzen}prestashop>back_office_4fd8968c92494e97456ff9c36c21075b'] = 'Les clés de l\'API REST sont disponibles dans votre Back Office PayZen (menu: Paramétrage > Boutiques > Clés d\'API REST).';
@@ -224,8 +216,6 @@ $_MODULE['<{payzen}prestashop>back_office_57bf638e4efbe98ed21368e1743f1c36'] = '
 $_MODULE['<{payzen}prestashop>back_office_20fc8a7c61c03bf03d45b1365928060d'] = 'Clé HMAC-SHA-256 de test';
 $_MODULE['<{payzen}prestashop>back_office_75aeca1c272244ff5471140a540a98ff'] = 'Clé HMAC-SHA-256 de production';
 $_MODULE['<{payzen}prestashop>back_office_94f5aa54f5eddcae568f04d7849c4eef'] = 'URL de notification de l\'API REST';
-$_MODULE['<{payzen}prestashop>back_office_2da8515cba985eaea76a3a0c600c2673'] = 'URL du serveur de l\'API REST';
-$_MODULE['<{payzen}prestashop>back_office_860d470aaf97cfc8c93506a3c6a081e8'] = 'URL du client JavaScript';
 $_MODULE['<{payzen}prestashop>back_office_178ab52ae45ca10afab67d9f2a91c70c'] = 'PAGE DE PAIEMENT';
 $_MODULE['<{payzen}prestashop>back_office_c96a77fb323a41898c3b6941a58dc741'] = 'Langue par défaut';
 $_MODULE['<{payzen}prestashop>back_office_88b2f5b27ce64b1d8f3b1d2b960bc3ba'] = 'Sélectionner la langue par défaut à utiliser sur la page de paiement.';
@@ -359,7 +349,6 @@ $_MODULE['<{payzen}prestashop>back_office_0c6b15ce96c02d974f27b99863d07445'] = '
 $_MODULE['<{payzen}prestashop>back_office_620220b64f95d5ae7990de1b40a88c9b'] = 'Délai entre deux échéances (en jours).';
 $_MODULE['<{payzen}prestashop>back_office_4abaa1c572a69cfa5797c5fa53e68374'] = 'Montant de la première échéance en pourcentage du total. Si vide, toutes les échéances auront le même montant.';
 $_MODULE['<{payzen}prestashop>back_office_bd8ee4ec38df265aee78e99f37be36c9'] = 'N\'oubliez pas de cliquer sur le bouton « Sauvegarder » afin de sauvegarder vos modifications.';
-$_MODULE['<{payzen}prestashop>back_office_0e93ce3b9f389ff2a1293344b983dd9f'] = 'PAIEMENT CHOOZEO';
 $_MODULE['<{payzen}prestashop>back_office_2ec00e49c767ce07c7640dcf61d04c31'] = 'Méthode de paiement indisponible pour la liste de pays définie sur votre boutique PrestaShop.';
 $_MODULE['<{payzen}prestashop>back_office_009f24214ec5f02e74cd3f042ca6643a'] = 'Définir la restriction sur le montant pour chaque carte.';
 $_MODULE['<{payzen}prestashop>back_office_4951b2a4c7c29e0163b0c083ca191133'] = 'Activer la sélection des options';
@@ -471,8 +460,6 @@ $_MODULE['<{payzen}prestashop>payment_std_oneclick_db63648022f22f4f36b6c6ab782a4
 $_MODULE['<{payzen}prestashop>payment_std_oneclick_911b0828774977d104dcbbb74ed42261'] = 'Vous allez saisir les informations de paiement après confirmation de la commande.';
 $_MODULE['<{payzen}prestashop>payment_std_oneclick_1f94631eae41fc7ff74bf279ee887785'] = 'Cliquez ici pour payer avec votre moyen de paiement enregistré.';
 $_MODULE['<{payzen}prestashop>payment_ancv_b7d869dae8ed09acc5c6bfee167393ad'] = 'Cliquez ici pour payer avec ANCV';
-$_MODULE['<{payzen}prestashop>payment_choozeo_29f6b9f66d8f9c6bdb96c29c37dd4171'] = 'Cliquez ici pour payer avec Choozeo';
-$_MODULE['<{payzen}prestashop>payment_choozeo_3e3a8db7b428d790b6289e7ab663c7b8'] = 'Cliquez sur une option de paiement pour payer avec Choozeo';
 $_MODULE['<{payzen}prestashop>payment_fullcb_f91833142c39e62a7fc3fcda38a17018'] = 'Cliquez ici pour payer avec Full CB';
 $_MODULE['<{payzen}prestashop>payment_fullcb_b117c15650859690a7871852f0129684'] = 'Choisissez une option de paiement puis cliquez sur le bouton « Payer »';
 $_MODULE['<{payzen}prestashop>payment_franfinance_99938b17c91170dfb0c2f3f8bc9f2a85'] = 'Payer';

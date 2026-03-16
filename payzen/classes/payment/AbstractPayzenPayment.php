@@ -318,6 +318,9 @@ abstract class AbstractPayzenPayment
             }
         }
 
+        // Set URL fields with fallback to defaults if not stored in DB.
+        $request->set('platform_url', PayzenTools::getConfigOrDefault('PAYZEN_PLATFORM_URL'));
+
         // Detect default language.
         /* @var $language Language */
         $language = Language::getLanguage((int) $cart->id_lang);

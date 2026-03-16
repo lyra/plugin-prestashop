@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-9.x';
     private static $SUPPORT_EMAIL = 'https://payzen.io/fr-FR/support/';
-    private static $PLUGIN_VERSION = '1.23.1';
+    private static $PLUGIN_VERSION = '1.24.0';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -56,7 +56,7 @@ class PayzenTools
     public static $multi_lang_fields = array(
         'PAYZEN_REDIRECT_SUCCESS_M', 'PAYZEN_REDIRECT_ERROR_M',
         'PAYZEN_STD_TITLE', 'PAYZEN_MULTI_TITLE', 'PAYZEN_ONEY34_TITLE', 'PAYZEN_ANCV_TITLE',
-        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_CHOOZEO_TITLE', 'PAYZEN_THEME_CONFIG',
+        'PAYZEN_SEPA_TITLE', 'PAYZEN_SOFORT_TITLE', 'PAYZEN_PAYPAL_TITLE', 'PAYZEN_THEME_CONFIG',
         'PAYZEN_FULLCB_TITLE', 'PAYZEN_OTHER_TITLE', 'PAYZEN_FFIN_TITLE', 'PAYZEN_STD_REST_LBL_REGIST'
     );
 
@@ -64,7 +64,7 @@ class PayzenTools
 
     public static $group_amount_fields = array(
         'PAYZEN_STD_AMOUNTS', 'PAYZEN_MULTI_AMOUNTS', 'PAYZEN_ANCV_AMOUNTS',
-        'PAYZEN_ONEY34_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS', 'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS', 'PAYZEN_CHOOZEO_AMOUNTS', 'PAYZEN_CHOOZEO_OPTIONS',
+        'PAYZEN_ONEY34_AMOUNTS', 'PAYZEN_SEPA_AMOUNTS', 'PAYZEN_SOFORT_AMOUNTS', 'PAYZEN_PAYPAL_AMOUNTS',
         'PAYZEN_FULLCB_AMOUNTS', 'PAYZEN_3DS_MIN_AMOUNT', 'PAYZEN_OTHER_AMOUNTS', 'PAYZEN_FFIN_AMOUNTS'
     );
 
@@ -92,11 +92,9 @@ class PayzenTools
         'prodfaq' => true,
         'restrictmulti' => false,
         'shatwo' => true,
-        'support' => false,
         'brazil' => false,
 
         'multi' => true,
-        'choozeo' => false,
         'oney' => true,
         'ancv' => true,
         'sepa' => true,
@@ -110,7 +108,6 @@ class PayzenTools
     public static $submodules = array(
         'STD' => 'Standard',
         'MULTI' => 'Multi',
-        'CHOOZEO' => 'Choozeo',
         'ONEY34' => 'Oney34',
         'FULLCB' => 'Fullcb',
         'FFIN' => 'Franfinance',
@@ -140,6 +137,22 @@ class PayzenTools
         }
 
         return self::$$name;
+    }
+
+    public static function getConfigOrDefault($key)
+    {
+        $value = Configuration::get($key);
+        if ($value) {
+            return $value;
+        }
+
+        $defaults = array(
+            'PAYZEN_PLATFORM_URL' => 'GATEWAY_URL',
+            'PAYZEN_REST_SERVER_URL' => 'REST_URL',
+            'PAYZEN_REST_JS_CLIENT_URL' => 'STATIC_URL',
+        );
+
+        return isset($defaults[$key]) ? self::getDefault($defaults[$key]) : $value;
     }
 
     public static function getDocPattern()
@@ -240,8 +253,6 @@ class PayzenTools
             array('key' => 'PAYZEN_MODE', 'name' => 'ctx_mode', 'default' => self::getDefault('CTX_MODE'), 'label' => 'Mode'),
             array('key' => 'PAYZEN_SIGN_ALGO', 'name' => 'sign_algo', 'default' => self::getDefault('SIGN_ALGO'),
                 'label' => 'Signature algorithm'),
-            array('key' => 'PAYZEN_PLATFORM_URL', 'name' => 'platform_url',
-                'default' => self::getDefault('GATEWAY_URL'), 'label' => 'Payment page URL'),
 
             array('key' => 'PAYZEN_PRIVKEY_TEST', 'default' => '', 'label' => 'Test password'),
             array('key' => 'PAYZEN_PRIVKEY_PROD', 'default' => '', 'label' => 'Production password'),
@@ -249,8 +260,6 @@ class PayzenTools
             array('key' => 'PAYZEN_PUBKEY_PROD', 'default' => '', 'label' => 'Public production key'),
             array('key' => 'PAYZEN_RETKEY_TEST', 'default' => '', 'label' => 'SHA256 test key'),
             array('key' => 'PAYZEN_RETKEY_PROD', 'default' => '', 'label' => 'SHA256 production key'),
-            array('key' => 'PAYZEN_REST_SERVER_URL', 'default' => self::getDefault('REST_URL'), 'label' => 'REST API server URL'),
-            array('key' => 'PAYZEN_REST_JS_CLIENT_URL', 'default' => self::getDefault('STATIC_URL'), 'label' => 'JavaScript client URL'),
 
             array('key' => 'PAYZEN_DOCUMENT', 'name' => 'document_custom_field', 'default' => '', 'label' => 'CPF/CNPJ field'),
             array('key' => 'PAYZEN_NUMBER', 'name' => 'number_custom_field', 'default' => '', 'label' => 'Address number field'),
@@ -557,36 +566,6 @@ class PayzenTools
             array('key' => 'PAYZEN_PAYPAL_DELAY', 'default' => '', 'label' => 'Capture delay'),
             array('key' => 'PAYZEN_PAYPAL_VALIDATION', 'default' => '-1', 'label' => 'Payment validation'),
             array('key' => 'PAYZEN_PAYPAL_AMOUNTS', 'default' => array(), 'label' => 'PayPal payment - Customer group amount restriction'),
-
-            array('key' => 'PAYZEN_CHOOZEO_TITLE',
-                'default' => array(
-                    'en' => 'Payment with Choozeo without fees',
-                    'fr' => 'Paiement avec Choozeo sans frais',
-                    'de' => 'Zahlung mit Choozeo ohne zusätzliche',
-                    'es' => 'Pago con Choozeo sin gastos',
-                    'br' => 'Pagamento com Choozeo sem custo',
-                    'pt' => 'Pagamento com Choozeo sem custo'
-                ),
-                'label' => 'Method title'),
-            array('key' => 'PAYZEN_CHOOZEO_ENABLED', 'default' => 'False', 'label' => 'Activation'),
-            array('key' => 'PAYZEN_CHOOZEO_DELAY', 'default' => '', 'label' => 'Capture delay'),
-            array('key' => 'PAYZEN_CHOOZEO_AMOUNTS',
-                'default' => array(
-                    array('min_amount' => '135', 'max_amount' => '2000')
-                ),
-                'label' => 'Choozeo payment - Customer group amount restriction'),
-            array('key' => 'PAYZEN_CHOOZEO_OPTIONS', 'default' => array(
-                'EPNF_3X' => array(
-                    'enabled' => 'True',
-                    'min_amount' => '',
-                    'max_amount' => ''
-                ),
-                'EPNF_4X' => array(
-                    'enabled' => 'True',
-                    'min_amount' => '',
-                    'max_amount' => ''
-                )
-            ), 'label' => 'Choozeo payment - Payment options'),
 
             array('key' => 'PAYZEN_OTHER_GROUPED_VIEW', 'default' => 'False', 'label' => 'Regroup payment means'),
             array('key' => 'PAYZEN_OTHER_ENABLED', 'default' => 'True', 'label' => 'Activation'),
@@ -1077,28 +1056,6 @@ class PayzenTools
     {
         return self::getDefault('CMS_IDENTIFIER') . '_' . self::getDefault('PLUGIN_VERSION') . '/' . _PS_VERSION_ . '/'
             . PayzenApi::shortPhpVersion();
-    }
-
-    public static function getModulesInstalled()
-    {
-        $modules = Module::getModulesInstalled(1);
-
-        $installedModules = array();
-        foreach ($modules as $module) {
-            $installedModules[] = $module['name'];
-        }
-
-        return implode(' / ', $installedModules);
-    }
-
-    public static function getCardDataEntryModes() {
-        return array(
-            '1' => 'REDIRECT',
-            '2' => 'MERCHANT',
-            '7' => 'SMARTFORM',
-            '8' => 'SMARTFORM_EXT_WITH_LOGOS',
-            '9' => 'SMARTFORM_EXT_WITHOUT_LOGOS'
-        );
     }
 
     public static function formatDocument($cnpj_cpf)
