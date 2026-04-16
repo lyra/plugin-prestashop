@@ -92,9 +92,8 @@ class PayzenFullcbPayment extends AbstractPayzenPayment
     public static function getAvailableOptions($cart)
     {
         // Fullcb payment options.
-        $options = @unserialize(Configuration::get('PAYZEN_FULLCB_OPTIONS'));
-
-        if (! is_array($options) || empty($options)) {
+        $options = PayzenTools::getArrayConfig('PAYZEN_FULLCB_OPTIONS');
+        if (empty($options)) {
             return array();
         }
 

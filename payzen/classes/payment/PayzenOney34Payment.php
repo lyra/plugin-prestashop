@@ -95,8 +95,8 @@ class PayzenOney34Payment extends AbstractPayzenPayment
     public static function getAvailableOptions($cart)
     {
         // Oney payment options.
-        $options = @unserialize(Configuration::get('PAYZEN_ONEY34_OPTIONS'));
-        if (! is_array($options) || empty($options)) {
+        $options = PayzenTools::getArrayConfig('PAYZEN_ONEY34_OPTIONS');
+        if (empty($options)) {
             return array();
         }
 

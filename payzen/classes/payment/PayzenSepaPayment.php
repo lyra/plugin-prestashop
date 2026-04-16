@@ -63,7 +63,7 @@ class PayzenSepaPayment extends AbstractPayzenPayment
 
         // Sepa one click is active and customer is logged-in.
         if ($this->isOneClickActive() && $customer->id) {
-            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+            $customers_config = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
             $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
             $use_identifier = isset($data['sepa_payment_by_identifier']) ? $data['sepa_payment_by_identifier'] === '1' : false;
 
@@ -96,7 +96,7 @@ class PayzenSepaPayment extends AbstractPayzenPayment
 
         if ($this->isValidSavedAlias()) {
             $vars['payzen_is_valid_sepa_identifier'] = true;
-            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+            $customers_config = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
             $vars['payzen_sepa_saved_payment_mean'] = isset($customers_config[$cart->id_customer][$this->name]['m']) ?
             $customers_config[$cart->id_customer][$this->name]['m'] : 'sk';
         }

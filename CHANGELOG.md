@@ -1,3 +1,9 @@
+1.24.1, 2026-04-16:
+- Bug fix: Fix error related to undefined method Tools::redirectLink() in PrestaShop 9.x.
+- Bug Fix: Check value of some configuration fields to avoid PHP warning.
+- Update list of supported payment means.
+- Update list of supported currencies.
+
 1.24.0, 2026-03-16:
 - [technical] Clean Choozeo payment submodule code.
 - Remove contact support component.

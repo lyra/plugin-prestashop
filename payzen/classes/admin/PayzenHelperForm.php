@@ -72,7 +72,7 @@ class PayzenHelperForm
             $doc_files[$doc_languages[$lang]] = $docUri . 'prestashop/sitemap.html';
         }
 
-        $placeholders = self::getArrayConfig('PAYZEN_STD_REST_PLACEHLDR');
+        $placeholders = PayzenTools::getArrayConfig('PAYZEN_STD_REST_PLACEHLDR');
         if (empty($placeholders)) {
             $placeholders = array('pan' => '', 'expiry' => '', 'cvv' => '');
         }
@@ -287,7 +287,7 @@ class PayzenHelperForm
             'PAYZEN_SHOP_NAME' => Configuration::get('PAYZEN_SHOP_NAME'),
             'PAYZEN_SHOP_URL' => Configuration::get('PAYZEN_SHOP_URL'),
 
-            'PAYZEN_3DS_MIN_AMOUNT' => self::getArrayConfig('PAYZEN_3DS_MIN_AMOUNT'),
+            'PAYZEN_3DS_MIN_AMOUNT' => PayzenTools::getArrayConfig('PAYZEN_3DS_MIN_AMOUNT'),
 
             'PAYZEN_DOCUMENT' => Configuration::get('PAYZEN_DOCUMENT'),
             'PAYZEN_NUMBER' => Configuration::get('PAYZEN_NUMBER'),
@@ -304,13 +304,13 @@ class PayzenHelperForm
 
             'PAYZEN_SEND_CART_DETAIL' => Configuration::get('PAYZEN_SEND_CART_DETAIL'),
             'PAYZEN_COMMON_CATEGORY' => Configuration::get('PAYZEN_COMMON_CATEGORY'),
-            'PAYZEN_CATEGORY_MAPPING' => self::getArrayConfig('PAYZEN_CATEGORY_MAPPING'),
+            'PAYZEN_CATEGORY_MAPPING' => PayzenTools::getArrayConfig('PAYZEN_CATEGORY_MAPPING'),
             'PAYZEN_SEND_SHIP_DATA' => Configuration::get('PAYZEN_SEND_SHIP_DATA'),
-            'PAYZEN_ONEY_SHIP_OPTIONS' => self::getArrayConfig('PAYZEN_ONEY_SHIP_OPTIONS'),
+            'PAYZEN_ONEY_SHIP_OPTIONS' => PayzenTools::getArrayConfig('PAYZEN_ONEY_SHIP_OPTIONS'),
 
             'PAYZEN_STD_TITLE' => self::getLangConfig('PAYZEN_STD_TITLE'),
             'PAYZEN_STD_ENABLED' => Configuration::get('PAYZEN_STD_ENABLED'),
-            'PAYZEN_STD_AMOUNTS' => self::getArrayConfig('PAYZEN_STD_AMOUNTS'),
+            'PAYZEN_STD_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_STD_AMOUNTS'),
             'PAYZEN_STD_DELAY' => Configuration::get('PAYZEN_STD_DELAY'),
             'PAYZEN_STD_VALIDATION' => Configuration::get('PAYZEN_STD_VALIDATION'),
             'PAYZEN_STD_PAYMENT_CARDS' => ! Configuration::get('PAYZEN_STD_PAYMENT_CARDS') ?
@@ -333,42 +333,42 @@ class PayzenHelperForm
 
             'PAYZEN_MULTI_TITLE' => self::getLangConfig('PAYZEN_MULTI_TITLE'),
             'PAYZEN_MULTI_ENABLED' => Configuration::get('PAYZEN_MULTI_ENABLED'),
-            'PAYZEN_MULTI_AMOUNTS' => self::getArrayConfig('PAYZEN_MULTI_AMOUNTS'),
+            'PAYZEN_MULTI_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_MULTI_AMOUNTS'),
             'PAYZEN_MULTI_DELAY' => Configuration::get('PAYZEN_MULTI_DELAY'),
             'PAYZEN_MULTI_VALIDATION' => Configuration::get('PAYZEN_MULTI_VALIDATION'),
             'PAYZEN_MULTI_CARD_MODE' => Configuration::get('PAYZEN_MULTI_CARD_MODE'),
             'PAYZEN_MULTI_PAYMENT_CARDS' => ! Configuration::get('PAYZEN_MULTI_PAYMENT_CARDS') ?
                                             array('') :
                                             explode(';', Configuration::get('PAYZEN_MULTI_PAYMENT_CARDS')),
-            'PAYZEN_MULTI_OPTIONS' => self::getArrayConfig('PAYZEN_MULTI_OPTIONS'),
+            'PAYZEN_MULTI_OPTIONS' => PayzenTools::getArrayConfig('PAYZEN_MULTI_OPTIONS'),
 
             'PAYZEN_ANCV_TITLE' => self::getLangConfig('PAYZEN_ANCV_TITLE'),
             'PAYZEN_ANCV_ENABLED' => Configuration::get('PAYZEN_ANCV_ENABLED'),
-            'PAYZEN_ANCV_AMOUNTS' => self::getArrayConfig('PAYZEN_ANCV_AMOUNTS'),
+            'PAYZEN_ANCV_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_ANCV_AMOUNTS'),
             'PAYZEN_ANCV_DELAY' => Configuration::get('PAYZEN_ANCV_DELAY'),
             'PAYZEN_ANCV_VALIDATION' => Configuration::get('PAYZEN_ANCV_VALIDATION'),
 
             'PAYZEN_ONEY34_TITLE' => self::getLangConfig('PAYZEN_ONEY34_TITLE'),
             'PAYZEN_ONEY34_ENABLED' => Configuration::get('PAYZEN_ONEY34_ENABLED'),
-            'PAYZEN_ONEY34_AMOUNTS' => self::getArrayConfig('PAYZEN_ONEY34_AMOUNTS'),
+            'PAYZEN_ONEY34_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_ONEY34_AMOUNTS'),
             'PAYZEN_ONEY34_DELAY' => Configuration::get('PAYZEN_ONEY34_DELAY'),
             'PAYZEN_ONEY34_VALIDATION' => Configuration::get('PAYZEN_ONEY34_VALIDATION'),
-            'PAYZEN_ONEY34_OPTIONS' => self::getArrayConfig('PAYZEN_ONEY34_OPTIONS'),
+            'PAYZEN_ONEY34_OPTIONS' => PayzenTools::getArrayConfig('PAYZEN_ONEY34_OPTIONS'),
 
             'PAYZEN_FFIN_TITLE' => self::getLangConfig('PAYZEN_FFIN_TITLE'),
             'PAYZEN_FFIN_ENABLED' => Configuration::get('PAYZEN_FFIN_ENABLED'),
-            'PAYZEN_FFIN_AMOUNTS' => self::getArrayConfig('PAYZEN_FFIN_AMOUNTS'),
-            'PAYZEN_FFIN_OPTIONS' => self::getArrayConfig('PAYZEN_FFIN_OPTIONS'),
+            'PAYZEN_FFIN_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_FFIN_AMOUNTS'),
+            'PAYZEN_FFIN_OPTIONS' => PayzenTools::getArrayConfig('PAYZEN_FFIN_OPTIONS'),
 
             'PAYZEN_FULLCB_TITLE' => self::getLangConfig('PAYZEN_FULLCB_TITLE'),
             'PAYZEN_FULLCB_ENABLED' => Configuration::get('PAYZEN_FULLCB_ENABLED'),
-            'PAYZEN_FULLCB_AMOUNTS' => self::getArrayConfig('PAYZEN_FULLCB_AMOUNTS'),
+            'PAYZEN_FULLCB_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_FULLCB_AMOUNTS'),
             'PAYZEN_FULLCB_ENABLE_OPTS' => Configuration::get('PAYZEN_FULLCB_ENABLE_OPTS'),
-            'PAYZEN_FULLCB_OPTIONS' => self::getArrayConfig('PAYZEN_FULLCB_OPTIONS'),
+            'PAYZEN_FULLCB_OPTIONS' => PayzenTools::getArrayConfig('PAYZEN_FULLCB_OPTIONS'),
 
             'PAYZEN_SEPA_TITLE' => self::getLangConfig('PAYZEN_SEPA_TITLE'),
             'PAYZEN_SEPA_ENABLED' => Configuration::get('PAYZEN_SEPA_ENABLED'),
-            'PAYZEN_SEPA_AMOUNTS' => self::getArrayConfig('PAYZEN_SEPA_AMOUNTS'),
+            'PAYZEN_SEPA_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_SEPA_AMOUNTS'),
             'PAYZEN_SEPA_DELAY' => Configuration::get('PAYZEN_SEPA_DELAY'),
             'PAYZEN_SEPA_VALIDATION' => Configuration::get('PAYZEN_SEPA_VALIDATION'),
             'PAYZEN_SEPA_MANDATE_MODE' => Configuration::get('PAYZEN_SEPA_MANDATE_MODE'),
@@ -376,20 +376,20 @@ class PayzenHelperForm
 
             'PAYZEN_SOFORT_TITLE' => self::getLangConfig('PAYZEN_SOFORT_TITLE'),
             'PAYZEN_SOFORT_ENABLED' => Configuration::get('PAYZEN_SOFORT_ENABLED'),
-            'PAYZEN_SOFORT_AMOUNTS' => self::getArrayConfig('PAYZEN_SOFORT_AMOUNTS'),
+            'PAYZEN_SOFORT_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_SOFORT_AMOUNTS'),
 
             'PAYZEN_PAYPAL_TITLE' => self::getLangConfig('PAYZEN_PAYPAL_TITLE'),
             'PAYZEN_PAYPAL_ENABLED' => Configuration::get('PAYZEN_PAYPAL_ENABLED'),
-            'PAYZEN_PAYPAL_AMOUNTS' => self::getArrayConfig('PAYZEN_PAYPAL_AMOUNTS'),
+            'PAYZEN_PAYPAL_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_PAYPAL_AMOUNTS'),
             'PAYZEN_PAYPAL_DELAY' => Configuration::get('PAYZEN_PAYPAL_DELAY'),
             'PAYZEN_PAYPAL_VALIDATION' => Configuration::get('PAYZEN_PAYPAL_VALIDATION'),
 
             'PAYZEN_OTHER_GROUPED_VIEW' => Configuration::get('PAYZEN_OTHER_GROUPED_VIEW'),
             'PAYZEN_OTHER_ENABLED' => Configuration::get('PAYZEN_OTHER_ENABLED'),
             'PAYZEN_OTHER_TITLE' => self::getLangConfig('PAYZEN_OTHER_TITLE'),
-            'PAYZEN_OTHER_AMOUNTS' => self::getArrayConfig('PAYZEN_OTHER_AMOUNTS'),
-            'PAYZEN_OTHER_PAYMENT_MEANS' => self::getArrayConfig('PAYZEN_OTHER_PAYMENT_MEANS'),
-            'PAYZEN_EXTRA_PAYMENT_MEANS' => self::getArrayConfig('PAYZEN_EXTRA_PAYMENT_MEANS')
+            'PAYZEN_OTHER_AMOUNTS' => PayzenTools::getArrayConfig('PAYZEN_OTHER_AMOUNTS'),
+            'PAYZEN_OTHER_PAYMENT_MEANS' => PayzenTools::getArrayConfig('PAYZEN_OTHER_PAYMENT_MEANS'),
+            'PAYZEN_EXTRA_PAYMENT_MEANS' => PayzenTools::getArrayConfig('PAYZEN_EXTRA_PAYMENT_MEANS')
         );
 
         foreach (PayzenTools::$submodules as $key => $module) {
@@ -413,17 +413,6 @@ class PayzenHelperForm
             . $shop->getBaseURI() . 'module/payzen/validation';
 
         return $ipn;
-    }
-
-    private static function getArrayConfig($name)
-    {
-        $value = @unserialize(Configuration::get($name));
-
-        if (! is_array($value)) {
-            $value = array();
-        }
-
-        return $value;
     }
 
     private static function getLangConfig($name)

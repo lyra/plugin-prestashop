@@ -101,8 +101,8 @@ abstract class AbstractPayzenPayment
 
     protected function checkAmountRestriction($cart)
     {
-        $config_options = @unserialize(Configuration::get($this->prefix . 'AMOUNTS'));
-        if (! is_array($config_options) || empty($config_options)) {
+        $config_options = PayzenTools::getArrayConfig($this->prefix . 'AMOUNTS');
+        if (empty($config_options)) {
             return true;
         }
 
@@ -462,8 +462,8 @@ abstract class AbstractPayzenPayment
 
         // Activate 3DS?
         $threeds_mpi = null;
-        $threeds_min_amount_options = @unserialize(Configuration::get('PAYZEN_3DS_MIN_AMOUNT'));
-        if (is_array($threeds_min_amount_options) && ! empty($threeds_min_amount_options)) {
+        $threeds_min_amount_options = PayzenTools::getArrayConfig('PAYZEN_3DS_MIN_AMOUNT');
+        if (! empty($threeds_min_amount_options)) {
             $customer_group = (int) Customer::getDefaultGroupId($cart->id_customer);
 
             $all_min_amount = $threeds_min_amount_options[0]['min_amount']; // Value configured for all groups.
@@ -530,19 +530,19 @@ abstract class AbstractPayzenPayment
         if (Configuration::get('PAYZEN_COMMON_CATEGORY') !== 'CUSTOM_MAPPING') {
             $category = Configuration::get('PAYZEN_COMMON_CATEGORY');
         } else {
-            $oney_categories = @unserialize(Configuration::get('PAYZEN_CATEGORY_MAPPING'));
+            $oney_categories = PayzenTools::getArrayConfig('PAYZEN_CATEGORY_MAPPING');
         }
 
         $product_label_regex_not_allowed = '#[^A-Z0-9ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜÇ ]#ui';
 
         foreach ($products as $product) {
-            if (!isset($category)) {
+            if (! isset($category)) {
                 // Build query to get product default category.
                 $sql = 'SELECT `id_category_default` FROM `' . _DB_PREFIX_ . 'product` WHERE `id_product` = ' .
                     (int) $product['id_product'];
 
                 $db_category = Db::getInstance()->getValue($sql);
-                $category = $oney_categories[$db_category];
+                $category = isset($oney_categories[$db_category]) ? $oney_categories[$db_category] : "";
             }
 
             $price_in_cents = $currency->convertAmountToInteger($product['price']);
@@ -569,7 +569,7 @@ abstract class AbstractPayzenPayment
         $isOney34 = $this instanceof PayzenOney34Payment;
 
         // Oney delivery options defined in admin panel.
-        $shipping_options = @unserialize(Configuration::get('PAYZEN_ONEY_SHIP_OPTIONS'));
+        $shipping_options = PayzenTools::getArrayConfig('PAYZEN_ONEY_SHIP_OPTIONS');
 
         // Retrieve carrier ID from cart.
         if (isset($cart->id_carrier) && $cart->id_carrier > 0) {
@@ -578,12 +578,14 @@ abstract class AbstractPayzenPayment
             $delivery_option_list = $cart->getDeliveryOptionList();
 
             $delivery_option = $cart->getDeliveryOption();
-            $carrier_key = $delivery_option[(int) $cart->id_address_delivery];
-            $carrier_list = $delivery_option_list[(int) $cart->id_address_delivery][$carrier_key]['carrier_list'];
+            $carrier_key = isset($delivery_option[(int) $cart->id_address_delivery]) ? $delivery_option[(int) $cart->id_address_delivery] : null;
+            $carrier_list = isset($delivery_option_list[(int) $cart->id_address_delivery][$carrier_key]['carrier_list']) ? $delivery_option_list[(int) $cart->id_address_delivery][$carrier_key]['carrier_list'] : null;
 
-            foreach (array_keys($carrier_list) as $id) {
-                $carrier_id = $id;
-                break;
+            if (is_array($carrier_list)) {
+                foreach (array_keys($carrier_list) as $id) {
+                    $carrier_id = $id;
+                    break;
+                }
             }
         }
 
