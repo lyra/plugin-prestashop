@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.24.0';
+        $this->version = '1.24.1';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'validation');
 
@@ -180,7 +180,7 @@ class Payzen extends PaymentModule
                 } elseif (is_array($param['default'])) {
                     $default = serialize($param['default']);
                 } elseif (defined('PAYZEN_TRANSIENT_DEFAULT')) {
-                    $defaults = unserialize(PAYZEN_TRANSIENT_DEFAULT);
+                    $defaults = PayzenTools::getArrayConfig(PAYZEN_TRANSIENT_DEFAULT);
                     $default = isset($defaults[$key]) ? $defaults[$key] : $param['default'];
                 } else {
                     $default = $param['default'];
@@ -776,7 +776,7 @@ class Payzen extends PaymentModule
                     $cards = Lyranetwork\Payzen\Sdk\Form\Api::getSupportedCardTypes();
 
                     // Add extra means of payment to supported payment means.
-                    $extra_cards = @unserialize(Configuration::get('PAYZEN_EXTRA_PAYMENT_MEANS'));
+                    $extra_cards = PayzenTools::getArrayConfig('PAYZEN_EXTRA_PAYMENT_MEANS');
                     foreach ($extra_cards as $option_card) {
                         if (! isset($cards[$option_card['code']])) {
                             $cards[$option_card['code']] = $option_card['title'];
@@ -851,7 +851,7 @@ class Payzen extends PaymentModule
                 }
 
                 // Update PAYZEN_OTHER_PAYMENT_MEANS (options containing deleted payment means should not appear).
-                $other_payment_means = @unserialize(Configuration::get('PAYZEN_OTHER_PAYMENT_MEANS'));
+                $other_payment_means = PayzenTools::getArrayConfig('PAYZEN_OTHER_PAYMENT_MEANS');
                 foreach ($other_payment_means as $key_payment_mean => $option_payment_mean) {
                     if (! in_array($option_payment_mean['code'], $used_cards)) {
                         unset($other_payment_means[$key_payment_mean]);
@@ -1026,6 +1026,7 @@ class Payzen extends PaymentModule
 
                 // Current language or default if not supported.
                 $language = Language::getLanguage((int) $this->context->cart->id_lang);
+                $id_lang = $language['id_lang'];
                 $language_iso_code = $language['language_code'] ? Tools::substr($language['language_code'], 0, 2) : $language['iso_code'];
                 $language_iso_code = Tools::strtolower($language_iso_code);
                 if (! Lyranetwork\Payzen\Sdk\Form\Api::isSupportedLanguage($language_iso_code)) {
@@ -1041,19 +1042,19 @@ class Payzen extends PaymentModule
                                   kr-post-url-success="' . $return_url . '"
                                   kr-post-url-refused="' . $return_url . '"
                                   kr-language="' . $language_iso_code . '"
-                                  kr-label-do-register="' . Configuration::get('PAYZEN_STD_REST_LBL_REGIST', $language['id_lang']) . '"';
+                                  kr-label-do-register="' . Configuration::get('PAYZEN_STD_REST_LBL_REGIST', $id_lang) . '"';
 
-                $rest_placeholders = @unserialize(Configuration::get('PAYZEN_STD_REST_PLACEHLDR'));
-                if ($pan_label = $rest_placeholders['pan'][$language['id_lang']]) {
-                    $html .= ' kr-placeholder-pan="' . $pan_label . '"';
+                $rest_placeholders = PayzenTools::getArrayConfig('PAYZEN_STD_REST_PLACEHLDR');
+                if (isset($rest_placeholders['pan'][$id_lang])) {
+                    $html .= ' kr-placeholder-pan="' . $rest_placeholders['pan'][$id_lang] . '"';
                 }
 
-                if ($expiry_label = $rest_placeholders['expiry'][$language['id_lang']]) {
-                    $html .= ' kr-placeholder-expiry="' . $expiry_label . '"';
+                if (isset($rest_placeholders['expiry'][$id_lang])) {
+                    $html .= ' kr-placeholder-expiry="' . $rest_placeholders['expiry'][$id_lang] . '"';
                 }
 
-                if ($cvv_label = $rest_placeholders['cvv'][$language['id_lang']]) {
-                    $html .= ' kr-placeholder-security-code="' . $cvv_label . '"';
+                if (isset($rest_placeholders['cvv'][$id_lang])) {
+                    $html .= ' kr-placeholder-security-code="' . $rest_placeholders['cvv'][$id_lang] . '"';
                 }
 
                 $html .= '></script>' . "\n";
@@ -1213,7 +1214,7 @@ class Payzen extends PaymentModule
 
         $cart = $this->context->cart;
         $customer = new Customer((int) $cart->id_customer);
-        $customersConfig = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+        $customersConfig = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
 
         // Version tag for specific styles.
         $tag = version_compare(_PS_VERSION_, '1.6', '<') ? 'payzen15' : 'payzen16';
@@ -1329,7 +1330,7 @@ class Payzen extends PaymentModule
 
         $cart = $this->context->cart;
         $customer = new Customer((int) $cart->id_customer);
-        $customersConfig = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+        $customersConfig = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
 
         /**
          * @var array[\PrestaShop\PrestaShop\Core\Payment\PaymentOption]
@@ -2494,10 +2495,7 @@ class Payzen extends PaymentModule
             }
 
             // Save customers configuration as array: n = identifier, m = masked PAN.
-            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
-            if (! is_array($customers_config)) {
-                $customers_config = array();
-            }
+            $customers_config = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
 
             // Recover module_id.
             $module_id = $response->getExtInfo('module_id');

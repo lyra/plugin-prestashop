@@ -94,7 +94,7 @@ class PayzenRestModuleFrontController extends ModuleFrontController
 
         if (! $this->checkRestReturnValidity()) {
             $this->logger->logError('Invalid return request received, redirect to home page. Content: ' . print_r($_POST, true));
-            Tools::redirectLink('index.php');
+            Tools::redirect('index.php');
         }
 
         $test_mode = Configuration::get('PAYZEN_MODE') === 'TEST';
@@ -108,13 +108,13 @@ class PayzenRestModuleFrontController extends ModuleFrontController
             $ip = Tools::getRemoteAddr();
             $this->logger->logError("{$ip} tries to access module/payzen/rest page without valid signature with parameters: " . print_r($data, true));
 
-            Tools::redirectLink('index.php');
+            Tools::redirect('index.php');
         }
 
         $answer = json_decode($data['kr-answer'], true);
         if (! is_array($answer)) {
             $this->logger->logError('Invalid return request received, redirect to home page. Content of kr-answer: ' . $data['kr-answer']);
-            Tools::redirectLink('index.php');
+            Tools::redirect('index.php');
         }
 
         // Wrap payment result to use traditional order creation tunnel.
@@ -235,8 +235,8 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         $customerId = $this->context->customer->id;
         $customerEmail = $this->context->customer->email;
 
-        $customersConfig = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
-        if (! is_array($customersConfig)) {
+        $customersConfig = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
+        if (empty($customersConfig)) {
             $this->logger->logInfo("User {$customerEmail} has no saved identifier.");
 
             return;
