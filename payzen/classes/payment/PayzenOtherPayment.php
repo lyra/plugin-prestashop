@@ -150,8 +150,8 @@ class PayzenOtherPayment extends AbstractPayzenPayment
     public static function getAvailablePaymentMeans($cart = null)
     {
         // Other payment means.
-        $other_payment_means = @unserialize(Configuration::get('PAYZEN_OTHER_PAYMENT_MEANS'));
-        if (! is_array($other_payment_means) || empty($other_payment_means)) {
+        $other_payment_means = PayzenTools::getArrayConfig('PAYZEN_OTHER_PAYMENT_MEANS');
+        if (empty($other_payment_means)) {
             return array();
         }
 

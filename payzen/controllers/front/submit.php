@@ -75,7 +75,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
             $this->logger->logError("{$ip} tries to access module/payzen/submit page without valid signature with parameters: " . print_r($_REQUEST, true));
             $this->logger->logError('Signature algorithm selected in module settings must be the same as one selected in gateway Back Office.');
 
-            Tools::redirectLink('index.php');
+            Tools::redirect('index.php');
         }
 
         $cart_id = $this->currentCart->id;
@@ -85,7 +85,7 @@ class PayzenSubmitModuleFrontController extends ModuleFrontController
             PayzenTools::rebuildContext($this->currentCart);
         } catch (Exception $e) {
             $this->logger->logError("Error while rebuilding context for cart #{$cart_id}: {$e->getMessage()}.");
-            Tools::redirectLink('index.php');
+            Tools::redirect('index.php');
         }
 
         // Search order in db.

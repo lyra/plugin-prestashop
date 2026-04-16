@@ -73,8 +73,8 @@ class PayzenFranfinancePayment extends AbstractPayzenPayment
     public static function getAvailableOptions($cart)
     {
         // FranFinance payment options.
-        $options = @unserialize(Configuration::get('PAYZEN_FFIN_OPTIONS'));
-        if (! is_array($options) || empty($options)) {
+        $options = PayzenTools::getArrayConfig('PAYZEN_FFIN_OPTIONS');
+        if (empty($options)) {
             return array();
         }
 

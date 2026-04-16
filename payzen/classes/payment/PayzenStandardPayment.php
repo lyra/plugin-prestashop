@@ -45,21 +45,21 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
             // REST placeholders config.
             $language = Language::getLanguage((int) $this->context->cart->id_lang);
-            $rest_placeholders = @unserialize(Configuration::get('PAYZEN_STD_REST_PLACEHLDR'));
+            $rest_placeholders = PayzenTools::getArrayConfig('PAYZEN_STD_REST_PLACEHLDR');
 
             // kr-placeholder-pan.
-            if ($pan_label = $rest_placeholders['pan'][$language['id_lang']]) {
-                $vars['payzen_set_std_rest_kr_placeholder_pan'] = $pan_label;
+            if (isset($rest_placeholders['pan'][$language['id_lang']])) {
+                $vars['payzen_set_std_rest_kr_placeholder_pan'] = $rest_placeholders['pan'][$language['id_lang']];
             }
 
             // kr-placeholder-expiry.
-            if ($expiry_label = $rest_placeholders['expiry'][$language['id_lang']]) {
-                $vars['payzen_set_std_rest_kr_placeholder_expiry'] = $expiry_label;
+            if (isset($rest_placeholders['expiry'][$language['id_lang']])) {
+                $vars['payzen_set_std_rest_kr_placeholder_expiry'] = $rest_placeholders['expiry'][$language['id_lang']];
             }
 
             // kr-placeholder-security-code.
-            if ($cvv_label = $rest_placeholders['cvv'][$language['id_lang']]) {
-                $vars['payzen_set_std_rest_kr_placeholder_security_code'] = $cvv_label;
+            if (isset($rest_placeholders['cvv'][$language['id_lang']])) {
+                $vars['payzen_set_std_rest_kr_placeholder_security_code'] = $rest_placeholders['cvv'][$language['id_lang']];
             }
 
             // kr-label-do-register.
@@ -104,7 +104,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
 
         if ($this->isValidSavedAlias()) {
             $vars['payzen_is_valid_std_identifier'] = true;
-            $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+            $customers_config = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
             $vars['payzen_saved_payment_mean'] = isset($customers_config[$cart->id_customer][$this->name]['m']) ?
                 $customers_config[$cart->id_customer][$this->name]['m'] : '';
         }
@@ -226,7 +226,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         if ($this->isOneClickActive() && $customer->id) {
             if ((! isset($data['force_identifier']) || $data['force_identifier']) && $this->isValidSavedAlias()) {
                 // Customer has an identifier and it is valid.
-                $customers_config = @unserialize(Configuration::get('PAYZEN_CUSTOMERS_CONFIG'));
+                $customers_config = PayzenTools::getArrayConfig('PAYZEN_CUSTOMERS_CONFIG');
                 $saved_identifier = isset($customers_config[$cart->id_customer][$this->name]['n']) ? $customers_config[$cart->id_customer][$this->name]['n'] : '';
                 $request->set('identifier', $saved_identifier);
 
@@ -509,7 +509,7 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $otherEmbeddedPaymentMeans = array();
 
         if (Configuration::get('PAYZEN_OTHER_ENABLED') === 'True') {
-            $otherPaymentMeans = @unserialize(Configuration::get('PAYZEN_OTHER_PAYMENT_MEANS'));
+            $otherPaymentMeans = PayzenTools::getArrayConfig('PAYZEN_OTHER_PAYMENT_MEANS');
             $amount = $cart->getOrderTotal();
             $billing_address = new Address((int) $cart->id_address_invoice);
             $billing_country = new Country((int) $billing_address->id_country);

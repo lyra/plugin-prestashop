@@ -39,8 +39,8 @@ class PayzenMultiPayment extends AbstractPayzenPayment
     public static function getAvailableOptions($cart = null)
     {
         // Multi payment options.
-        $options = @unserialize(Configuration::get('PAYZEN_MULTI_OPTIONS'));
-        if (! is_array($options) || empty($options)) {
+        $options = PayzenTools::getArrayConfig('PAYZEN_MULTI_OPTIONS');
+        if (empty($options)) {
             return array();
         }
 
