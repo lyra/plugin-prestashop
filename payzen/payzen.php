@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.24.1';
+        $this->version = '1.24.2';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'validation');
 
@@ -1727,7 +1727,7 @@ class Payzen extends PaymentModule
             } else {
                 // Display warning to customer if any for PrestaShop versions >= 1.7.7.
                 if (isset($this->context->cookie->payzenRefundWarn)) {
-                    $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+                    $this->displayAdminMessage($this->context->cookie->payzenRefundWarn);
                     unset($this->context->cookie->payzenRefundWarn);
                 }
 
@@ -1739,7 +1739,7 @@ class Payzen extends PaymentModule
             }
         } elseif (version_compare(_PS_VERSION_, '1.7.7', '>=') && isset($this->context->cookie->payzenRefundWarn)) {
             // Display warning to customer if any for Prestashop versions >= 1.7.7.
-            $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+            $this->displayAdminMessage($this->context->cookie->payzenRefundWarn);
             unset($this->context->cookie->payzenRefundWarn);
         }
 
@@ -1875,7 +1875,7 @@ class Payzen extends PaymentModule
             } else {
                 // Display warning to customer if any for Prestashop versions >= 1.7.7.
                 if (isset($this->context->cookie->payzenRefundWarn)) {
-                    $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+                    $this->displayAdminMessage($this->context->cookie->payzenRefundWarn);
                     unset($this->context->cookie->payzenRefundWarn);
                 }
 
@@ -1887,7 +1887,7 @@ class Payzen extends PaymentModule
             }
         } elseif (version_compare(_PS_VERSION_, '1.7.7', '>=') && isset($this->context->cookie->payzenRefundWarn)) {
             // Display warning to customer if any for Prestashop versions >= 1.7.7.
-            $this->get('session')->getFlashBag()->set('warning', $this->context->cookie->payzenRefundWarn);
+            $this->displayAdminMessage($this->context->cookie->payzenRefundWarn);
             unset($this->context->cookie->payzenRefundWarn);
         }
 
@@ -2177,13 +2177,13 @@ class Payzen extends PaymentModule
     private function createCustomerThread($id_order)
     {
         $customerThread = new CustomerThread();
-        $customerThread->id_shop = $this->context->shop->id;
-        $customerThread->id_lang = $this->context->language->id;
+        $customerThread->id_shop = $this->context->shop ? $this->context->shop->id : 0;
+        $customerThread->id_lang = $this->context->language ? $this->context->language->id : 0;
         $customerThread->id_contact = 0;
         $customerThread->id_order = $id_order;
-        $customerThread->id_customer = $this->context->customer->id;
+        $customerThread->id_customer = $this->context->customer ? $this->context->customer->id : 0;
         $customerThread->status = 'closed';
-        $customerThread->email = $this->context->customer->email;
+        $customerThread->email = $this->context->customer ? $this->context->customer->email : '';
         $customerThread->token = Tools::passwdGen(12);
         $customerThread->add();
 
@@ -2959,5 +2959,16 @@ class Payzen extends PaymentModule
         $cardBrand = $response->get('card_brand');
 
         return array_key_exists($cardBrand, $cards) ? $cards[$cardBrand] : $cardBrand;
+    }
+
+    private function displayAdminMessage($message, $type = 'warning')
+    {
+        $container = PrestaShop\PrestaShop\Adapter\SymfonyContainer::getInstance();
+
+        // Get session.
+        $session = version_compare(_PS_VERSION_, '9.0.0', '>=') ? $container->get('request_stack')->getSession()
+            : $container->get('session');
+
+        $session->getFlashBag()->add($type, $message);
     }
 }
