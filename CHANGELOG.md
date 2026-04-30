@@ -1,6 +1,10 @@
+1.24.2, 2026-04-30:
+- Bug fix: Fix translations files encoding error.
+- Bug fix: Fix display of refund error message in PrestaShop 9.x.
+
 1.24.1, 2026-04-16:
 - Bug fix: Fix error related to undefined method Tools::redirectLink() in PrestaShop 9.x.
-- Bug Fix: Check value of some configuration fields to avoid PHP warning.
+- Bug fix: Check value of some configuration fields to avoid PHP warning.
 - Update list of supported payment means.
 - Update list of supported currencies.
 

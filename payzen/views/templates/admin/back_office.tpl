@@ -1,4 +1,4 @@
-﻿{**
+{**
  * Copyright © Lyra Network.
  * This file is part of PayZen plugin for PrestaShop. See COPYING.md for license details.
  *
