@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.24.2';
+        $this->version = '1.24.3';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'validation');
 
@@ -1799,12 +1799,7 @@ class Payzen extends PaymentModule
         }
 
         // Get amount from OrderSlip.
-        $amount = $orderSlipObject->amount;
-        if (Tools::isSubmit('TaxMethod')) {
-            // Prestashop versions < 1.7.7.
-            // For now it's a workaround instead of use OrderSlip->amount for a bug in PrestaShop calculation.
-            $amount = ! Tools::getValue('TaxMethod') ? $orderSlipObject->total_products_tax_excl : $orderSlipObject->total_products_tax_incl;
-        }
+        $amount = $orderSlipObject->total_products_tax_incl;
 
         // Add shipping cost amount.
         if (version_compare(_PS_VERSION_, '1.6', '>=')) {

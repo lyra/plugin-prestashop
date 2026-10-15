@@ -1,3 +1,8 @@
+1.24.3, 2026-10-15:
+- Bug fix: Fix refund amount for customer group where price display method is excluding tax.
+- Added compatibility with PHP 8.5.x versions.
+- Add new payment status CAPTURE_PENDING.
+
 1.24.2, 2026-04-30:
 - Bug fix: Fix translations files encoding error.
 - Bug fix: Fix display of refund error message in PrestaShop 9.x.
