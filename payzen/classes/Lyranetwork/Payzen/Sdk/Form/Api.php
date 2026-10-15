@@ -277,6 +277,7 @@ class Api
     {
         return array(
             'INITIAL',
+            'CAPTURE_PENDING',
             'WAITING_AUTHORISATION',
             'WAITING_AUTHORISATION_TO_VALIDATE',
             'UNDER_VERIFICATION',
