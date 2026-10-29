@@ -107,7 +107,13 @@ var payzenRefreshToken = async function(emptyCart) {
             success: function(json) {
                 var response = JSON.parse(json);
 
-                if (response.cartUnchanged) {
+                if (response.status === 'error') {
+                    if (response.redirectUrl) {
+                        window.location.href = response.redirectUrl;
+                    }
+
+                    reject(response);
+                } else if (response.cartUnchanged) {
                     if (emptyCart) {
                         payzenEmptyCart();
                     }
@@ -249,9 +255,20 @@ var payzenCheckTermsAndConditions = async function(paymentMethod, action) {
         }
     }
 
-    await payzenRefreshToken(true);
+    try {
+        await payzenRefreshToken(true);
 
-    return true;
+        return true;
+    } catch (error) {
+        let message = payzenTranslate("CLIENT_999");
+        if (error.message) {
+            console.log(error.message);
+        }
+
+        KR.throwCustomError(message, paymentMethod);
+
+        return false;
+    }
 };
 
 var payzenCanProceed = function() {
