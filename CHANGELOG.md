@@ -1,3 +1,6 @@
+1.24.4, 2026-10-29:
+- Bug fix: Validate cart item quantities before submitting the embedded payment form.
+
 1.24.3, 2026-10-15:
 - Bug fix: Fix refund amount for customer group where price display method is excluding tax.
 - Added compatibility with PHP 8.5.x versions.

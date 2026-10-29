@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.24.3';
+        $this->version = '1.24.4';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'validation');
 

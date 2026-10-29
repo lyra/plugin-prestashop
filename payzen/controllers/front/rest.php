@@ -28,6 +28,18 @@ class PayzenRestModuleFrontController extends ModuleFrontController
         $cart = $this->context->cart;
         $payment = new PayzenStandardPayment();
 
+        if (Validate::isLoadedObject($cart) && ! $cart->checkQuantities()) {
+            $this->logger->logWarning("Cart #{$cart->id} contains products with insufficient stock, redirect customer to cart.");
+            $this->context->cookie->id_cart = $cart->id;
+
+            $json = array(
+                'status' => 'error',
+                'redirectUrl' => $this->context->link->getPageLink('cart', true, null, array('action' => 'show'))
+            );
+
+            die($this->jsonEncode($json));
+        }
+
         $last_cart_update = isset($this->context->cookie->payzen_last_cart_update) ? $this->context->cookie->payzen_last_cart_update : null;
         if ($last_cart_update && ($last_cart_update === $cart->date_upd)) {
             // Cart data did not change since last payment attempt, do not update payment token.
