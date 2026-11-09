@@ -11,6 +11,29 @@
  * REST API JS tools.
  */
 
+if (typeof prestashop !== 'undefined' && typeof prestashop.on === 'function') {
+    prestashop.on('opcPaymentMethodsUpdated', async function() {
+        if (! document.querySelector('#opc-payment-methods #payzen_standard_rest_wrapper .kr-smart-form')) {
+            return;
+        }
+
+        if (typeof KR === 'undefined' || typeof KR.renderElements !== 'function') {
+            return;
+        }
+
+       try {
+            await KR.renderElements();
+            await payzenRefreshToken(false);
+
+            if (typeof payzenManageButtonDisplay === 'function') {
+                await payzenManageButtonDisplay();
+            }
+        } catch (error) {
+            console.error('Smartform initialization or button synchronization failed.');
+        }
+    });
+}
+
 $(function() {
     $('#total_price').on('DOMSubtreeModified', function() {
         if (typeof (payzen) === 'undefined') {
@@ -151,6 +174,10 @@ var payzenRefreshToken = async function(emptyCart) {
    });
 };
 
+var payzenGetConfirmationSelector = function() {
+    return $('#opc-payment-confirmation').length > 0 ? '#opc-payment-confirmation' : '#payment-confirmation';
+};
+
 var payzenInitRestEvents = function() {
     KR.onError(function(e) {
         payzenRestoreCart();
@@ -164,14 +191,14 @@ var payzenInitRestEvents = function() {
 
         if ($('#payzen_standard').length && $('#payzen_standard').data('submitted')) {
             // PrestaShop 1.7 template.
-            $('#payment-confirmation button').removeAttr('disabled');
+            $(payzenGetConfirmationSelector() + ' button').removeAttr('disabled');
             $('#payzen_standard').data('submitted', false);
         }
 
         // Reset PrestaShop confirmation button style on error.
         var approvedConditions = $('input[name*="conditions_to_approve\"]:checked').length == $('input[name*="conditions_to_approve\"]').length;
         if (approvedConditions) {
-            $("#payment-confirmation button.btn").removeClass('disabled');
+            $(payzenGetConfirmationSelector() + ' button.btn').removeClass('disabled');
         }
 
         var msg = '';
@@ -214,7 +241,7 @@ var payzenInitRestEvents = function() {
     KR.onPopinClosed(function() {
         // Reset PrestaShop confirmation button style on popin close.
         if (payzenCanProceed()) {
-            $("#payment-confirmation button.btn").removeClass('disabled');
+            $(payzenGetConfirmationSelector() + ' button.btn').removeClass('disabled');
         }
     });
 
@@ -273,7 +300,8 @@ var payzenCheckTermsAndConditions = async function(paymentMethod, action) {
 
 var payzenCanProceed = function() {
     var approvedConditions = ($('input[name*="conditions_to_approve\"]:checked').length == $('input[name*="conditions_to_approve\"]').length);
-    if (! approvedConditions || $("#payment-confirmation button.btn").prop('disabled')) {
+    var confirmationButton = $(payzenGetConfirmationSelector() + ' button.btn');
+    if (! approvedConditions || confirmationButton.prop('disabled')) {
        return false;
     }
 

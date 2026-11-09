@@ -1,3 +1,8 @@
+1.25.0, 2026-11-09:
+- Bug fix: Fix display of payment means menu with Hummunigbird theme.
+- Added compatibility with Prestashop 9.2.
+- Added compatibility with Prestashop one page checkout.
+
 1.24.4, 2026-10-29:
 - Bug fix: Validate cart item quantities before submitting the embedded payment form.
 
