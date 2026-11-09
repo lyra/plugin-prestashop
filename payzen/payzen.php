@@ -33,7 +33,7 @@ class Payzen extends PaymentModule
     {
         $this->name = 'payzen';
         $this->tab = 'payments_gateways';
-        $this->version = '1.24.4';
+        $this->version = '1.25.0';
         $this->author = 'Lyra Network';
         $this->controllers = array('redirect', 'submit', 'rest', 'validation');
 
@@ -1119,6 +1119,9 @@ class Payzen extends PaymentModule
 
         $this->context->smarty->assign([
             'front_controller' => $url,
+            'payzen_hummingbird_theme' => version_compare(_PS_VERSION_, '1.7', '>=')
+                && ($context->shop->theme->get('name') === 'hummingbird'
+                || $context->shop->theme->get('parent') === 'hummingbird'),
         ]);
 
         return $this->context->smarty->fetch(_PS_MODULE_DIR_ . 'payzen/views/templates/hook/customer_account.tpl');

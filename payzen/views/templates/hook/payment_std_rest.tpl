@@ -92,9 +92,9 @@
 
     var currentOptionId = $("input[type='radio'][name='payment-option']:checked").attr('id');
     if ($("#" + currentOptionId + "-additional-information").find("#payzen_standard_rest_wrapper").length > 0) {
-      $("#payment-confirmation").addClass('payzen-hide-confirmation');
+      $(payzenGetConfirmationSelector()).addClass('payzen-hide-confirmation');
     } else {
-      $("#payment-confirmation").removeClass('payzen-hide-confirmation');
+      $(payzenGetConfirmationSelector()).removeClass('payzen-hide-confirmation');
     }
   };
 
@@ -108,7 +108,7 @@
 
       KR.openPopin();
 
-      $('#payment-confirmation button').removeAttr('disabled');
+      $(payzenGetConfirmationSelector() + ' button').removeAttr('disabled');
     }
 
     return false;
