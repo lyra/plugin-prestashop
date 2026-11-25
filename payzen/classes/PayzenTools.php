@@ -33,7 +33,7 @@ class PayzenTools
 
     private static $CMS_IDENTIFIER = 'PrestaShop_1.5-9.x';
     private static $SUPPORT_EMAIL = 'https://payzen.io/fr-FR/support/';
-    private static $PLUGIN_VERSION = '1.25.0';
+    private static $PLUGIN_VERSION = '1.25.1';
     private static $GATEWAY_VERSION = 'V2';
 
     const ORDER_ID_REGEX = '#^[a-zA-Z0-9]{1,9}$#';
@@ -987,19 +987,33 @@ class PayzenTools
     {
         $supported_sign_algos = array('sha256_hmac');
 
+        if (! is_array($data) || ! isset($data['kr-hash-algorithm']) || ! isset($data['kr-answer']) || ! isset($data['kr-hash'])) {
+            self::getLogger()->logError('Unable to check hash: missing required fields in payload.');
+
+            return false;
+        }
+
+        if (! is_string($key) || ($key === '')) {
+            self::getLogger()->logError('Unable to check hash: signature key is empty.');
+
+            return false;
+        }
+
         // Check if the hash algorithm is supported.
-        if (! in_array($data['kr-hash-algorithm'], $supported_sign_algos)) {
+        if (! in_array($data['kr-hash-algorithm'], $supported_sign_algos, true)) {
             self::getLogger()->logError('Hash algorithm is not supported: ' . Tools::getValue('kr-hash-algorithm'));
+
             return false;
         }
 
         // On some servers, / can be escaped.
-        $kr_answer = str_replace('\/', '/', $data['kr-answer']);
+        $kr_answer = str_replace('\/', '/', (string) $data['kr-answer']);
+        $sent_hash = (string) $data['kr-hash'];
 
         $hash = hash_hmac('sha256', $kr_answer, $key);
 
         // Return true if calculated hash and sent hash are the same.
-        return ($hash == $data['kr-hash']);
+        return hash_equals($hash, $sent_hash);
     }
 
     public static function rebuildContext($cart)
