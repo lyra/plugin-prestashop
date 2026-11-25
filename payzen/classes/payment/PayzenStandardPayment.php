@@ -255,12 +255,10 @@ class PayzenStandardPayment extends AbstractPayzenPayment
         $strong_auth = $this->getEscapedVar($request, 'threeds_mpi') === '2' ? 'DISABLED' : 'AUTO';
         $currency = PayzenApi::findCurrencyByNumCode($this->getEscapedVar($request, 'currency'));
         $cart_id = $this->getEscapedVar($request, 'order_id');
-        $cust_mail = $this->getEscapedVar($request, 'cust_email');
 
         $params = array(
             'orderId' => $cart_id,
             'customer' => array(
-                'email' => $cust_mail,
                 'reference' => $this->getEscapedVar($request, 'cust_id'),
                 'billingDetails' => array(
                     'language' => $this->getEscapedVar($request, 'language'),
@@ -308,6 +306,11 @@ class PayzenStandardPayment extends AbstractPayzenPayment
                 'module_id' => $this->name
             )
         );
+
+        $cust_mail = $this->getEscapedVar($request, 'cust_email');
+        if (! is_null($cust_mail)) {
+            $params['customer']['email'] = $cust_mail;
+        }
 
         $validationMode = Configuration::get('PAYZEN_STD_VALIDATION');
         if ($validationMode !== "") {
