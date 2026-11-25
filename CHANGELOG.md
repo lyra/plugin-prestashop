@@ -1,3 +1,7 @@
+1.25.1, 2026-11-25:
+- Bug fix: Check customer email validity before sending it to payment gateway.
+- Bug fix: Reject empty signature keys during IPN/return hash validation.
+
 1.25.0, 2026-11-09:
 - Bug fix: Fix display of payment means menu with Hummunigbird theme.
 - Added compatibility with Prestashop 9.2.

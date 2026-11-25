@@ -388,7 +388,11 @@ abstract class AbstractPayzenPayment
         }
 
         // Customer data.
-        $request->set('cust_email', $cust->email);
+        $cust_email = trim((string) $cust->email);
+        if ($cust_email && Validate::isEmail($cust_email)) {
+            $request->set('cust_email', $cust_email);
+        }
+
         $request->set('cust_id', $cust->id);
 
         $cust_title = new Gender((int) $cust->id_gender);
